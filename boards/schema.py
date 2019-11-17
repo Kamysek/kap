@@ -3,13 +3,10 @@ from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from boards.models import Board, Topic, Post
-from account.models import CustomUser
-from account.schema import UserType, UserInput, CreateUser
-from graphql import GraphQLError
-from django.db.models import Q
 from datetime import datetime
 from graphql_jwt.decorators import staff_member_required
-from django.contrib.auth import get_user_model
+from graphql_jwt.decorators import login_required
+from graphql_jwt.decorators import user_passes_test
 
 
 class BoardType(DjangoObjectType):
@@ -36,7 +33,9 @@ class CreateBoard(graphene.Mutation):
 
     board = graphene.Field(BoardType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
         board_instance = Board(name=input.name, description=input.description, creator=info.context.user)
         board_instance.save()
@@ -50,7 +49,9 @@ class UpdateBoard(graphene.Mutation):
 
     board = graphene.Field(BoardType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, board_id, input=None):
         board_instance = Board.objects.get(id=board_id)
         if board_instance:
@@ -85,7 +86,9 @@ class CreateTopic(graphene.Mutation):
 
     topic = graphene.Field(TopicType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
         topic_instance = Topic(subject=input.subject,
                                last_updated=datetime.now(),
@@ -102,7 +105,9 @@ class UpdateTopic(graphene.Mutation):
 
     topic = graphene.Field(TopicType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, topic_id, input=None):
         topic_instance = Topic.objects.get(id=topic_id)
 
@@ -138,7 +143,9 @@ class CreatePost(graphene.Mutation):
 
     post = graphene.Field(PostType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
         post_instance = Post(message=input.message,
                              topic=Topic.objects.get(id=input.topic),
@@ -157,7 +164,9 @@ class UpdatePost(graphene.Mutation):
 
     post = graphene.Field(PostType)
 
-    @staticmethod
+    @login_required
+    @user_passes_test(
+        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, post_id, input=None):
         post_instance = Post.objects.get(id=post_id)
         if post_instance:
@@ -170,6 +179,7 @@ class UpdatePost(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
+
     board = relay.Node.Field(BoardNode)
     topic = relay.Node.Field(TopicNode)
     post = relay.Node.Field(PostNode)
