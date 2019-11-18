@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'boards.apps.BoardsConfig',
     'account.apps.AccountConfig',
+    'appointments.apps.AppointmentsConfig',
 ]
 
 MIDDLEWARE = [
