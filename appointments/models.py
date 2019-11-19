@@ -1,8 +1,7 @@
 from django.db import models
 from django.conf import settings
+from graphql import GraphQLError
 from django.urls import reverse
-from graphql_jwt.decorators import login_required
-from graphql_jwt.decorators import user_passes_test
 
 User = settings.AUTH_USER_MODEL
 
@@ -27,7 +26,7 @@ class RestrictManager(models.Manager):
 		#print("removing sensitive Data from Entrys not by user: " + str(user))
 		print(info.context.user.is_authenticated)
 		if not info.context.user.is_authenticated:
-			raise Exception('Not authenticated!')
+			raise GraphQLError('You must be logged in to see this!')
 
 		remove_sensitive_data(info.context.user,queryset)
 		return queryset
