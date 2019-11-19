@@ -31,6 +31,7 @@ class RestrictManager(models.Manager):
 		remove_sensitive_data(info.context.user,queryset)
 		return queryset
 
+
 class Appointment(models.Model):
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	title = models.CharField(max_length=50)

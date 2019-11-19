@@ -1,13 +1,9 @@
 import graphene
-from django.contrib.auth.models import Permission
-from graphene import relay
 from graphene_django import DjangoObjectType
-from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from boards.models import Board, Topic, Post
 from datetime import datetime
 from graphql_jwt.decorators import login_required
-from graphql_jwt.decorators import user_passes_test
 
 
 class UnauthorisedAccessError(GraphQLError):
