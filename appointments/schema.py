@@ -15,6 +15,7 @@ class Query(graphene.ObjectType):
 	def resolve_appointments(self, info, **kwargs):
 		return Appointment.objects.by_user(info)
 
+
 class CreateAppointment(graphene.Mutation):
 	#user =
 	id = graphene.Int()
@@ -32,9 +33,8 @@ class CreateAppointment(graphene.Mutation):
 		return CreateAppointment(
 			id=appointment.id,
 			timestamp=appointment.timestamp
-        )
+		)
 
 
-#4
 class Mutation(graphene.ObjectType):
 	create_appointment = CreateAppointment.Field()

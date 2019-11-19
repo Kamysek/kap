@@ -5,6 +5,7 @@ from graphene_django import DjangoObjectType
 from account.models import CustomUser
 from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
 class UserType(DjangoObjectType):

@@ -1,24 +1,23 @@
 import graphene
+from django.contrib.auth.models import Permission
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
+from graphql import GraphQLError
 from boards.models import Board, Topic, Post
 from datetime import datetime
-from graphql_jwt.decorators import staff_member_required
 from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import user_passes_test
+
+
+class UnauthorisedAccessError(GraphQLError):
+    def __init__(self, message, *args, **kwargs):
+        super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
 class BoardType(DjangoObjectType):
     class Meta:
         model = Board
-
-
-class BoardNode(DjangoObjectType):
-    class Meta:
-        model = Board
-        filter_fields = ['name', 'description', 'creator']
-        interfaces = (relay.Node, )
 
 
 class BoardInput(graphene.InputObjectType):
@@ -34,12 +33,14 @@ class CreateBoard(graphene.Mutation):
     board = graphene.Field(BoardType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
-        board_instance = Board(name=input.name, description=input.description, creator=info.context.user)
-        board_instance.save()
-        return CreateBoard(board=board_instance)
+        if info.context.user.has_perm('boards.can_add_board'):
+            if input.name is not None and input.description is not None and info.context.user is not None:
+                board_instance = Board(name=input.name, description=input.description, creator=info.context.user)
+                board_instance.save()
+                return CreateBoard(board=board_instance)
+            raise Exception('Please provide complete information!')
+        raise UnauthorisedAccessError(message='No permissions to create a board!')
 
 
 class UpdateBoard(graphene.Mutation):
@@ -50,27 +51,25 @@ class UpdateBoard(graphene.Mutation):
     board = graphene.Field(BoardType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, board_id, input=None):
-        board_instance = Board.objects.get(id=board_id)
-        if board_instance:
-            board_instance.name = input.name
-            board_instance.description = input.description
-            board_instance.save()
-            return CreateBoard(board=board_instance)
+        if info.context.user.has_perm('boards.can_change_board'):
+            try:
+                board_instance = Board.objects.get(id=board_id)
+                if board_instance:
+                    if input.name:
+                        board_instance.name = input.name
+                    if input.description:
+                        board_instance.description = input.description
+                    board_instance.save()
+                    return CreateBoard(board=board_instance)
+            except Board.DoesNotExist:
+                raise Exception('Board does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to change a board!')
 
 
 class TopicType(DjangoObjectType):
     class Meta:
         model = Topic
-
-
-class TopicNode(DjangoObjectType):
-    class Meta:
-        model = Topic
-        filter_fields = ['subject', 'last_updated', 'board', 'creator']
-        interfaces = (relay.Node, )
 
 
 class TopicInput(graphene.InputObjectType):
@@ -87,15 +86,19 @@ class CreateTopic(graphene.Mutation):
     topic = graphene.Field(TopicType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
-        topic_instance = Topic(subject=input.subject,
-                               last_updated=datetime.now(),
-                               board=Board.objects.get(id=input.board),
-                               creator=info.context.user)
-        topic_instance.save()
-        return CreateTopic(topic=topic_instance)
+        if info.context.user.has_perm('boards.can_add_topic'):
+            if input.subject is not None:
+                try:
+                    get_board = Board.objects.get(id=input.board)
+                    if get_board:
+                        topic_instance = Topic(subject=input.subject, last_updated=datetime.now(), board=get_board, creator=info.context.user)
+                        topic_instance.save()
+                        return CreateTopic(topic=topic_instance)
+                except Board.DoesNotExist:
+                    raise Exception('Board does not exist!')
+            raise Exception('Please provide complete information!')
+        raise UnauthorisedAccessError(message='No permissions to create a topic!')
 
 
 class UpdateTopic(graphene.Mutation):
@@ -106,17 +109,24 @@ class UpdateTopic(graphene.Mutation):
     topic = graphene.Field(TopicType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, topic_id, input=None):
-        topic_instance = Topic.objects.get(id=topic_id)
+        if info.context.user.has_perm('boards.can_change_topic'):
+            try:
+                topic_instance = Topic.objects.get(id=topic_id)
+            except Topic.DoesNotExist:
+                raise Exception('Topic does not exist!')
 
-        if topic_instance:
-            topic_instance.subject = input.subject
-            topic_instance.last_updated = datetime.now()
-            topic_instance.board = Board.objects.get(id=input.board)
-            topic_instance.save()
-            return CreateTopic(topic=topic_instance)
+            if topic_instance:
+                if input.subject:
+                    topic_instance.subject = input.subject
+                topic_instance.last_updated = datetime.now()
+                try:
+                    topic_instance.board = Board.objects.get(id=input.board)
+                except Board.DoesNotExist:
+                    raise Exception('Board does not exist!')
+                topic_instance.save()
+                return CreateTopic(topic=topic_instance)
+        raise UnauthorisedAccessError(message='No permissions to update a topic!')
 
 
 class PostType(DjangoObjectType):
@@ -124,17 +134,10 @@ class PostType(DjangoObjectType):
         model = Post
 
 
-class PostNode(DjangoObjectType):
-    class Meta:
-        model = Post
-        filter_fields = ['message', 'topic', 'created_at', 'updated_at', 'created_by', 'updated_by']
-        interfaces = (relay.Node, )
-
-
 class PostInput(graphene.InputObjectType):
     id = graphene.ID()
-    message = graphene.String()
-    topic = graphene.Int()
+    message = graphene.String(required=True)
+    topic = graphene.Int(required=True)
 
 
 class CreatePost(graphene.Mutation):
@@ -144,17 +147,21 @@ class CreatePost(graphene.Mutation):
     post = graphene.Field(PostType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
-        post_instance = Post(message=input.message,
-                             topic=Topic.objects.get(id=input.topic),
-                             created_by=info.context.user,
-                             updated_by=info.context.user,
-                             created_at=datetime.now(),
-                             updated_at=datetime.now())
-        post_instance.save()
-        return CreatePost(post=post_instance)
+        if info.context.user.has_perm('boards.can_add_post'):
+            if input.message is not None and input.topic is not None:
+                try:
+                    get_topic = Topic.objects.get(id=input.topic)
+                    if get_topic:
+                        post_instance = Post(message=input.message, topic=get_topic, created_by=info.context.user,
+                                             updated_by=info.context.user, created_at=datetime.now(),
+                                             updated_at=datetime.now())
+                        post_instance.save()
+                        return CreatePost(post=post_instance)
+                except Topic.DoesNotExist:
+                    raise Exception('Topic does not exist!')
+            raise Exception('Please provide complete information!')
+        raise UnauthorisedAccessError(message='No permissions to create a post!')
 
 
 class UpdatePost(graphene.Mutation):
@@ -165,28 +172,94 @@ class UpdatePost(graphene.Mutation):
     post = graphene.Field(PostType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, post_id, input=None):
-        post_instance = Post.objects.get(id=post_id)
-        if post_instance:
-            post_instance.message = input.message
-            post_instance.topic = Topic.objects.get(id=input.topic)
-            post_instance.updated_by = info.context.user
-            post_instance.updated_at = datetime.now()
-            post_instance.save()
-            return CreatePost(post=post_instance)
+
+        if info.context.user.has_perm('boards.can_change_post'):
+            try:
+                post_instance = Post.objects.get(id=post_id)
+            except Post.DoesNotExist:
+                raise Exception('Post does not exist!')
+            if post_instance:
+                if input.message:
+                    post_instance.message = input.message
+                try:
+                    post_instance.topic = Topic.objects.get(id=input.topic)
+                except Topic.DoesNotExist:
+                    raise Exception('Topic does not exist!')
+                post_instance.updated_by = info.context.user
+                post_instance.updated_at = datetime.now()
+                post_instance.save()
+                return CreatePost(post=post_instance)
 
 
 class Query(graphene.ObjectType):
+    board = relay.Node.Field(BoardType)
+    topic = relay.Node.Field(TopicType)
+    post = relay.Node.Field(PostType)
 
-    board = relay.Node.Field(BoardNode)
-    topic = relay.Node.Field(TopicNode)
-    post = relay.Node.Field(PostNode)
+    all_boards = graphene.List(BoardType)
+    all_topics = graphene.List(TopicType)
+    all_posts = graphene.List(PostType)
 
-    all_boards = DjangoFilterConnectionField(BoardNode)
-    all_topics = DjangoFilterConnectionField(TopicNode)
-    all_posts = DjangoFilterConnectionField(PostNode)
+    def resolve_board(self, info, **kwargs):
+        if info.context.user.has_perm('boards.view_board'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Board.objects.get(id=id)
+                except Board.DoesNotExist:
+                    raise Exception('Board does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the boards!')
+
+    def resolve_topic(self, info, **kwargs):
+        if info.context.user.has_perm('boards.can_view_topic'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Topic.objects.get(id=id)
+                except Topic.DoesNotExist:
+                    raise Exception('Topic does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the topics!')
+
+    def resolve_post(self, info, **kwargs):
+        if info.context.user.has_perm('boards.can_view_post'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Post.objects.get(id=id)
+                except Post.DoesNotExist:
+                    raise Exception('Post does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the posts!')
+
+    def resolve_all_boards(self, info, **kwargs):
+        if info.context.user.has_perm('boards.can_view_board'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Board.objects.all()
+                except Board.DoesNotExist:
+                    raise Exception('Board does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the boards!')
+
+    def resolve_all_topics(self, info, **kwargs):
+        if info.context.user.has_perm('boards.can_view_topic'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Topic.objects.all()
+                except Topic.DoesNotExist:
+                    raise Exception('Topic does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the topics!')
+
+    def resolve_all_posts(self, info, **kwargs):
+        if info.context.user.has_perm('boards.can_view_post'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Post.objects.all()
+                except Post.DoesNotExist:
+                    raise Exception('Post does not exist!')
+        raise UnauthorisedAccessError(message='No permissions to see the posts!')
 
 
 class Mutation(graphene.ObjectType):
