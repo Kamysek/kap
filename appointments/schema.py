@@ -4,56 +4,57 @@ from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from .models import Appointment
 
-
 def remove_sensitive_appointment(user, appointment):
-	if user != appointment.user:
-		appointment.user = None
-		appointment.title = "anonym"
-		appointment.comment = "anonym"
-		appointment.files = 0
-		#appointment.timestamp = "2019-11-18T10:39:40.461196+00:00"
-		appointment.id = 0
+    if user != appointment.patient:
+        appointment.patient = None
+        appointment.title = None
+        appointment.comment = None
+        appointment.files = None
+        appointment.created_at = None
+        appointment.id = 0
 
 
 def remove_sensitive_data(user, queryset):
-	for appointment in queryset:
-		remove_sensitive_appointment(user, appointment)
+    for appointment in queryset:
+        remove_sensitive_appointment(user, appointment)
+
 
 class AppointmentType(DjangoObjectType):
-	class Meta:
-		model = Appointment
+    class Meta:
+        model = Appointment
 
 
 class Query(graphene.ObjectType):
-	appointments = graphene.List(AppointmentType)
-	@login_required
-	def resolve_appointments(self, info, **kwargs):
-		queryset = Appointment.objects.all()
-		if not info.context.user.is_authenticated:
-			raise GraphQLError('You must be logged in to see this!')
-		remove_sensitive_data(info.context.user,queryset)
-		return queryset
-		return Appointment.objects.by_user(info)
+    appointments = graphene.List(AppointmentType)
+
+    @login_required
+    def resolve_appointments(self, info, **kwargs):
+        queryset = Appointment.objects.all()
+        if not info.context.user.is_authenticated:#TODO Check user group permissions
+            return queryset
+        remove_sensitive_data(info.context.user, queryset)
+        return queryset
 
 
 class CreateAppointment(graphene.Mutation):
-	id = graphene.Int()
-	timestamp = graphene.DateTime()
+    id = graphene.Int()
+    timestamp = graphene.DateTime()
 
-	class Arguments:
-		title = graphene.String()
-		comment = graphene.String()
-		date = graphene.DateTime()
-	@login_required
-	def mutate(self, info, title,date, comment):
-		appointment = Appointment(user=info.context.user,title=title, comment=comment,date=date)
-		appointment.save()
+    class Arguments:
+        title = graphene.String()
+        comment = graphene.String()
+        date = graphene.DateTime()
 
-		return CreateAppointment(
-			id=appointment.id,
-			timestamp=appointment.timestamp
-		)
+    @login_required
+    def mutate(self, info, title, date, comment):
+        appointment = Appointment(user=info.context.user, title=title, comment=comment, date=date)
+        appointment.save()
+
+        return CreateAppointment(
+            id=appointment.id,
+            timestamp=appointment.timestamp
+        )
 
 
 class Mutation(graphene.ObjectType):
-	create_appointment = CreateAppointment.Field()
+    create_appointment = CreateAppointment.Field()
