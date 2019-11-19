@@ -202,9 +202,9 @@ class UpdatePost(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    board = graphene.Field(BoardType)
-    topic = graphene.Field(TopicType)
-    post = graphene.Field(PostType)
+    board = graphene.Field(BoardType, id=graphene.Int())
+    topic = graphene.Field(TopicType, id=graphene.Int())
+    post = graphene.Field(PostType, id=graphene.Int())
 
     all_boards = graphene.List(BoardType)
     all_topics = graphene.List(TopicType)
@@ -212,9 +212,7 @@ class Query(graphene.ObjectType):
 
     def resolve_board(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_board'):
-            print("test")
             id = kwargs.get('id')
-            print(id)
             if id is not None:
                 try:
                     return Board.objects.get(id=id)
