@@ -30,10 +30,11 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_appointments(self, info, **kwargs):
         queryset = Appointment.objects.all()
-        if not info.context.user.is_authenticated:#TODO Check user group permissions
+        if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(name='Admin').exists():
             return queryset
-        remove_sensitive_data(info.context.user, queryset)
-        return queryset
+        else:
+            remove_sensitive_data(info.context.user, queryset)
+            return queryset
 
 
 class CreateAppointment(graphene.Mutation):
