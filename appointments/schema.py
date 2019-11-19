@@ -2,7 +2,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
-from .models import Appointment
+from .models import Appointment, Calendar
 
 def remove_sensitive_appointment(user, appointment):
     if user != appointment.patient:
@@ -39,21 +39,22 @@ class Query(graphene.ObjectType):
 
 class CreateAppointment(graphene.Mutation):
     id = graphene.Int()
-    timestamp = graphene.DateTime()
+    created_at = graphene.DateTime()
 
     class Arguments:
         title = graphene.String()
         comment = graphene.String()
-        date = graphene.DateTime()
+        appointment_at = graphene.DateTime()
+        calendar = graphene.String()
 
     @login_required
-    def mutate(self, info, title, date, comment):
-        appointment = Appointment(user=info.context.user, title=title, comment=comment, date=date)
+    def mutate(self, info, title, appointment_at, comment, calendar):
+        appointment = Appointment(patient=info.context.user, title=title, comment=comment, appointment_at=appointment_at, calendar=Calendar.objects.get(name=calendar))
         appointment.save()
 
         return CreateAppointment(
             id=appointment.id,
-            timestamp=appointment.timestamp
+            created_at=appointment.created_at
         )
 
 
