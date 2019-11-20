@@ -195,10 +195,9 @@ class UpdateAppointment(graphene.Mutation):
                         appointment_instance.appointment_end = input.appointment_end
 
 
-                    #if not isAppointmentFree(appointment_instance, Appointment.objects.all().filter(
-                            #calendar__appointment__patient_id__in=appointment_id)):
-                    #else:
-                        #raise GraphQLError("Invalid Time selected")
+                    if not isAppointmentFree(appointment_instance, Appointment.objects.all().filter(
+                        calendar__appointment__patient_id__in=appointment_id)):
+                        raise GraphQLError("Invalid Time selected")
 
 
                     appointment_instance.save()
