@@ -18,8 +18,8 @@ class BoardType(DjangoObjectType):
 
 class BoardInput(graphene.InputObjectType):
     id = graphene.ID()
-    name = graphene.String(required=True)
-    description = graphene.String(required=True)
+    name = graphene.String()
+    description = graphene.String()
 
 
 class CreateBoard(graphene.Mutation):
@@ -36,7 +36,7 @@ class CreateBoard(graphene.Mutation):
                 board_instance.save()
                 return CreateBoard(board=board_instance)
             else:
-                raise Exception('Please provide complete information!')
+                raise GraphQLError('Please provide complete information!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a board!')
 
@@ -61,7 +61,7 @@ class UpdateBoard(graphene.Mutation):
                     board_instance.save()
                     return CreateBoard(board=board_instance)
             except Board.DoesNotExist:
-                raise Exception('Board does not exist!')
+                raise GraphQLError('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to change a board!')
 
@@ -83,7 +83,7 @@ class DeleteBoard(graphene.Mutation):
                     board_instance.delete()
                     return DeleteBoard(ok=True)
             except Board.DoesNotExist:
-                raise Exception('Board does not exist!')
+                raise GraphQLError('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a board!')
 
@@ -95,9 +95,9 @@ class TopicType(DjangoObjectType):
 
 class TopicInput(graphene.InputObjectType):
     id = graphene.ID()
-    subject = graphene.String(required=True)
+    subject = graphene.String()
     last_updated = graphene.DateTime()
-    board = graphene.Int(required=True)
+    board = graphene.Int()
 
 
 class CreateTopic(graphene.Mutation):
@@ -109,7 +109,7 @@ class CreateTopic(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('boards.can_add_topic'):
-            if input.subject is not None:
+            if input.subject is not None and input.board is not None:
                 try:
                     get_board = Board.objects.get(pk=input.board)
                     if get_board:
@@ -117,9 +117,9 @@ class CreateTopic(graphene.Mutation):
                         topic_instance.save()
                         return CreateTopic(topic=topic_instance)
                 except Board.DoesNotExist:
-                    raise Exception('Board does not exist!')
+                    raise GraphQLError('Board does not exist!')
             else:
-                raise Exception('Please provide complete information!')
+                raise GraphQLError('Please provide complete information!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a topic!')
 
@@ -137,7 +137,7 @@ class UpdateTopic(graphene.Mutation):
             try:
                 topic_instance = Topic.objects.get(pk=topic_id)
             except Topic.DoesNotExist:
-                raise Exception('Topic does not exist!')
+                raise GraphQLError('Topic does not exist!')
 
             if topic_instance:
                 if input.subject:
@@ -146,7 +146,7 @@ class UpdateTopic(graphene.Mutation):
                 try:
                     topic_instance.board = Board.objects.get(pk=input.board)
                 except Board.DoesNotExist:
-                    raise Exception('Board does not exist!')
+                    raise GraphQLError('Board does not exist!')
                 topic_instance.save()
                 return CreateTopic(topic=topic_instance)
         else:
@@ -165,12 +165,12 @@ class DeleteTopic(graphene.Mutation):
     def mutate(self, info, topic_id):
         if info.context.user.has_perm('boards.can_delete_topic'):
             try:
-                topic_instance = Board.objects.get(pk=topic_id)
+                topic_instance = Topic.objects.get(pk=topic_id)
                 if topic_instance:
                     topic_instance.delete()
                     return DeleteTopic(ok=True)
             except Topic.DoesNotExist:
-                raise Exception('Topic does not exist!')
+                raise GraphQLError('Topic does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a topic!')
 
@@ -182,8 +182,8 @@ class PostType(DjangoObjectType):
 
 class PostInput(graphene.InputObjectType):
     id = graphene.ID()
-    message = graphene.String(required=True)
-    topic = graphene.Int(required=True)
+    message = graphene.String()
+    topic = graphene.Int()
 
 
 class CreatePost(graphene.Mutation):
@@ -205,9 +205,9 @@ class CreatePost(graphene.Mutation):
                         post_instance.save()
                         return CreatePost(post=post_instance)
                 except Topic.DoesNotExist:
-                    raise Exception('Topic does not exist!')
+                    raise GraphQLError('Topic does not exist!')
             else:
-                raise Exception('Please provide complete information!')
+                raise GraphQLError('Please provide complete information!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a post!')
 
@@ -227,14 +227,14 @@ class UpdatePost(graphene.Mutation):
                 post_instance = Post.objects.get(pk=post_id)
             except Post.DoesNotExist:
 
-                raise Exception('Post does not exist!')
+                raise GraphQLError('Post does not exist!')
             if post_instance:
                 if input.message:
                     post_instance.message = input.message
                 try:
                     post_instance.topic = Topic.objects.get(pk=input.topic)
                 except Topic.DoesNotExist:
-                    raise Exception('Topic does not exist!')
+                    raise GraphQLError('Topic does not exist!')
                 post_instance.updated_by = info.context.user
                 post_instance.updated_at = datetime.now()
                 post_instance.save()
@@ -258,7 +258,7 @@ class DeletePost(graphene.Mutation):
                     post_instance.delete()
                     return DeletePost(ok=True)
             except Post.DoesNotExist:
-                raise Exception('Post does not exist!')
+                raise GraphQLError('Post does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a post!')
 
@@ -280,7 +280,7 @@ class Query(graphene.ObjectType):
                 try:
                     return Board.objects.get(pk=ident)
                 except Board.DoesNotExist:
-                    raise Exception('Board does not exist!')
+                    raise GraphQLError('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
@@ -292,7 +292,7 @@ class Query(graphene.ObjectType):
                 try:
                     return Topic.objects.get(pk=ident)
                 except Topic.DoesNotExist:
-                    raise Exception('Topic does not exist!')
+                    raise GraphQLError('Topic does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
@@ -304,7 +304,7 @@ class Query(graphene.ObjectType):
                 try:
                     return Post.objects.get(pk=ident)
                 except Post.DoesNotExist:
-                    raise Exception('Post does not exist!')
+                    raise GraphQLError('Post does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the posts!')
 
@@ -314,7 +314,7 @@ class Query(graphene.ObjectType):
             try:
                 return Board.objects.all()
             except Board.DoesNotExist:
-                raise Exception('Board does not exist!')
+                raise GraphQLError('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
@@ -324,7 +324,7 @@ class Query(graphene.ObjectType):
             try:
                 return Topic.objects.all()
             except Topic.DoesNotExist:
-                raise Exception('Topic does not exist!')
+                raise GraphQLError('Topic does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
@@ -334,7 +334,7 @@ class Query(graphene.ObjectType):
             try:
                 return Post.objects.all()
             except Post.DoesNotExist:
-                raise Exception('Post does not exist!')
+                raise GraphQLError('Post does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the posts!')
 

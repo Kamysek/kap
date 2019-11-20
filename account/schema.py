@@ -2,10 +2,15 @@ import graphene
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from graphene_django import DjangoObjectType
+from graphql import GraphQLError
 from account.models import CustomUser
 from graphql_jwt.decorators import login_required
 from graphql_jwt.decorators import user_passes_test
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
+
+class UnauthorisedAccessError(GraphQLError):
+    def __init__(self, message, *args, **kwargs):
+        super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
 class UserType(DjangoObjectType):
@@ -28,16 +33,16 @@ class CreateUser(graphene.Mutation):
     user = graphene.Field(UserType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
-        user_instance = get_user_model()(
-            username=input.username,
-        )
-        user_instance.set_password(input.password)
-        user_instance.save()
-
-        return CreateUser(user=user_instance)
+        if info.context.user.has_perm('account.can_add_custom_user'):
+            user_instance = get_user_model()(
+                username=input.username,
+            )
+            user_instance.set_password(input.password)
+            user_instance.save()
+            return CreateUser(user=user_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a user!')
 
 
 class GroupType(DjangoObjectType):
@@ -56,16 +61,17 @@ class CreateGroup(graphene.Mutation):
     group = graphene.Field(GroupType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, input=None):
-        group_instance = Group.objects.get_or_create(name=input.name)
-        group_instance.save()
+        if info.context.user.has_perm('auth.can_add_group'):
+            group_instance = Group.objects.get_or_create(name=input.name)
+            group_instance.save()
 
-        return CreateGroup(group=group_instance)
+            return CreateGroup(group=group_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a group!')
 
 
-class AddToGroup(graphene.Mutation):
+class UpdateGroup(graphene.Mutation):
     group_str = graphene.String()
     user_id = graphene.Int()
 
@@ -74,23 +80,23 @@ class AddToGroup(graphene.Mutation):
         user_id = graphene.Int()
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def mutate(self, info, group_str, user_id):
+        if info.context.user.has_perm('auth.can_update_group'):
+            try:
+                user_instance = CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
 
-        try:
-            user_instance = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
-            raise Exception('User does not exist!')
+            try:
+                group_instance = Group.objects.get(name=group_str)
+            except Group.DoesNotExist:
+                raise GraphQLError('Group does not exist!')
 
-        try:
-            group_instance = Group.objects.get(name=group_str)
-        except Group.DoesNotExist:
-            raise Exception('Group does not exist!')
+            user_instance.groups.add(group_instance)
 
-        user_instance.groups.add(group_instance)
-
-        return AddToGroup(group_str=group_instance.name, user_id=user_instance.id)
+            return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to update a group!')
 
 
 class Query(graphene.AbstractType):
@@ -102,47 +108,69 @@ class Query(graphene.AbstractType):
     groups = graphene.List(GroupType)
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def resolve_me(self, info, **kwargs):
-        user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
-
-        return user
+        if info.context.user.has_perm('account.can_view_custom_user'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                user = info.context.user
+                if user.is_anonymous:
+                    raise GraphQLError('Not logged in!')
+                return user
+            else:
+                raise UnauthorisedAccessError(message='No permissions to view the user!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def resolve_user(self, info, **kwargs):
-        id = kwargs.get('id')
-
-        if id is not None:
-            return get_user_model().objects.get(pk=id)
+        if info.context.user.has_perm('account.can_view_custom_user'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                id = kwargs.get('id')
+                if id is not None:
+                    return get_user_model().objects.get(pk=id)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to view the user!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def resolve_users(self, info):
-        return get_user_model().objects.all()
+        if info.context.user.has_perm('account.can_view_custom_user'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                return get_user_model().objects.all()
+            else:
+                raise UnauthorisedAccessError(message='No permissions to view the user!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def resolve_group(self, info, **kwargs):
-        name = kwargs.get('name')
-
-        if name is not None:
-            return Group.objects.get(name=name)
+        if info.context.user.has_perm('auth.can_update_group'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                name = kwargs.get('name')
+                if name is not None:
+                    return Group.objects.get(name=name)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to view the group!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view a group!')
 
     @login_required
-    @user_passes_test(
-        lambda user: user.groups.filter(name='Doctor').exists() or user.groups.filter(name='Admin').exists())
     def resolve_groups(self, info, **kwargs):
-        return Group.objects.all()
+        if info.context.user.has_perm('auth.can_update_group'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                return Group.objects.all()
+            else:
+                raise UnauthorisedAccessError(message='No permissions to view the group!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view a group!')
 
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     create_group = CreateGroup.Field()
-    add_to_group = AddToGroup.Field()
+    add_to_group = UpdateGroup.Field()
