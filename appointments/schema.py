@@ -81,31 +81,39 @@ class AppointmentType(DjangoObjectType):
         model = Appointment
 
 
+class AppointmentInput(graphene.InputObjectType):
+    id = graphene.ID()
+    title = graphene.String()
+    comment_doctor = graphene.String()
+    calendar = graphene.Int()
+    appointment_start = graphene.DateTime()
+    appointment_end = graphene.DateTime()
+
+
 class CreateAppointment(graphene.Mutation):
     class Arguments:
-        title = graphene.String(required=True)
-        comment_doctor = graphene.String(required=True)
-        calendar_id = graphene.Int(required=True)
-        appointment_start = graphene.DateTime(required=True)
-        appointment_end = graphene.DateTime(required=True)
+        input = AppointmentInput(required=True)
 
     appointment = graphene.Field(AppointmentType)
 
     @login_required
-    def mutate(self, info, title, comment_doctor, calendar_id, appointment_start, appointment_end):
+    def mutate(self, info, input=None):
         if info.context.user.has_perm('appointments.can_add_appointment'):
-            try:
-                get_calendar = Calendar.objects.get(pk=calendar_id)
-                if get_calendar:
-                    appointment_instance = Appointment(title=title, comment_doctor=comment_doctor,
-                                                       calendar=get_calendar, patient=None,
-                                                       created_At=datetime.now(),
-                                                       appointment_start=appointment_start,
-                                                       appointment_end=appointment_end, taken=False)
-                    appointment_instance.save()
-                    return CreateAppointment(appointment=appointment_instance)
-            except Calendar.DoesNotExist:
-                raise Exception('Calendar does not exist!')
+            if input.title is not None and input.comment_doctor is not None and input.calendar is not None and input.appointment_start is not None and input.appointment_end is not None and info.context.user is not None:
+                try:
+                    get_calendar = Calendar.objects.get(pk=input.calendar)
+                    if get_calendar:
+                        appointment_instance = Appointment(title=input.title, comment_doctor=input.comment,
+                                                           calendar=get_calendar, patient=None,
+                                                           created_At=datetime.now(),
+                                                           appointment_start=input.appointment_start,
+                                                           appointment_end=input.appointment_end, taken=False)
+                        appointment_instance.save()
+                        return CreateAppointment(appointment=appointment_instance)
+                except Calendar.DoesNotExist:
+                    raise Exception('Calendar does not exist!')
+            else:
+                raise Exception('Please provide complete information!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
@@ -113,39 +121,31 @@ class CreateAppointment(graphene.Mutation):
 class UpdateAppointment(graphene.Mutation):
     class Arguments:
         appointment_id = graphene.Int(required=True)
-        title = graphene.String()
-        comment_doctor = graphene.String()
-        comment_patient = graphene.String()
-        calendar_id = graphene.Int()
-        appointment_start = graphene.DateTime()
-        appointment_end = graphene.DateTime()
+        input = AppointmentInput(required=True)
 
     appointment = graphene.Field(AppointmentType)
 
     @login_required
-    def mutate(self, info, appointment_id, title=None, comment_doctor=None, comment_patient=None, calendar_id=None,
-               appointment_start=None, appointment_end=None):
+    def mutate(self, info, appointment_id, input=None):
         if info.context.user.has_perm('appointments.can_change_appointment'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance:
-                    if title:
-                        appointment_instance.title = title
-                    if comment_doctor:
-                        appointment_instance.comment_doctor = comment_doctor
-                    if comment_patient:
-                        appointment_instance.comment_patient = comment_patient
-                    if calendar_id:
+                    if input.title:
+                        appointment_instance.title = input.title
+                    if input.comment_doctor:
+                        appointment_instance.comment_doctor = input.comment_doctor
+                    if input.calendar:
                         try:
-                            get_calendar = Calendar.objects.get(pk=calendar_id)
+                            get_calendar = Calendar.objects.get(pk=input.calendar)
                             if get_calendar:
                                 appointment_instance.calendar = get_calendar
                         except Calendar.DoesNotExist:
                             raise Exception('Calendar does not exist!')
-                    if appointment_start:
-                        appointment_instance.appointment_start = appointment_start
-                    if appointment_end:
-                        appointment_instance.appointment_end = appointment_end
+                    if input.appointment_start:
+                        appointment_instance.appointment_start = input.appointment_start
+                    if input.appointment_end:
+                        appointment_instance.appointment_end = input.appointment_end
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
             except Appointment.DoesNotExist:
