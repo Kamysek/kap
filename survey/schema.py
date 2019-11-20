@@ -123,7 +123,7 @@ class CreateQuestion(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('survey.can_add_question'):
-            if input.question_text is not None and input.question_type is not None and info.context.user is not None:
+            if input.question_text is not None and input.question_type is not None and input.survey is not None and info.context.user is not None:
                 try:
                     get_survey = Survey.objects.get(pk=input.survey)
                     question_instance = Question(question_text=input.question_text, created_on=datetime.now(),
@@ -777,4 +777,3 @@ class Mutation(graphene.ObjectType):
     delete_text_answer = DeleteTextAnswer.Field()
     delete_choice_answer = DeleteChoiceAnswer.Field()
     delete_number_answer = DeleteNumberAnswer.Field()
-
