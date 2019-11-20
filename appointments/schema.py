@@ -6,6 +6,18 @@ from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
 
 
+def isAppointmentFree(newAppointment,allAppointments):
+    for existingAppointment in allAppointments:
+        if (
+                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end):
+            # Invalid Appointment time
+            return False
+        else:
+            return True
+
+
 class UnauthorisedAccessError(GraphQLError):
     def __init__(self, message, *args, **kwargs):
         super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
@@ -108,6 +120,8 @@ class CreateAppointment(graphene.Mutation):
                                                            created_At=datetime.now(),
                                                            appointment_start=input.appointment_start,
                                                            appointment_end=input.appointment_end, taken=False)
+                        if not isAppointmentFree(appointment_instance,Appointment.objects.all()):
+                            raise Exception("Timeslot is not available")
                         appointment_instance.save()
                         return CreateAppointment(appointment=appointment_instance)
                 except Calendar.DoesNotExist:
@@ -146,6 +160,9 @@ class UpdateAppointment(graphene.Mutation):
                         appointment_instance.appointment_start = input.appointment_start
                     if input.appointment_end:
                         appointment_instance.appointment_end = input.appointment_end
+
+                    if not isAppointmentFree(appointment_instance,Appointment.objects.all().filter(calendar__appointment__patient_id__in=appointment_id)):
+                        raise Exception("Invalid Time selected")
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
             except Appointment.DoesNotExist:
