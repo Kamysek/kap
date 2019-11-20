@@ -36,6 +36,7 @@ class Query(graphene.ObjectType):
             remove_sensitive_data(info.context.user, queryset)
             return queryset
 
+#TODO make Update and Delete Mutations
 
 class CreateAppointment(graphene.Mutation):
     id = graphene.Int()

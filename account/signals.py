@@ -3,8 +3,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, post_migrate
 from django.dispatch import receiver
 from account.models import CustomUser
-from boards.models import *
-
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -32,4 +30,9 @@ def init_groups(sender, **kwargs):
     group, created = Group.objects.get_or_create(name='Admin')
     if created:
         # all permissions
+        appointment_ct = ContentType.objects.get(app_label='appointments', model='Appointment')
+
+        can_view = Permission(name='Full Access', codename='full_access',
+                              content_type=appointment_ct)
+        group.permissions.add(can_view)
         group.save()
