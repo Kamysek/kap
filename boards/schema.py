@@ -1,7 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
-from boards.models import Board, Topic, Post
+from boards.models import *
 from datetime import datetime
 from graphql_jwt.decorators import login_required
 

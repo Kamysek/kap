@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'boards.apps.BoardsConfig',
     'account.apps.AccountConfig',
     'appointments.apps.AppointmentsConfig',
+    'survey.apps.SurveyConfig',
 ]
 
 MIDDLEWARE = [
