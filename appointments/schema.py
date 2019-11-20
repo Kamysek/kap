@@ -16,7 +16,10 @@ def isAppointmentFree(newAppointment,allAppointments):
             return False
         else:
             return True
-
+def checkAppointmentFormat(newAppointment):
+    print(str(newAppointment.appointment_end - newAppointment.appointment_start))
+    if (newAppointment.appointment_end - newAppointment.appointment_start).total_seconds() < 300:
+        raise Exception("Appointment too short ( < 5 min)")
 
 class UnauthorisedAccessError(GraphQLError):
     def __init__(self, message, *args, **kwargs):
@@ -36,7 +39,7 @@ class CreateCalendar(graphene.Mutation):
 
     @login_required
     def mutate(self, info, name):
-        if info.context.user.has_perm('appointments.can_add_calendar'):
+        if info.context.user.has_perm('can_add_calendar'):
             calendar_instance = Calendar(name=name, doctor=info.context.user)
             calendar_instance.save()
             return CreateCalendar(calendar=calendar_instance)
@@ -53,7 +56,7 @@ class UpdateCalendar(graphene.Mutation):
 
     @login_required
     def mutate(self, info, calendar_id, name):
-        if info.context.user.has_perm('appointments.can_change_calendar'):
+        if info.context.user.has_perm('can_change_calendar'):
             try:
                 calendar_instance = Calendar.objects.get(pk=calendar_id)
                 if calendar_instance:
@@ -76,7 +79,7 @@ class DeleteCalendar(graphene.Mutation):
 
     @login_required
     def mutate(self, info, calendar_id):
-        if info.context.user.has_perm('appointments.can_delete_calendar'):
+        if info.context.user.has_perm('can_delete_calendar'):
             try:
                 calendar_instance = Calendar.objects.get(pk=calendar_id)
                 if calendar_instance:
@@ -110,16 +113,16 @@ class CreateAppointment(graphene.Mutation):
 
     @login_required
     def mutate(self, info, input=None):
-        if info.context.user.has_perm('appointments.can_add_appointment'):
+        if info.context.user.has_perm('can_add_appointment'):
             if input.title is not None and input.comment_doctor is not None and input.calendar is not None and input.appointment_start is not None and input.appointment_end is not None and info.context.user is not None:
                 try:
                     get_calendar = Calendar.objects.get(pk=input.calendar)
                     if get_calendar:
-                        appointment_instance = Appointment(title=input.title, comment_doctor=input.comment,
+                        appointment_instance = Appointment(title=input.title, comment_doctor=input.comment_doctor,
                                                            calendar=get_calendar, patient=None,
-                                                           created_At=datetime.now(),
                                                            appointment_start=input.appointment_start,
                                                            appointment_end=input.appointment_end, taken=False)
+                        checkAppointmentFormat(appointment_instance)
                         if not isAppointmentFree(appointment_instance,Appointment.objects.all()):
                             raise Exception("Timeslot is not available")
                         appointment_instance.save()
@@ -141,7 +144,7 @@ class UpdateAppointment(graphene.Mutation):
 
     @login_required
     def mutate(self, info, appointment_id, input=None):
-        if info.context.user.has_perm('appointments.can_change_appointment'):
+        if info.context.user.has_perm('can_change_appointment'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance:
@@ -181,7 +184,7 @@ class DeleteAppointment(graphene.Mutation):
 
     @login_required
     def mutate(self, info, appointment_id):
-        if info.context.user.has_perm('appointments.can_delete_appointment'):
+        if info.context.user.has_perm('can_delete_appointment'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance:
@@ -202,7 +205,7 @@ class CreateAppointmentPatient(graphene.Mutation):
 
     @login_required
     def mutate(self, info, appointment_id, comment_patient):
-        if info.context.user.has_perm('appointments.can_add_appointment_patient'):
+        if info.context.user.has_perm('can_add_appointment_patient'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance and not appointment_instance.taken:
@@ -228,7 +231,7 @@ class UpdateAppointmentPatient(graphene.Mutation):
 
     @login_required
     def mutate(self, info, appointment_id, comment_patient):
-        if info.context.user.has_perm('appointments.can_change_appointment_patient'):
+        if info.context.user.has_perm('can_change_appointment_patient'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance.patient == info.context.user:
@@ -254,7 +257,7 @@ class DeleteAppointmentPatient(graphene.Mutation):
 
     @login_required
     def mutate(self, info, appointment_id):
-        if info.context.user.has_perm('appointments.can_delete_appointment_patient'):
+        if info.context.user.has_perm('can_delete_appointment_patient'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance.patient == info.context.user:
@@ -278,7 +281,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def my_calendars(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_calendar'):
+        if info.context.user.has_perm('can_view_calendar'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
                 return Calendar.objects.fiter(doctor=info.context.user)
@@ -289,14 +292,14 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_all_calendars(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_calendar'):
+        if info.context.user.has_perm('can_view_calendar'):
             return Calendar.objects.all()
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
 
     @login_required
     def resolve_all_appointments_doctor(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_appointment'):
+        if info.context.user.has_perm('can_view_appointment'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
                 my_calendars = self.my_calendars()
@@ -311,7 +314,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_one_calendar_appointments_doctor(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_appointment'):
+        if info.context.user.has_perm('can_view_appointment'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
                 ident = kwargs.get('ident')
@@ -327,7 +330,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_appointments_patient(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_appointment_patient'):
+        if info.context.user.has_perm('can_view_appointment_patient'):
             try:
                 return Appointment.objects.get(patient=info.context.user)
             except Calendar.DoesNotExist:
