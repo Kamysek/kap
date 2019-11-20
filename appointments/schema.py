@@ -8,10 +8,10 @@ from .models import Appointment, Calendar
 
 def isAppointmentFree(newAppointment,allAppointments):
     for existingAppointment in allAppointments:
-        if (
+        if newAppointment.calendar == existingAppointment.calendar and ((
                 newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
                 newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end):
+                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
         else:
