@@ -73,7 +73,7 @@ class DeleteCalendar(graphene.Mutation):
 
     @login_required
     def mutate(self, info, calendar_id):
-        if info.context.user.has_perm('boards.can_delete_board'):
+        if info.context.user.has_perm('appointments.can_delete_calendar'):
             try:
                 calendar_instance = Calendar.objects.get(pk=calendar_id)
                 if calendar_instance:
@@ -125,8 +125,6 @@ class CreateAppointment(graphene.Mutation):
                 raise Exception('Please provide complete information!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
-
-#TODO make Update and Delete Mutations
 
 class UpdateAppointment(graphene.Mutation):
     class Arguments:
