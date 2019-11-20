@@ -66,6 +66,28 @@ class UpdateBoard(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to change a board!')
 
 
+class DeleteBoard(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    class Arguments:
+        board_id = graphene.Int(required=True)
+
+    board = graphene.Field(BoardType)
+
+    @login_required
+    def mutate(self, info, board_id):
+        if info.context.user.has_perm('boards.can_delete_board'):
+            try:
+                board_instance = Board.objects.get(id=board_id)
+                if board_instance:
+                    board_instance.delete()
+                    return DeleteBoard(ok=True)
+            except Board.DoesNotExist:
+                raise Exception('Board does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to delete a board!')
+
+
 class TopicType(DjangoObjectType):
     class Meta:
         model = Topic
@@ -89,7 +111,7 @@ class CreateTopic(graphene.Mutation):
         if info.context.user.has_perm('boards.can_add_topic'):
             if input.subject is not None:
                 try:
-                    get_board = Board.objects.get(id=input.board)
+                    get_board = Board.objects.get(pk=input.board)
                     if get_board:
                         topic_instance = Topic(subject=input.subject, last_updated=datetime.now(), board=get_board, creator=info.context.user)
                         topic_instance.save()
@@ -113,7 +135,7 @@ class UpdateTopic(graphene.Mutation):
     def mutate(self, info, topic_id, input=None):
         if info.context.user.has_perm('boards.can_change_topic'):
             try:
-                topic_instance = Topic.objects.get(id=topic_id)
+                topic_instance = Topic.objects.get(pk=topic_id)
             except Topic.DoesNotExist:
                 raise Exception('Topic does not exist!')
 
@@ -122,13 +144,35 @@ class UpdateTopic(graphene.Mutation):
                     topic_instance.subject = input.subject
                 topic_instance.last_updated = datetime.now()
                 try:
-                    topic_instance.board = Board.objects.get(id=input.board)
+                    topic_instance.board = Board.objects.get(pk=input.board)
                 except Board.DoesNotExist:
                     raise Exception('Board does not exist!')
                 topic_instance.save()
                 return CreateTopic(topic=topic_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to update a topic!')
+
+
+class DeleteTopic(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    class Arguments:
+        topic_id = graphene.Int(required=True)
+
+    topic = graphene.Field(TopicType)
+
+    @login_required
+    def mutate(self, info, topic_id):
+        if info.context.user.has_perm('boards.can_delete_topic'):
+            try:
+                topic_instance = Board.objects.get(id=topic_id)
+                if topic_instance:
+                    topic_instance.delete()
+                    return DeleteTopic(ok=True)
+            except Topic.DoesNotExist:
+                raise Exception('Topic does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to delete a topic!')
 
 
 class PostType(DjangoObjectType):
@@ -153,7 +197,7 @@ class CreatePost(graphene.Mutation):
         if info.context.user.has_perm('boards.can_add_post'):
             if input.message is not None and input.topic is not None:
                 try:
-                    get_topic = Topic.objects.get(id=input.topic)
+                    get_topic = Topic.objects.get(pk=input.topic)
                     if get_topic:
                         post_instance = Post(message=input.message, topic=get_topic, created_by=info.context.user,
                                              updated_by=info.context.user, created_at=datetime.now(),
@@ -180,7 +224,7 @@ class UpdatePost(graphene.Mutation):
 
         if info.context.user.has_perm('boards.can_change_post'):
             try:
-                post_instance = Post.objects.get(id=post_id)
+                post_instance = Post.objects.get(pk=post_id)
             except Post.DoesNotExist:
 
                 raise Exception('Post does not exist!')
@@ -188,7 +232,7 @@ class UpdatePost(graphene.Mutation):
                 if input.message:
                     post_instance.message = input.message
                 try:
-                    post_instance.topic = Topic.objects.get(id=input.topic)
+                    post_instance.topic = Topic.objects.get(pk=input.topic)
                 except Topic.DoesNotExist:
                     raise Exception('Topic does not exist!')
                 post_instance.updated_by = info.context.user
@@ -197,49 +241,75 @@ class UpdatePost(graphene.Mutation):
                 return CreatePost(post=post_instance)
 
 
+class DeletePost(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    class Arguments:
+        post_id = graphene.Int(required=True)
+
+    post = graphene.Field(TopicType)
+
+    @login_required
+    def mutate(self, info, post_id):
+        if info.context.user.has_perm('boards.can_delete_post'):
+            try:
+                post_instance = Post.objects.get(id=post_id)
+                if post_instance:
+                    post_instance.delete()
+                    return DeletePost(ok=True)
+            except Post.DoesNotExist:
+                raise Exception('Post does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to delete a post!')
+
+
 class Query(graphene.ObjectType):
-    board = graphene.Field(BoardType, id=graphene.Int())
-    topic = graphene.Field(TopicType, id=graphene.Int())
-    post = graphene.Field(PostType, id=graphene.Int())
+    board = graphene.Field(BoardType, ident=graphene.Int())
+    topic = graphene.Field(TopicType, ident=graphene.Int())
+    post = graphene.Field(PostType, ident=graphene.Int())
 
     all_boards = graphene.List(BoardType)
     all_topics = graphene.List(TopicType)
     all_posts = graphene.List(PostType)
 
+    @login_required
     def resolve_board(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_board'):
-            id = kwargs.get('id')
-            if id is not None:
+            ident = kwargs.get('ident')
+            if ident is not None:
                 try:
-                    return Board.objects.get(id=id)
+                    return Board.objects.get(pk=ident)
                 except Board.DoesNotExist:
                     raise Exception('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
+    @login_required
     def resolve_topic(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_topic'):
-            id = kwargs.get('id')
-            if id is not None:
+            ident = kwargs.get('ident')
+            if ident is not None:
                 try:
-                    return Topic.objects.get(id=id)
+                    return Topic.objects.get(pk=ident)
                 except Topic.DoesNotExist:
                     raise Exception('Topic does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
+    @login_required
     def resolve_post(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_post'):
-            id = kwargs.get('id')
-            if id is not None:
+            ident = kwargs.get('ident')
+            if ident is not None:
                 try:
-                    return Post.objects.get(id=id)
+                    return Post.objects.get(pk=ident)
                 except Post.DoesNotExist:
                     raise Exception('Post does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the posts!')
 
-    def resolve_all_boards(self, info, **kwargs):
+    @login_required
+    def resolve_all_boards(self, info):
         if info.context.user.has_perm('boards.can_view_board'):
             try:
                 return Board.objects.all()
@@ -248,7 +318,8 @@ class Query(graphene.ObjectType):
         else:
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
-    def resolve_all_topics(self, info, **kwargs):
+    @login_required
+    def resolve_all_topics(self, info):
         if info.context.user.has_perm('boards.can_view_topic'):
             try:
                 return Topic.objects.all()
@@ -257,7 +328,8 @@ class Query(graphene.ObjectType):
         else:
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
-    def resolve_all_posts(self, info, **kwargs):
+    @login_required
+    def resolve_all_posts(self, info):
         if info.context.user.has_perm('boards.can_view_post'):
             try:
                 return Post.objects.all()
@@ -275,3 +347,7 @@ class Mutation(graphene.ObjectType):
     update_board = UpdateBoard.Field()
     update_topic = UpdateTopic.Field()
     update_post = UpdatePost.Field()
+
+    delete_board = DeleteBoard.Field()
+    delete_topic = DeleteTopic.Field()
+    delete_post = DeletePost.Field()
