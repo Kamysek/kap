@@ -1,18 +1,8 @@
-"""
-def set_permissions():
-    # all permissions
-    print("todo")
-    group = Group.objects.get(name="Admin")
-    somemodel_ct = ContentType.objects.get_for_model(Appointment)
-    full_access = Permission(name='full access', codename='full_access', content_type=somemodel_ct)
-    full_access.save()
-    group.permissions.add(full_access)
-"""
 # backend/management/commands/initgroups.py
 from django.core.management import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from appointments.models import Appointment
-from boards.models import Board,Post,Topic
+from boards.models import Board, Post, Topic
 
 GROUPS_PERMISSIONS = {
     'Admin': {
@@ -21,13 +11,13 @@ GROUPS_PERMISSIONS = {
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
     },
-    'Doctor':{
+    'Doctor': {
         Appointment: ['add', 'change', 'delete', 'view'],
         Board: ['add', 'change', 'delete', 'view'],
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
     },
-    'Patient':{
+    'Patient': {
         Appointment: ['view'],
         Board: ['view'],
         Post: ['view'],
