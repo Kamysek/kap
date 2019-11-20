@@ -52,7 +52,7 @@ class UpdateBoard(graphene.Mutation):
     def mutate(self, info, board_id, input=None):
         if info.context.user.has_perm('boards.can_change_board'):
             try:
-                board_instance = Board.objects.get(id=board_id)
+                board_instance = Board.objects.get(pk=board_id)
                 if board_instance:
                     if input.name:
                         board_instance.name = input.name
@@ -78,7 +78,7 @@ class DeleteBoard(graphene.Mutation):
     def mutate(self, info, board_id):
         if info.context.user.has_perm('boards.can_delete_board'):
             try:
-                board_instance = Board.objects.get(id=board_id)
+                board_instance = Board.objects.get(pk=board_id)
                 if board_instance:
                     board_instance.delete()
                     return DeleteBoard(ok=True)
@@ -165,7 +165,7 @@ class DeleteTopic(graphene.Mutation):
     def mutate(self, info, topic_id):
         if info.context.user.has_perm('boards.can_delete_topic'):
             try:
-                topic_instance = Board.objects.get(id=topic_id)
+                topic_instance = Board.objects.get(pk=topic_id)
                 if topic_instance:
                     topic_instance.delete()
                     return DeleteTopic(ok=True)
@@ -253,7 +253,7 @@ class DeletePost(graphene.Mutation):
     def mutate(self, info, post_id):
         if info.context.user.has_perm('boards.can_delete_post'):
             try:
-                post_instance = Post.objects.get(id=post_id)
+                post_instance = Post.objects.get(pk=post_id)
                 if post_instance:
                     post_instance.delete()
                     return DeletePost(ok=True)
