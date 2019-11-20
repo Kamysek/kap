@@ -30,9 +30,8 @@ def init_groups(sender, **kwargs):
     group, created = Group.objects.get_or_create(name='Admin')
     if created:
         # all permissions
-        appointment_ct = ContentType.objects.get(app_label='appointments', model='Appointment')
+        #appointment_ct = ContentType.objects.get(app_label='appointments', model='Appointment')
 
-        can_view = Permission(name='Full Access', codename='full_access',
-                              content_type=appointment_ct)
-        group.permissions.add(can_view)
+        #can_view = Permission(name='Full Access', codename='full_access',content_type=appointment_ct)
+        #group.permissions.add(can_view)
         group.save()
