@@ -1,7 +1,7 @@
 # backend/management/commands/initgroups.py
 from django.core.management import BaseCommand
 from django.contrib.auth.models import Group, Permission
-from appointments.models import Appointment
+from appointments.models import Appointment, Calendar
 from boards.models import Board, Post, Topic
 
 GROUPS_PERMISSIONS = {
@@ -10,18 +10,21 @@ GROUPS_PERMISSIONS = {
         Board: ['add', 'change', 'delete', 'view'],
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
+        Calendar: ['add', 'change', 'delete', 'view'],
     },
     'Doctor': {
         Appointment: ['add', 'change', 'delete', 'view'],
         Board: ['add', 'change', 'delete', 'view'],
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
+        Calendar: ['add', 'change', 'delete', 'view'],
     },
     'Patient': {
         Appointment: ['view'],
         Board: ['view'],
         Post: ['view'],
         Topic: ['view'],
+        Calendar: ['view'],
     },
 }
 
