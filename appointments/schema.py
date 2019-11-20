@@ -1,9 +1,33 @@
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
-from datetime import datetime
 from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
+
+"""
+    title = models.CharField(max_length=50, null=True)
+    comment_doctor = models.TextField(max_length=200, null=False, blank=True)
+    comment_patient = models.TextField(max_length=200, null=False, blank=True)
+    calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
+    patient = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    appointment_start = models.DateTimeField()
+    appointment_end = models.DateTimeField()
+    taken = models.BooleanField(default=False)
+def remove_sensitive_appointment(user, appointment):
+    if user != appointment.patient:
+        appointment.patient = None
+        appointment.title = None
+        appointment.comment_doctor = None
+        appointment.comment_patient = None
+        appointment.files = None
+        appointment.created_at = None
+        appointment.id = 0
+
+def remove_sensitive_data(user, queryset):
+    for appointment in queryset:
+        remove_sensitive_appointment(user, appointment)
+"""
 
 
 def isAppointmentFree(newAppointment,allAppointments):
@@ -18,7 +42,7 @@ def isAppointmentFree(newAppointment,allAppointments):
             return True
 def checkAppointmentFormat(newAppointment):
     print(str(newAppointment.appointment_end - newAppointment.appointment_start))
-    if (newAppointment.appointment_end - newAppointment.appointment_start).total_seconds() < 300:
+    if (newAppointment.appointment_end - newAppointment.appointment_start).total_seconds() < 250:
         raise Exception("Appointment too short ( < 5 min)")
 
 class UnauthorisedAccessError(GraphQLError):
@@ -282,11 +306,7 @@ class Query(graphene.ObjectType):
     @login_required
     def my_calendars(self, info, **kwargs):
         if info.context.user.has_perm('can_view_calendar'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
                 return Calendar.objects.fiter(doctor=info.context.user)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the calendars!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
 
