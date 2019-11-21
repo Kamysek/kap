@@ -1,8 +1,11 @@
+import django_filters
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
+from django.contrib.auth import get_user_model
+
 
 """
     title = models.CharField(max_length=50, null=True)
@@ -56,7 +59,6 @@ class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
 
-
 class CalendarInput(graphene.InputObjectType):
     id = graphene.ID()
     name = graphene.String(required=True)
@@ -71,7 +73,7 @@ class CreateCalendar(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('appointments.can_add_calendar'):
-            calendar_instance = Calendar(name=input.name, doctor=info.context.user)
+            calendar_instance = Calendar(name=input.name, doctor=info.context.user.id)
             calendar_instance.save()
             return CreateCalendar(calendar=calendar_instance)
         else:
@@ -241,7 +243,7 @@ class CreateAppointmentPatient(graphene.Mutation):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance and not appointment_instance.taken:
-                    appointment_instance.patient = info.context.user
+                    appointment_instance.patient = info.context.user.id
                     appointment_instance.comment_patient = comment_patient
                     appointment_instance.taken = True
                     appointment_instance.save()
@@ -292,7 +294,7 @@ class DeleteAppointmentPatient(graphene.Mutation):
         if info.context.user.has_perm('appointments.can_delete_appointment_patient'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
-                if appointment_instance.patient == info.context.user:
+                if appointment_instance.patient == info.context.user.id:
                     appointment_instance.patient = None
                     appointment_instance.taken = False
                     return DeleteAppointmentPatient(ok=True)
@@ -314,6 +316,7 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_my_calendars(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
+            #f = Calendar.objects.filter(filter_fields=["doctor"])
             return Calendar.objects.filter(doctor=info.context.user)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
