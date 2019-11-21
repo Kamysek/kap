@@ -38,8 +38,7 @@ def isAppointmentFree(newAppointment, allAppointments):
                                                                                 newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
-        else:
-            return True
+    return True
 
 
 def checkAppointmentFormat(newAppointment):
@@ -195,8 +194,7 @@ class UpdateAppointment(graphene.Mutation):
                         appointment_instance.appointment_end = input.appointment_end
 
 
-                    if not isAppointmentFree(appointment_instance, Appointment.objects.all().filter(
-                        calendar__appointment__patient_id__in=appointment_id)):
+                    if not isAppointmentFree(appointment_instance, Appointment.objects.all().exclude(calendar__appointment__id=1)):
                         raise GraphQLError("Invalid Time selected")
 
 
