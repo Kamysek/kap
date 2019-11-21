@@ -5,7 +5,6 @@ from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from account.models import CustomUser
 from graphql_jwt.decorators import login_required
-from graphql_jwt.decorators import user_passes_test
 
 
 class UnauthorisedAccessError(GraphQLError):
@@ -35,14 +34,71 @@ class CreateUser(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('account.can_add_custom_user'):
-            user_instance = get_user_model()(
-                username=input.username,
-            )
-            user_instance.set_password(input.password)
-            user_instance.save()
-            return CreateUser(user=user_instance)
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                user_instance = get_user_model()(
+                    username=input.username,
+                )
+                user_instance.set_password(input.password)
+                user_instance.save()
+                return CreateUser(user=user_instance)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to create user!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a user!')
+
+
+class UpdateUser(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int(required=True)
+        input = UserInput(required=True)
+
+    user = graphene.Field(UserType)
+
+    @login_required
+    def mutate(self, info, user_id, input=None):
+        if info.context.user.has_perm('account.can_change_custom_user'):
+            try:
+                user_instance = CustomUser.objects.get(pk=user_id)
+                if user_instance:
+                    if input.password:
+                        user_instance.password = input.password
+                    if input.is_staff:
+                        user_instance.is_staff = input.is_staff
+                    if input.is_active:
+                        user_instance.is_active = input.is_active
+                    user_instance.save()
+                    return UpdateUser(user=user_instance)
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to change a user!')
+
+
+class DeleteUser(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    class Arguments:
+        user_id = graphene.Int(required=True)
+
+    user = graphene.Field(UserType)
+
+    @login_required
+    def mutate(self, info, user_id):
+        if info.context.user.has_perm('account.can_delete_custom_user'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
+                    name='Admin').exists():
+                try:
+                    user_instance = CustomUser.objects.get(pk=user_id)
+                    if user_instance:
+                        user_instance.delete()
+                        return DeleteUser(ok=True)
+                except CustomUser.DoesNotExist:
+                    raise GraphQLError('User does not exist!')
+            else:
+                raise UnauthorisedAccessError(message='No permissions to delete user!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to delete a user!')
 
 
 class GroupType(DjangoObjectType):
@@ -63,10 +119,13 @@ class CreateGroup(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('auth.can_add_group'):
-            group_instance = Group.objects.get_or_create(name=input.name)
-            group_instance.save()
+            if info.context.user.groups.filter(name='Admin').exists():
+                group_instance = Group.objects.get_or_create(name=input.name)
+                group_instance.save()
 
-            return CreateGroup(group=group_instance)
+                return CreateGroup(group=group_instance)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to create the group!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a group!')
 
@@ -82,19 +141,22 @@ class UpdateGroup(graphene.Mutation):
     @login_required
     def mutate(self, info, group_str, user_id):
         if info.context.user.has_perm('auth.can_update_group'):
-            try:
-                user_instance = CustomUser.objects.get(id=user_id)
-            except CustomUser.DoesNotExist:
-                raise GraphQLError('User does not exist!')
+            if info.context.user.groups.filter(name='Admin').exists():
+                try:
+                    user_instance = CustomUser.objects.get(id=user_id)
+                except CustomUser.DoesNotExist:
+                    raise GraphQLError('User does not exist!')
 
-            try:
-                group_instance = Group.objects.get(name=group_str)
-            except Group.DoesNotExist:
-                raise GraphQLError('Group does not exist!')
+                try:
+                    group_instance = Group.objects.get(name=group_str)
+                except Group.DoesNotExist:
+                    raise GraphQLError('Group does not exist!')
 
-            user_instance.groups.add(group_instance)
+                user_instance.groups.add(group_instance)
 
-            return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
+                return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to update the group!')
         else:
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
