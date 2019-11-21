@@ -144,7 +144,6 @@ class UpdateQuestion(graphene.Mutation):
     class Arguments:
         question_id = graphene.Int(required=True)
         input = QuestionInput(required=True)
-
     question = graphene.Field(QuestionType)
 
     @login_required
@@ -176,7 +175,6 @@ class DeleteQuestion(graphene.Mutation):
 
     class Arguments:
         question_id = graphene.Int(required=True)
-
     question = graphene.Field(QuestionType)
 
     @login_required
@@ -200,14 +198,13 @@ class ChoiceType(DjangoObjectType):
 
 class ChoiceInput(graphene.InputObjectType):
     id = graphene.ID()
-    choice_text = graphene.String(required=True)
-    question = graphene.Int(required=True)
+    choice_text = graphene.String()
+    question = graphene.Int()
 
 
 class CreateChoice(graphene.Mutation):
     class Arguments:
         input = ChoiceInput(required=True)
-
     choice = graphene.Field(ChoiceType)
 
     @login_required
@@ -234,7 +231,6 @@ class UpdateChoice(graphene.Mutation):
     class Arguments:
         choice_id = graphene.Int(required=True)
         input = ChoiceInput(required=True)
-
     choice = graphene.Field(ChoiceType)
 
     @login_required
@@ -288,8 +284,8 @@ class TextAnswerType(DjangoObjectType):
 
 class TextAnswerInput(graphene.InputObjectType):
     id = graphene.ID()
-    text_answer = graphene.String(required=True)
-    question = graphene.Int(required=True)
+    text_answer = graphene.String()
+    question = graphene.Int()
 
 
 class CreateTextAnswer(graphene.Mutation):
@@ -376,8 +372,8 @@ class NumberAnswerType(DjangoObjectType):
 
 class NumberAnswerInput(graphene.InputObjectType):
     id = graphene.ID()
-    number_answer = graphene.String(required=True)
-    question = graphene.Int(required=True)
+    number_answer = graphene.String()
+    question = graphene.Int()
 
 
 class CreateNumberAnswer(graphene.Mutation):
