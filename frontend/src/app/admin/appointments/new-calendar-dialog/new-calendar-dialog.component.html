@@ -1,0 +1,12 @@
+<h1 mat-dialog-title>Create new Calendar</h1>
+<mat-dialog-content>
+  <form fxLayout="column" [formGroup]="calendarForm">
+    <mat-form-field>
+      <input matInput type="text" placeholder="name" formControlName="name">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-flat-button color="primary" [disabled]="calendarForm.invalid" [mat-dialog-close]="calendarForm.value">Save</button>
+  <button mat-stroked-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
