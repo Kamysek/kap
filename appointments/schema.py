@@ -296,6 +296,7 @@ class DeleteAppointmentPatient(graphene.Mutation):
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance.patient == info.context.user.id:
                     appointment_instance.patient = None
+                    appointment_instance.comment_patient = ""
                     appointment_instance.taken = False
                     appointment_instance.save()
                     return DeleteAppointmentPatient(ok=True)
