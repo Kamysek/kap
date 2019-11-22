@@ -8,9 +8,8 @@ describe('NewCalendarDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NewCalendarDialogComponent ]
-    })
-    .compileComponents();
+      declarations: [NewCalendarDialogComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

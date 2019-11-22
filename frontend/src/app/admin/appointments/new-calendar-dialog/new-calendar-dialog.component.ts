@@ -1,5 +1,5 @@
-import {Component, OnInit} from '@angular/core';
-import {FormBuilder, Validators} from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'kap-new-calendar-dialog',
@@ -7,7 +7,6 @@ import {FormBuilder, Validators} from '@angular/forms';
   styleUrls: ['./new-calendar-dialog.component.scss']
 })
 export class NewCalendarDialogComponent implements OnInit {
-
   calendarForm;
 
   constructor(fb: FormBuilder) {
@@ -16,7 +15,5 @@ export class NewCalendarDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 }
