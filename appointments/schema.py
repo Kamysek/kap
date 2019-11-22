@@ -6,7 +6,6 @@ from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
 from django.contrib.auth import get_user_model
 
-
 """
     title = models.CharField(max_length=50, null=True)
     comment_doctor = models.TextField(max_length=200, null=False, blank=True)
@@ -58,6 +57,7 @@ class UnauthorisedAccessError(GraphQLError):
 class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
+
 
 class CalendarInput(graphene.InputObjectType):
     id = graphene.ID()
@@ -152,8 +152,8 @@ class CreateAppointment(graphene.Mutation):
                     get_calendar = Calendar.objects.get(pk=input.calendar)
                     if get_calendar:
                         appointment_instance = Appointment(title=input.title, comment_doctor=input.comment_doctor,
-                                                           calendar=get_calendar, patient=None,
-                                                           appointment_start=input.appointment_start,
+                                                           calendar=get_calendar, doctor=info.context.user.id,
+                                                           patient=None, appointment_start=input.appointment_start,
                                                            appointment_end=input.appointment_end, taken=False)
                         checkAppointmentFormat(appointment_instance)
                         appointment_instance.save()
@@ -195,10 +195,9 @@ class UpdateAppointment(graphene.Mutation):
                     if input.appointment_end:
                         appointment_instance.appointment_end = input.appointment_end
 
-
-                    if not isAppointmentFree(appointment_instance, Appointment.objects.all().exclude(calendar__appointment__id=1)):
+                    if not isAppointmentFree(appointment_instance,
+                                             Appointment.objects.all().exclude(calendar__appointment__id=1)):
                         raise GraphQLError("Invalid Time selected")
-
 
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
@@ -309,6 +308,7 @@ class DeleteAppointmentPatient(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
+    get_calendar = graphene.List(CalendarType, id=graphene.Int())
     my_calendars = graphene.List(CalendarType)
     all_calendars = graphene.List(CalendarType)
     all_appointments_doctor = graphene.List(AppointmentType)
@@ -316,9 +316,21 @@ class Query(graphene.ObjectType):
     appointments_patient = graphene.List(AppointmentType)
 
     @login_required
+    def resolve_get_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.can_view_calendar'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Calendar.objects.filter(pk=id)
+                except Calendar.DoesNotExist:
+                    raise GraphQLError('Calendar does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the calendars!')
+
+    @login_required
     def resolve_my_calendars(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
-            #f = Calendar.objects.filter(filter_fields=["doctor"])
+            # f = Calendar.objects.filter(filter_fields=["doctor"])
             return Calendar.objects.filter(doctor=info.context.user)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')

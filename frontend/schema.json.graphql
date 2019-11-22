@@ -1,0 +1,526 @@
+# This file was generated based on "schema.json". Do not edit manually.
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type AppointmentType {
+  appointmentEnd: DateTime!
+  appointmentStart: DateTime!
+  calendar: CalendarType!
+  commentDoctor: String!
+  commentPatient: String!
+  createdAt: DateTime
+  id: ID!
+  patient: Int
+  taken: Boolean!
+  title: String
+}
+
+type BoardType {
+  creator: UserType!
+  description: String!
+  id: ID!
+  name: String!
+  topicSet: [TopicType!]!
+}
+
+type CalendarType {
+  appointmentSet: [AppointmentType!]!
+  doctor: Int!
+  id: ID!
+  name: String!
+}
+
+type ChoiceAnswerType {
+  choiceAnswer: ChoiceType!
+  createdBy: UserType!
+  createdOn: DateTime!
+  id: ID!
+  question: QuestionType!
+  updatedOn: DateTime!
+}
+
+type ChoiceType {
+  choiceText: String!
+  choiceanswerSet: [ChoiceAnswerType!]!
+  id: ID!
+  question: QuestionType!
+}
+
+type CreateAppointment {
+  appointment: AppointmentType
+}
+
+type CreateAppointmentPatient {
+  appointment: AppointmentType
+}
+
+type CreateBoard {
+  board: BoardType
+}
+
+type CreateCalendar {
+  calendar: CalendarType
+}
+
+type CreateChoice {
+  choice: ChoiceType
+}
+
+type CreateChoiceAnswer {
+  choiceAnswer: ChoiceAnswerType
+}
+
+type CreateGroup {
+  group: GroupType
+}
+
+type CreateNumberAnswer {
+  numberAnswer: NumberAnswerType
+}
+
+type CreatePost {
+  post: PostType
+}
+
+type CreateQuestion {
+  question: QuestionType
+}
+
+type CreateSurvey {
+  survey: SurveyType
+}
+
+type CreateTextAnswer {
+  textAnswer: TextAnswerType
+}
+
+type CreateTopic {
+  topic: TopicType
+}
+
+type CreateUser {
+  user: UserType
+}
+
+type DeleteAppointment {
+  appointment: AppointmentType
+  ok: Boolean
+}
+
+type DeleteAppointmentPatient {
+  appointment: AppointmentType
+  ok: Boolean
+}
+
+type DeleteBoard {
+  board: BoardType
+  ok: Boolean
+}
+
+type DeleteCalendar {
+  calendar: CalendarType
+  ok: Boolean
+}
+
+type DeleteChoice {
+  choice: ChoiceType
+  ok: Boolean
+}
+
+type DeleteChoiceAnswer {
+  choiceAnswer: ChoiceAnswerType
+  ok: Boolean
+}
+
+type DeleteNumberAnswer {
+  numberAnswer: NumberAnswerType
+  ok: Boolean
+}
+
+type DeletePost {
+  ok: Boolean
+  post: TopicType
+}
+
+type DeleteQuestion {
+  ok: Boolean
+  question: QuestionType
+}
+
+type DeleteSurvey {
+  ok: Boolean
+  survey: SurveyType
+}
+
+type DeleteTextAnswer {
+  ok: Boolean
+  textAnswer: TextAnswerType
+}
+
+type DeleteTopic {
+  ok: Boolean
+  topic: TopicType
+}
+
+type GroupType {
+  id: ID!
+  name: String!
+  "The groups this user belongs to. A user will get all permissions granted to each of their groups."
+  userSet: [UserType!]!
+}
+
+type Mutation {
+  addToGroup(groupStr: String, userId: Int): UpdateGroup
+  createAppointment(input: AppointmentInput!): CreateAppointment
+  createAppointmentPatient(
+    appointmentId: Int!
+    commentPatient: String = ""
+  ): CreateAppointmentPatient
+  createBoard(input: BoardInput!): CreateBoard
+  createCalendar(input: CalendarInput!): CreateCalendar
+  createChoice(input: ChoiceInput!): CreateChoice
+  createChoiceAnswer(input: ChoiceAnswerInput!): CreateChoiceAnswer
+  createGroup(input: GroupInput!): CreateGroup
+  createNumberAnswer(input: NumberAnswerInput!): CreateNumberAnswer
+  createPost(input: PostInput!): CreatePost
+  createQuestion(input: QuestionInput!): CreateQuestion
+  createSurvey(input: SurveyInput!): CreateSurvey
+  createTextAnswer(input: TextAnswerInput!): CreateTextAnswer
+  createTopic(input: TopicInput!): CreateTopic
+  createUser(input: UserInput!): CreateUser
+  deleteAppointment(appointmentId: Int!): DeleteAppointment
+  deleteAppointmentPatient(appointmentId: Int!): DeleteAppointmentPatient
+  deleteBoard(boardId: Int!): DeleteBoard
+  deleteCalendar(calendarId: Int!): DeleteCalendar
+  deleteChoice(choiceId: Int!): DeleteChoice
+  deleteChoiceAnswer(choiceAnswerId: Int!): DeleteChoiceAnswer
+  deleteNumberAnswer(numberAnswerId: Int!): DeleteNumberAnswer
+  deletePost(postId: Int!): DeletePost
+  deleteQuestion(questionId: Int!): DeleteQuestion
+  deleteSurvey(surveyId: Int!): DeleteSurvey
+  deleteTextAnswer(textAnswerId: Int!): DeleteTextAnswer
+  deleteTopic(topicId: Int!): DeleteTopic
+  refreshToken(token: String!): Refresh
+  "Obtain JSON Web Token mutation"
+  tokenAuth(password: String!, username: String!): ObtainJSONWebToken
+  updateAppointment(
+    appointmentId: Int!
+    input: AppointmentInput!
+  ): UpdateAppointment
+  updateAppointmentPatient(
+    appointmentId: Int!
+    commentPatient: String
+  ): UpdateAppointmentPatient
+  updateBoard(boardId: Int!, input: BoardInput!): UpdateBoard
+  updateCalendar(calendarId: Int!, input: CalendarInput!): UpdateCalendar
+  updateChoice(choiceId: Int!, input: ChoiceInput!): UpdateChoice
+  updateChoiceAnswer(
+    choiceAnswerId: Int!
+    input: ChoiceAnswerInput!
+  ): UpdateChoiceAnswer
+  updateNumberAnswer(
+    input: NumberAnswerInput!
+    numberAnswerId: Int!
+  ): UpdateNumberAnswer
+  updatePost(input: PostInput!, postId: Int!): UpdatePost
+  updateQuestion(input: QuestionInput!, questionId: Int!): UpdateQuestion
+  updateSurvey(input: SurveyInput!, surveyId: Int!): UpdateSurvey
+  updateTextAnswer(
+    input: TextAnswerInput!
+    textAnswerId: Int!
+  ): UpdateTextAnswer
+  updateTopic(input: TopicInput!, topicId: Int!): UpdateTopic
+  verifyToken(token: String!): Verify
+}
+
+type NumberAnswerType {
+  createdBy: UserType!
+  createdOn: DateTime!
+  id: ID!
+  numberAnswer: Int!
+  question: QuestionType!
+  updatedOn: DateTime!
+}
+
+"Obtain JSON Web Token mutation"
+type ObtainJSONWebToken {
+  token: String
+}
+
+type PostType {
+  createdAt: DateTime!
+  createdBy: UserType!
+  id: ID!
+  message: String!
+  topic: TopicType!
+  updatedAt: DateTime
+  updatedBy: UserType
+}
+
+type Query {
+  allAppointmentsDoctor: [AppointmentType]
+  allBoards: [BoardType]
+  allCalendars: [CalendarType]
+  allChoiceAnswers(surveyIdent: Int): [ChoiceAnswerType]
+  allChoices(questionIdent: Int): [ChoiceType]
+  allNumberAnswers(surveyIdent: Int): [NumberAnswerType]
+  allPosts: [PostType]
+  allQuestions(surveyIdent: Int): [QuestionType]
+  allSurveys: [SurveyType]
+  allTextAnswers(surveyIdent: Int): [TextAnswerType]
+  allTopics: [TopicType]
+  appointmentsPatient: [AppointmentType]
+  board(ident: Int): BoardType
+  choice(ident: Int): ChoiceType
+  choiceAnswer(ident: Int): ChoiceAnswerType
+  getCalendar(id: Int): [CalendarType]
+  group: GroupType
+  groups: [GroupType]
+  me: UserType
+  myCalendars: [CalendarType]
+  numberAnswer(ident: Int): NumberAnswerType
+  oneCalendarAppointmentsDoctor(ident: Int): [AppointmentType]
+  post(ident: Int): PostType
+  question(ident: Int): QuestionType
+  survey(ident: Int): SurveyType
+  textAnswer(ident: Int): TextAnswerType
+  topic(ident: Int): TopicType
+  user(id: Int): UserType
+  users: [UserType]
+}
+
+type QuestionType {
+  choiceSet: [ChoiceType!]!
+  createdBy: UserType!
+  createdOn: DateTime!
+  id: ID!
+  questionText: String!
+  questionType: QuestionQuestionType!
+  survey: SurveyType!
+  updatedBy: UserType!
+  updatedOn: DateTime!
+}
+
+type Refresh {
+  payload: GenericScalar
+  token: String
+}
+
+type SurveyType {
+  createdBy: UserType!
+  createdOn: DateTime!
+  description: String!
+  id: ID!
+  pubDate: DateTime!
+  questionSet: [QuestionType!]!
+  surveyName: String!
+  updatedBy: UserType!
+  updatedOn: DateTime!
+}
+
+type TextAnswerType {
+  createdBy: UserType!
+  createdOn: DateTime!
+  id: ID!
+  question: QuestionType!
+  textAnswer: String!
+  updatedOn: DateTime!
+}
+
+type TopicType {
+  board: BoardType!
+  creator: UserType!
+  id: ID!
+  lastUpdated: DateTime!
+  postSet: [PostType!]!
+  subject: String!
+}
+
+type UpdateAppointment {
+  appointment: AppointmentType
+}
+
+type UpdateAppointmentPatient {
+  appointment: AppointmentType
+}
+
+type UpdateBoard {
+  board: BoardType
+}
+
+type UpdateCalendar {
+  calendar: CalendarType
+}
+
+type UpdateChoice {
+  choice: ChoiceType
+}
+
+type UpdateChoiceAnswer {
+  choiceAnswer: ChoiceAnswerType
+}
+
+type UpdateGroup {
+  groupStr: String
+  userId: Int
+}
+
+type UpdateNumberAnswer {
+  numberAnswer: NumberAnswerType
+}
+
+type UpdatePost {
+  post: PostType
+}
+
+type UpdateQuestion {
+  question: QuestionType
+}
+
+type UpdateSurvey {
+  survey: SurveyType
+}
+
+type UpdateTextAnswer {
+  textAnswer: TextAnswerType
+}
+
+type UpdateTopic {
+  topic: TopicType
+}
+
+type UserType {
+  boardSet: [BoardType!]!
+  dateJoined: DateTime!
+  "The groups this user belongs to. A user will get all permissions granted to each of their groups."
+  groups: [GroupType!]!
+  id: ID!
+  isActive: Boolean!
+  isStaff: Boolean!
+  "Designates that this user has all permissions without explicitly assigning them."
+  isSuperuser: Boolean!
+  lastLogin: DateTime
+  password: String!
+  postsCreatedBy: [PostType!]!
+  postsUpdatedBy: [PostType!]!
+  questionCreatedBy: [QuestionType!]!
+  questionUpdatedBy: [QuestionType!]!
+  surveyCreatedBy: [SurveyType!]!
+  surveyUpdatedBy: [SurveyType!]!
+  topicSet: [TopicType!]!
+  username: String!
+}
+
+type Verify {
+  payload: GenericScalar
+}
+
+"An enumeration."
+enum QuestionQuestionType {
+  #choice
+  CHOICE
+  #number
+  NUMBER
+  #text
+  TEXT
+}
+
+input AppointmentInput {
+  appointmentEnd: DateTime
+  appointmentStart: DateTime
+  calendar: Int
+  commentDoctor: String = ""
+  id: ID
+  title: String
+}
+
+input BoardInput {
+  description: String
+  id: ID
+  name: String
+}
+
+input CalendarInput {
+  id: ID
+  name: String!
+}
+
+input ChoiceAnswerInput {
+  choiceAnswer: Int
+  id: ID
+  question: Int
+}
+
+input ChoiceInput {
+  choiceText: String
+  id: ID
+  question: Int
+}
+
+input GroupInput {
+  name: String
+}
+
+input NumberAnswerInput {
+  id: ID
+  numberAnswer: String
+  question: Int
+}
+
+input PostInput {
+  id: ID
+  message: String
+  topic: Int
+}
+
+input QuestionInput {
+  id: ID
+  questionText: String
+  questionType: String
+  survey: Int
+}
+
+input SurveyInput {
+  description: String
+  id: ID
+  pubDate: DateTime
+  surveyName: String
+}
+
+input TextAnswerInput {
+  id: ID
+  question: Int
+  textAnswer: String
+}
+
+input TopicInput {
+  board: Int
+  id: ID
+  lastUpdated: DateTime
+  subject: String
+}
+
+input UserInput {
+  id: ID
+  isActive: Boolean
+  isStaff: Boolean
+  password: String
+  username: String
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+"""
+The `GenericScalar` scalar type represents a generic
+GraphQL scalar value that could be:
+String, Boolean, Int, Float, List or Object.
+"""
+scalar GenericScalar
