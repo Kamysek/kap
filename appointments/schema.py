@@ -331,7 +331,7 @@ class Query(graphene.ObjectType):
     def resolve_my_calendars(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
             # f = Calendar.objects.filter(filter_fields=["doctor"])
-            return Calendar.objects.filter(doctor=info.context.user)
+            return Calendar.objects.filter(doctor=info.context.user.id)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
 
@@ -347,7 +347,7 @@ class Query(graphene.ObjectType):
         if info.context.user.has_perm('appointments.can_view_appointment'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
-                my_calendars = Calendar.objects.filter(doctor=info.context.user)
+                my_calendars = Calendar.objects.filter(doctor=info.context.user.id)
                 all_appointments = []
                 for m_c in my_calendars:
                     all_appointments.extend(Appointment.objects.filter(calendar=m_c))
@@ -377,7 +377,7 @@ class Query(graphene.ObjectType):
     def resolve_appointments_patient(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_appointment_patient'):
             try:
-                return Appointment.objects.filter(patient=info.context.user)
+                return Appointment.objects.filter(patient=info.context.user.id)
             except Appointment.DoesNotExist:
                 raise GraphQLError('No appointments exist!')
         else:
