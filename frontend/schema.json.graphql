@@ -276,7 +276,7 @@ type Query {
   board(ident: Int): BoardType
   choice(ident: Int): ChoiceType
   choiceAnswer(ident: Int): ChoiceAnswerType
-  getCalendars(ident: Int): [CalendarType]
+  getCalendar(id: Int): [CalendarType]
   group: GroupType
   groups: [GroupType]
   me: UserType

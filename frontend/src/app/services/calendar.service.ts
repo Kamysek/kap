@@ -7,6 +7,10 @@ import {
   createCalendarVariables
 } from '../../../__generated__/createCalendar';
 import { allCalendars } from '../../../__generated__/allCalendars';
+import {
+  getCalendar,
+  getCalendarVariables
+} from '../../../__generated__/getCalendar';
 
 @Injectable({
   providedIn: 'root'
@@ -58,8 +62,19 @@ export class CalendarService {
   }
 
   getCalendar(id: any) {
-    const query = gql`query getCalendar($id: ID!){
-        
-    }`;
+    const query = gql`
+      query getCalendar($id: Int!) {
+        getCalendar(id: $id) {
+          id
+          name
+          appointmentSet {
+            id
+          }
+        }
+      }
+    `;
+    const variables: getCalendarVariables = { id };
+    return this.apollo.watchQuery<getCalendar>({ query, variables })
+      .valueChanges;
   }
 }
