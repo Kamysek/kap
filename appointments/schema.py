@@ -320,7 +320,7 @@ class Query(graphene.ObjectType):
             id = kwargs.get('id')
             if id is not None:
                 try:
-                    return Calendar.objects.get(pk=id)
+                    return Calendar.objects.filter(pk=id)
                 except Calendar.DoesNotExist:
                     raise GraphQLError('Calendar does not exist!')
         else:
