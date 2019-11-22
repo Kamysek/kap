@@ -307,7 +307,7 @@ class DeleteAppointmentPatient(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    get_calendars = graphene.List(CalendarType, ident=graphene.Int())
+    get_calendar = graphene.List(CalendarType, id=graphene.Int())
     my_calendars = graphene.List(CalendarType)
     all_calendars = graphene.List(CalendarType)
     all_appointments_doctor = graphene.List(AppointmentType)
@@ -315,12 +315,12 @@ class Query(graphene.ObjectType):
     appointments_patient = graphene.List(AppointmentType)
 
     @login_required
-    def resolve_get_calendars(self, info, **kwargs):
+    def resolve_get_calendar(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
-            ident = kwargs.get('ident')
-            if ident is not None:
+            id = kwargs.get('id')
+            if id is not None:
                 try:
-                    return Calendar.objects.get(pk=ident)
+                    return Calendar.objects.get(pk=id)
                 except Calendar.DoesNotExist:
                     raise GraphQLError('Calendar does not exist!')
         else:
