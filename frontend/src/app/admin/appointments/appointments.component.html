@@ -3,8 +3,12 @@
   <section fxLayout="column">
     <h2>Calendars</h2>
     <mat-list>
-      <mat-list-item></mat-list-item>
+      <mat-list-item *ngFor="let calendar of calendars$ | async as calendars">{{
+        calendar.name
+      }}</mat-list-item>
     </mat-list>
-    <button mat-stroked-button (click)="createCalendar()">Create a new Calendar</button>
+    <button mat-stroked-button (click)="createCalendar()">
+      Create a new Calendar
+    </button>
   </section>
 </main>
