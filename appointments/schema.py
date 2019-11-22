@@ -34,10 +34,10 @@ def remove_sensitive_data(user, queryset):
 
 def isAppointmentFree(newAppointment, allAppointments):
     for existingAppointment in allAppointments:
-        if newAppointment.calendar == existingAppointment.calendar and ((
-                                                                                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                                                                                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                                                                                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
+        if newAppointment.calendar_id == existingAppointment.calendar_id and ((
+                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
     return True
@@ -60,8 +60,7 @@ class CalendarType(DjangoObjectType):
 
 
 class CalendarInput(graphene.InputObjectType):
-    id = graphene.ID()
-    name = graphene.String(required=True)
+    name = graphene.String()
 
 
 class CreateCalendar(graphene.Mutation):
@@ -73,7 +72,7 @@ class CreateCalendar(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('appointments.can_add_calendar'):
-            calendar_instance = Calendar(name=input.name, doctor=info.context.user.id)
+            calendar_instance = Calendar(name=input.name, doctor_id=info.context.user.id)
             calendar_instance.save()
             return CreateCalendar(calendar=calendar_instance)
         else:
@@ -132,7 +131,7 @@ class AppointmentType(DjangoObjectType):
 class AppointmentInput(graphene.InputObjectType):
     id = graphene.ID()
     title = graphene.String()
-    comment_doctor = graphene.String(default_value="")
+    comment_doctor = graphene.String()
     calendar = graphene.Int()
     appointment_start = graphene.DateTime()
     appointment_end = graphene.DateTime()
@@ -151,9 +150,10 @@ class CreateAppointment(graphene.Mutation):
                 try:
                     get_calendar = Calendar.objects.get(pk=input.calendar)
                     if get_calendar:
-                        appointment_instance = Appointment(title=input.title, comment_doctor=input.comment_doctor,
-                                                           calendar=get_calendar, doctor=info.context.user.id,
-                                                           patient=None, appointment_start=input.appointment_start,
+                        appointment_instance = Appointment(title=input.title,
+                                                           comment_doctor="" if input.comment_doctor is None else input.comment_doctor,
+                                                           calendar_id=get_calendar.id,
+                                                           appointment_start=input.appointment_start,
                                                            appointment_end=input.appointment_end, taken=False)
                         checkAppointmentFormat(appointment_instance)
                         appointment_instance.save()
@@ -187,7 +187,7 @@ class UpdateAppointment(graphene.Mutation):
                         try:
                             get_calendar = Calendar.objects.get(pk=input.calendar)
                             if get_calendar:
-                                appointment_instance.calendar = get_calendar
+                                appointment_instance.calendar_id = get_calendar
                         except Calendar.DoesNotExist:
                             raise GraphQLError('Calendar does not exist!')
                     if input.appointment_start:
@@ -195,9 +195,9 @@ class UpdateAppointment(graphene.Mutation):
                     if input.appointment_end:
                         appointment_instance.appointment_end = input.appointment_end
 
-                    if not isAppointmentFree(appointment_instance,
-                                             Appointment.objects.all().exclude(calendar__appointment__id=1)):
-                        raise GraphQLError("Invalid Time selected")
+                    # if not isAppointmentFree(appointment_instance,
+                    #                         Appointment.objects.all().exclude(calendar__appointment__id=1)):
+                    #    raise GraphQLError("Invalid Time selected")
 
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
@@ -320,7 +320,8 @@ class Query(graphene.ObjectType):
             id = kwargs.get('id')
             if id is not None:
                 try:
-                    return Calendar.objects.filter(pk=id)
+                    elem = Calendar.objects.filter(pk=id)
+                    return elem.get(0)
                 except Calendar.DoesNotExist:
                     raise GraphQLError('Calendar does not exist!')
         else:

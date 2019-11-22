@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 
 
 class Calendar(models.Model):
-    name = models.CharField(max_length=150, blank=False, null=False)
-    doctor = models.PositiveIntegerField(null=False,blank=False)#models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, blank=False, null=False)
+    doctor_id = models.PositiveIntegerField(null=False,blank=False)
 
     def __str__(self):
         return self.name
@@ -12,10 +12,10 @@ class Calendar(models.Model):
 
 class Appointment(models.Model):
     title = models.CharField(max_length=50, null=True)
-    comment_doctor = models.TextField(max_length=200, null=False, blank=True)
-    comment_patient = models.TextField(max_length=200, null=False, blank=True)
-    calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
-    patient = models.PositiveIntegerField(null=True) #models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
+    comment_doctor = models.TextField(max_length=500, null=False, blank=True, default="")
+    comment_patient = models.TextField(max_length=500, null=False, blank=True, default="")
+    calendar_id = models.PositiveIntegerField(null=False, blank=False)
+    patient_id = models.PositiveIntegerField(null=True, blank=False, default=None)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     appointment_start = models.DateTimeField()
     appointment_end = models.DateTimeField()
