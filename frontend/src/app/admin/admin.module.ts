@@ -11,16 +11,27 @@ import {
 } from '@angular/material';
 import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { EditCalendarComponent } from './appointments/edit-calendar/edit-calendar.component';
 
 const routes: Routes = [
   {
     path: 'admin',
-    children: [{ path: 'appointments', component: AppointmentsComponent }]
+    children: [
+      {
+        path: 'appointments',
+        component: AppointmentsComponent,
+        children: [{ path: ':id', component: EditCalendarComponent }]
+      }
+    ]
   }
 ];
 
 @NgModule({
-  declarations: [AppointmentsComponent, NewCalendarDialogComponent],
+  declarations: [
+    AppointmentsComponent,
+    NewCalendarDialogComponent,
+    EditCalendarComponent
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),

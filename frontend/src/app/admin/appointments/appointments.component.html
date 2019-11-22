@@ -1,14 +1,22 @@
 <main class="mat-app-background mat-typography" fxLayout="column">
   <h1>Manage Appointments</h1>
-  <section fxLayout="column">
-    <h2>Calendars</h2>
-    <mat-list>
-      <mat-list-item *ngFor="let calendar of calendars$ | async as calendars">{{
-        calendar.name
-      }}</mat-list-item>
-    </mat-list>
-    <button mat-stroked-button (click)="createCalendar()">
-      Create a new Calendar
-    </button>
-  </section>
+  <div fxLayout="row">
+    <section fxLayout="column">
+      <h2>Calendars</h2>
+      <mat-nav-list>
+        <a
+          mat-list-item
+          *ngFor="let calendar of calendars$ | async as calendars"
+          [routerLink]="calendar.id"
+          >{{ calendar.name }}</a
+        >
+      </mat-nav-list>
+      <button mat-stroked-button (click)="createCalendar()">
+        Create a new Calendar
+      </button>
+    </section>
+    <section>
+      <router-outlet></router-outlet>
+    </section>
+  </div>
 </main>

@@ -56,4 +56,10 @@ export class CalendarService {
       .watchQuery<allCalendars>({ query })
       .valueChanges.pipe(map(res => res.data.allCalendars));
   }
+
+  getCalendar(id: any) {
+    const query = gql`query getCalendar($id: ID!){
+        
+    }`;
+  }
 }
