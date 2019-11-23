@@ -229,10 +229,10 @@ class DeleteAppointment(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a appointment!')
 
 
-class CreateAppointmentPatient(graphene.Mutation):
+class TakeAppointment(graphene.Mutation):
     class Arguments:
         appointment_id = graphene.Int(required=True)
-        comment_patient = graphene.String(default_value="")
+        comment_patient = graphene.String()
 
     appointment = graphene.Field(AppointmentType)
 
@@ -246,16 +246,16 @@ class CreateAppointmentPatient(graphene.Mutation):
                     appointment_instance.comment_patient = comment_patient
                     appointment_instance.taken = True
                     appointment_instance.save()
-                    return CreateAppointmentPatient(appointment=appointment_instance)
+                    return TakeAppointment(appointment=appointment_instance)
                 else:
                     raise GraphQLError('Appointment is already taken!')
             except Calendar.DoesNotExist:
                 raise GraphQLError('Appointment does not exist!')
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a patient appointment!')
+            raise UnauthorisedAccessError(message='No permissions to take a appointment!')
 
 
-class UpdateAppointmentPatient(graphene.Mutation):
+class UpdateTakenAppointment(graphene.Mutation):
     class Arguments:
         appointment_id = graphene.Int(required=True)
         comment_patient = graphene.String()
@@ -271,16 +271,16 @@ class UpdateAppointmentPatient(graphene.Mutation):
                     if comment_patient:
                         appointment_instance.comment_patient = comment_patient
                         appointment_instance.save()
-                        return CreateAppointmentPatient(appointment=appointment_instance)
+                        return UpdateTakenAppointment(appointment=appointment_instance)
                 else:
-                    raise UnauthorisedAccessError(message='No permissions to change this patient appointment!')
+                    raise UnauthorisedAccessError(message='No permissions to change a taken appointment!')
             except Calendar.DoesNotExist:
                 raise GraphQLError('Appointment does not exist!')
         else:
-            raise UnauthorisedAccessError(message='No permissions to change a patient appointment!')
+            raise UnauthorisedAccessError(message='No permissions to change a taken appointment!')
 
 
-class DeleteAppointmentPatient(graphene.Mutation):
+class DeleteTakenAppointment(graphene.Mutation):
     ok = graphene.Boolean()
 
     class Arguments:
@@ -298,22 +298,23 @@ class DeleteAppointmentPatient(graphene.Mutation):
                     appointment_instance.comment_patient = ""
                     appointment_instance.taken = False
                     appointment_instance.save()
-                    return DeleteAppointmentPatient(ok=True)
+                    return DeleteTakenAppointment(ok=True)
                 else:
-                    raise UnauthorisedAccessError(message='No permissions to change this patient appointment!')
+                    raise UnauthorisedAccessError(message='No permissions to delete a taken appointment!')
             except Appointment.DoesNotExist:
                 raise GraphQLError('Appointment does not exist!')
         else:
-            raise UnauthorisedAccessError(message='No permissions to delete a patient appointment!')
+            raise UnauthorisedAccessError(message='No permissions to delete a taken appointment!')
 
 
 class Query(graphene.ObjectType):
-    get_calendar = graphene.List(CalendarType, id=graphene.Int())
-    my_calendars = graphene.List(CalendarType)
-    all_calendars = graphene.List(CalendarType)
-    all_appointments_doctor = graphene.List(AppointmentType)
-    one_calendar_appointments_doctor = graphene.List(AppointmentType, ident=graphene.Int())
-    appointments_patient = graphene.List(AppointmentType)
+    get_calendar = graphene.Field(CalendarType, id=graphene.Int())
+    get_my_calendars = graphene.List(CalendarType)  # only for doctor
+    get_all_calendars = graphene.List(CalendarType)
+    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
+    get_all_taken_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
+    get_all_open_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
+    get_my_appointments = graphene.List(AppointmentType)
 
     @login_required
     def resolve_get_calendar(self, info, **kwargs):
@@ -321,64 +322,62 @@ class Query(graphene.ObjectType):
             id = kwargs.get('id')
             if id is not None:
                 try:
-                    elem = Calendar.objects.filter(pk=id)
-                    return elem.get(0)
+                    return Calendar.objects.get(pk=id)
                 except Calendar.DoesNotExist:
                     raise GraphQLError('Calendar does not exist!')
         else:
-            raise UnauthorisedAccessError(message='No permissions to see the calendars!')
+            raise UnauthorisedAccessError(message='No permissions to see the calendar!')
 
     @login_required
-    def resolve_my_calendars(self, info, **kwargs):
+    def resolve_get_my_calendars(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
-            # f = Calendar.objects.filter(filter_fields=["doctor"])
-            return Calendar.objects.filter(doctor=info.context.user.id)
+            return Calendar.objects.filter(doctor_id=info.context.user.id)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
 
     @login_required
-    def resolve_all_calendars(self, info, **kwargs):
+    def resolve_get_all_calendars(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_calendar'):
             return Calendar.objects.all()
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
 
     @login_required
-    def resolve_all_appointments_doctor(self, info, **kwargs):
+    def resolve_get_all_appointments_from_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.can_view_appointment'):
+            id = kwargs.get('id')
+            if id is not None:
+                return Appointment.objects.filter(calendar_id=id)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+
+    @login_required
+    def resolve_get_all_taken_appointments_from_calendar(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_appointment'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
-                my_calendars = Calendar.objects.filter(doctor=info.context.user.id)
-                all_appointments = []
-                for m_c in my_calendars:
-                    all_appointments.extend(Appointment.objects.filter(calendar=m_c))
-                return all_appointments
+                id = kwargs.get('id')
+                if id is not None:
+                    return Appointment.objects.filter(calendar_id=id, taken=True)
             else:
                 raise UnauthorisedAccessError(message='No permissions to see the appointments!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the appointments!')
 
     @login_required
-    def resolve_one_calendar_appointments_doctor(self, info, **kwargs):
+    def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_appointment'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                ident = kwargs.get('ident')
-                if ident is not None:
-                    try:
-                        return Appointment.objects.filter(calendar=ident)
-                    except Calendar.DoesNotExist:
-                        raise GraphQLError('Calendar does not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+            id = kwargs.get('id')
+            if id is not None:
+                return Appointment.objects.filter(calendar_id=id, taken=False)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the appointments!')
 
     @login_required
-    def resolve_appointments_patient(self, info, **kwargs):
+    def resolve_get_my_appointments(self, info, **kwargs):
         if info.context.user.has_perm('appointments.can_view_appointment_patient'):
             try:
-                return Appointment.objects.filter(patient=info.context.user.id)
+                return Appointment.objects.filter(patient_id=info.context.user.id)
             except Appointment.DoesNotExist:
                 raise GraphQLError('No appointments exist!')
         else:
@@ -388,12 +387,12 @@ class Query(graphene.ObjectType):
 class Mutation(graphene.ObjectType):
     create_calendar = CreateCalendar.Field()
     create_appointment = CreateAppointment.Field()
-    create_appointment_patient = CreateAppointmentPatient.Field()
+    take_appointment = TakeAppointment.Field()
 
     update_calendar = UpdateCalendar.Field()
     update_appointment = UpdateAppointment.Field()
-    update_appointment_patient = UpdateAppointmentPatient.Field()
+    update_taken_appointment = UpdateTakenAppointment.Field()
 
     delete_calendar = DeleteCalendar.Field()
     delete_appointment = DeleteAppointment.Field()
-    delete_appointment_patient = DeleteAppointmentPatient.Field()
+    delete_taken_appointment = DeleteTakenAppointment.Field()
