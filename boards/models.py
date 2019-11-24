@@ -13,7 +13,6 @@ class Board(models.Model):
     class Meta:
         permissions = (
             ("view_creator_board", "View board creator"),
-            ("edit_creator_board", "Edit board creator"),
         )
 
 
@@ -26,7 +25,6 @@ class Topic(models.Model):
     class Meta:
         permissions = (
             ("view_creator_topic", "View topic creator"),
-            ("edit_creator_topic", "Edit topic creator"),
         )
 
 
@@ -41,7 +39,5 @@ class Post(models.Model):
     class Meta:
         permissions = (
             ("view_created_by", "View created by"),
-            ("edit_created_by", "Edit created by"),
             ("view_updated_by", "View updated by"),
-            ("edit_updated_by", "Edit updated by"),
         )

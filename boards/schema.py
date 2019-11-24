@@ -14,6 +14,7 @@ class UnauthorisedAccessError(GraphQLError):
 class BoardType(DjangoObjectType):
     class Meta:
         model = Board
+        fields = ('name', 'description', 'creator')
 
     def resolve_creator(self, info):
         if info.context.user.has_perm('boards.view_creator_board'):
@@ -96,6 +97,7 @@ class DeleteBoard(graphene.Mutation):
 class TopicType(DjangoObjectType):
     class Meta:
         model = Topic
+        fields = ('subject', 'last_updated', 'board', 'creator')
 
     def resolve_creator(self, info):
         if info.context.user.has_perm('boards.view_creator_topic'):
@@ -188,6 +190,7 @@ class DeleteTopic(graphene.Mutation):
 class PostType(DjangoObjectType):
     class Meta:
         model = Post
+        fields = ('message', 'topics', 'created_at', 'created_by', 'updated_at', 'updated_by')
 
     def resolve_created_by(self, info):
         if info.context.user.has_perm('boards.view_created_by'):

@@ -115,7 +115,13 @@ class Command(BaseCommand):
         proj_add_perm5 = Permission.objects.get(name='View patient')
         proj_add_perm6 = Permission.objects.get(name='View comment doctor')
         proj_add_perm7 = Permission.objects.get(name='View doctor')
+
         proj_add_perm8 = Permission.objects.get(name='Edit user')
+
+        proj_add_perm9 = Permission.objects.get(name='View board creator')
+        proj_add_perm10 = Permission.objects.get(name='View topic creator')
+        proj_add_perm11 = Permission.objects.get(name='View created by')
+        proj_add_perm12 = Permission.objects.get(name='View updated by')
 
         Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm2)
@@ -125,10 +131,18 @@ class Command(BaseCommand):
         Group.objects.get(name='Admin').permissions.add(proj_add_perm6)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm7)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm8)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm9)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm10)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm11)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm12)
 
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm5)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm6)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm7)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm9)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm10)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm11)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm12)
 
         Group.objects.get(name='Patient').permissions.add(proj_add_perm1)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm2)
