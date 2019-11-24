@@ -112,11 +112,22 @@ class Command(BaseCommand):
         proj_add_perm2 = Permission.objects.get(name='Change appointment patient')
         proj_add_perm3 = Permission.objects.get(name='Delete appointment patient')
         proj_add_perm4 = Permission.objects.get(name='View appointment patient')
+        proj_add_perm5 = Permission.objects.get(name='View patient')
+        proj_add_perm6 = Permission.objects.get(name='View comment doctor')
+        proj_add_perm7 = Permission.objects.get(name='View doctor')
 
         Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm2)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm3)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm4)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm5)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm6)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm7)
+
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm5)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm6)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm7)
+
 
         Group.objects.get(name='Patient').permissions.add(proj_add_perm1)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm2)

@@ -121,7 +121,6 @@ class AppointmentType(DjangoObjectType):
             'taken')
 
     def resolve_patient(self, info):
-<<<<<<< HEAD
         if info.context.user.has_perm('appointments.view_patient'):
             return self.patient
         return None
@@ -131,23 +130,6 @@ class AppointmentType(DjangoObjectType):
             return self.comment_doctor
         return None
 
-=======
-        if info.context.user.has_perm('account.view_customuser'):
-            return self.patient
-        return None
-
-    def resolve_calendar(self,info):
-        if info.context.user.has_perm('appointments.view_calendar'):
-            return self.calendar
-
-    def resolve_comment_patient(self,info):
-        if info.context.user.has_perm('appointments.view_appointment'):
-            return self.comment_patient
-
-    def resolve_calendar(self,info):
-        if info.context.user.has_perm('appointments.view_appointment'):
-            return self.calendar
->>>>>>> 3ff8841091907cf2077f1c6c888f2ab952342ae9
 
 class AppointmentInput(graphene.InputObjectType):
     id = graphene.ID()
