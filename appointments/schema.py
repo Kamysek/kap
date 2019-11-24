@@ -117,11 +117,6 @@ class AppointmentType(DjangoObjectType):
             return self.patient
         return None
 
-class secureAppointmentType(DjangoObjectType):
-    class Meta:
-        model = Appointment
-        fields= ["title","comment_doctor","appointment_start","appointment_end","taken"]
-
 
 class AppointmentInput(graphene.InputObjectType):
     id = graphene.ID()
@@ -310,7 +305,6 @@ class Query(graphene.ObjectType):
     get_all_taken_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
     get_all_open_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
     get_my_appointments = graphene.List(AppointmentType)
-    get_all_appointments_from_calendar_patient = graphene.List(secureAppointmentType, id=graphene.Int())
 
     @login_required
     def resolve_get_calendar(self, info, **kwargs):
@@ -366,15 +360,6 @@ class Query(graphene.ObjectType):
             id = kwargs.get('id')
             if id is not None:
                 return Appointment.objects.filter(calendar_id=id, taken=False)
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
-
-    @login_required
-    def resolve_get_all_appointments_from_calendar_patient(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_appointment_patient'):
-            id = kwargs.get('id')
-            if id is not None:
-                return Appointment.objects.filter(calendar_id=id)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the appointments!')
 
