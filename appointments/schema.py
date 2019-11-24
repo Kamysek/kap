@@ -333,7 +333,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_my_calendars(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_calendar'):
+        if info.context.user.has_perm('appointments.add_calendar'):
             return Calendar.objects.filter(doctor_id=info.context.user.id)
         else:
             raise UnauthorisedAccessError(message='No permissions to see the calendars!')
@@ -357,8 +357,7 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_get_all_taken_appointments_from_calendar(self, info, **kwargs):
         if info.context.user.has_perm('appointments.view_appointment'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(name='Admin').exists():
                 id = kwargs.get('id')
                 if id is not None:
                     return Appointment.objects.filter(calendar_id=id, taken=True)
@@ -369,8 +368,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm(
-                'appointments.view_appointment'):
+        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm('appointments.view_appointment'):
             id = kwargs.get('id')
             if id is not None:
                 return Appointment.objects.filter(calendar_id=id, taken=False)
@@ -379,7 +377,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_my_appointments(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_appointment_patient'):
+        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm('appointments.view_appointment'):
             try:
                 return Appointment.objects.filter(patient_id=info.context.user.id)
             except Appointment.DoesNotExist:

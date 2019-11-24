@@ -60,7 +60,6 @@ GROUPS_PERMISSIONS = {
         Topic: ['view'],
 
         Calendar: ['view'],
-        #Appointment: ['view'],
 
         Survey: ['view'],
         Question: ['view'],
