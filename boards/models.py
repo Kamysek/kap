@@ -38,6 +38,6 @@ class Post(models.Model):
 
     class Meta:
         permissions = (
-            ("view_created_by", "View created by"),
-            ("view_updated_by", "View updated by"),
+            ("view_created_by", "View created by Board"),
+            ("view_updated_by", "View updated by Board"),
         )
