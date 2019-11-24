@@ -33,6 +33,11 @@ class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
 
+    def resolve_doctor(self, info):
+        if info.context.user.has_perm('appointments.edit_doctor_calendar'):
+            return self.doctor
+        return None
+
 
 class CalendarInput(graphene.InputObjectType):
     name = graphene.String()

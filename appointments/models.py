@@ -4,10 +4,16 @@ from django.contrib.auth import get_user_model
 
 class Calendar(models.Model):
     name = models.CharField(max_length=200, blank=False, null=False)
-    doctor_id = models.PositiveIntegerField(null=False,blank=False)
+    doctor = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        permissions = (
+            ("view_doctor_calendar", "View doctor"),
+            ("edit_doctor_calendar", "Edit doctor"),
+        )
 
 
 class Appointment(models.Model):
