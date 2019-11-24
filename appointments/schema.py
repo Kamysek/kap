@@ -366,7 +366,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.can_view_appointment'):
+        if info.context.user.has_perm('appointments.view_appointment'):
             id = kwargs.get('id')
             if id is not None:
                 return Appointment.objects.filter(calendar_id=id, taken=False)
