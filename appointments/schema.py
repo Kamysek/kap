@@ -1,10 +1,8 @@
-import django_filters
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
-from django.contrib.auth import get_user_model
 
 
 def isAppointmentFree(newAppointment, allAppointments):
@@ -110,6 +108,7 @@ class AppointmentType(DjangoObjectType):
     class Meta:
         model = Appointment
         fields = (
+            'id',
             'title',
             'comment_doctor',
             'comment_patient',

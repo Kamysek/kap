@@ -114,6 +114,7 @@ class Command(BaseCommand):
         proj_add_perm5 = Permission.objects.get(name='View patient')
         proj_add_perm6 = Permission.objects.get(name='View comment doctor')
         proj_add_perm7 = Permission.objects.get(name='View doctor')
+        proj_add_perm8 = Permission.objects.get(name='Edit user')
 
         Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm2)
@@ -122,11 +123,11 @@ class Command(BaseCommand):
         Group.objects.get(name='Admin').permissions.add(proj_add_perm5)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm6)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm7)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm8)
 
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm5)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm6)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm7)
-
 
         Group.objects.get(name='Patient').permissions.add(proj_add_perm1)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm2)

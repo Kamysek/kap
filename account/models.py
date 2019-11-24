@@ -22,4 +22,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
-
+    class Meta:
+        permissions = (
+            ("edit_user", "Edit user"),
+        )
