@@ -110,10 +110,10 @@ class Command(BaseCommand):
                         self.stdout.write(codename + " not found")
 
     # add custom permissions
-        proj_add_perm1 = Permission.objects.get(name='Can add appointment patient')
-        proj_add_perm2 = Permission.objects.get(name='Can change appointment patient')
-        proj_add_perm3 = Permission.objects.get(name='Can delete appointment patient')
-        proj_add_perm4 = Permission.objects.get(name='Can view appointment patient')
+        proj_add_perm1 = Permission.objects.get(name='Add appointment patient')
+        proj_add_perm2 = Permission.objects.get(name='Change appointment patient')
+        proj_add_perm3 = Permission.objects.get(name='Delete appointment patient')
+        proj_add_perm4 = Permission.objects.get(name='View appointment patient')
 
         Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm2)

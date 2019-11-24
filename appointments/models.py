@@ -26,8 +26,8 @@ class Appointment(models.Model):
 
     class Meta:
         permissions = (
-            ("can_add_appointment_patient", "Can add appointment patient"),
-            ("can_change_appointment_patient", "Can change appointment patient"),
-            ("can_delete_appointment_patient", "Can delete appointment patient"),
-            ("can_view_appointment_patient", "Can view appointment patient"),
+            ("add_appointment_patient", "Add appointment patient"),
+            ("change_appointment_patient", "Change appointment patient"),
+            ("delete_appointment_patient", "Delete appointment patient"),
+            ("view_appointment_patient", "View appointment patient"),
         )
