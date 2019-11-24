@@ -10,9 +10,9 @@ from django.contrib.auth import get_user_model
 def isAppointmentFree(newAppointment, allAppointments):
     for existingAppointment in allAppointments:
         if newAppointment.calendar_id == existingAppointment.calendar_id and ((
-                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
+                                                                                      newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                                                                                      newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                                                                                      newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
     return True
@@ -36,6 +36,12 @@ class CalendarType(DjangoObjectType):
     def resolve_doctor(self, info):
         if info.context.user.has_perm('appointments.view_doctor'):
             return self.doctor
+        return None
+
+    def resolve_appointment_set(self, info):#TODO not working
+        if info.context.user.has_perm('appointments.view_appointments'):
+            print(self.appointment_set)
+            return self.appointment_set
         return None
 
 
@@ -296,7 +302,7 @@ class Query(graphene.ObjectType):
     get_calendar = graphene.Field(CalendarType, id=graphene.Int())
     get_my_calendars = graphene.List(CalendarType)  # only for doctor
     get_all_calendars = graphene.List(CalendarType)
-    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
+    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int()) # only for doctor
     get_all_taken_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
     get_all_open_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
     get_my_appointments = graphene.List(AppointmentType)
@@ -351,7 +357,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_appointment'):
+        if info.context.user.has_perm('appointments.view_appointment_patient')  or info.context.user.has_perm('appointments.view_appointment'):
             id = kwargs.get('id')
             if id is not None:
                 return Appointment.objects.filter(calendar_id=id, taken=False)

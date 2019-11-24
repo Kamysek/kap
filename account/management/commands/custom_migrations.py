@@ -55,13 +55,11 @@ GROUPS_PERMISSIONS = {
         NumberAnswer: ['add', 'change', 'delete', 'view'],
     },
     'Patient': {
-        #CustomUser: ['view'],
-
         Board: ['view'],
         Post: ['view'],
         Topic: ['view'],
 
-        #Calendar: ['view'],
+        Calendar: ['view'],
         #Appointment: ['view'],
 
         Survey: ['view'],
