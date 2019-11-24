@@ -12,7 +12,6 @@ class Calendar(models.Model):
     class Meta:
         permissions = (
             ("view_doctor", "View doctor"),
-            ("edit_doctor", "Edit doctor"),
         )
 
 
@@ -37,5 +36,5 @@ class Appointment(models.Model):
             ("delete_appointment_patient", "Delete appointment patient"),
             ("view_appointment_patient", "View appointment patient"),
             ("view_patient", "View patient"),
-            ("edit_patient", "Edit patient"),
+            ("view_comment_doctor", "View comment doctor"),
         )

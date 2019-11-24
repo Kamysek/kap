@@ -32,15 +32,13 @@ class UnauthorisedAccessError(GraphQLError):
 class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
+        fields = ('id',
+                  'name',
+                  'doctor')
 
     def resolve_doctor(self, info):
         if info.context.user.has_perm('appointments.view_doctor'):
             return self.doctor
-        return None
-
-    def resolve_appointment_set(self, info):#TODO not working
-        if info.context.user.has_perm('appointments.view_appointments'):
-            return self.appointment_set
         return None
 
 
@@ -111,10 +109,25 @@ class DeleteCalendar(graphene.Mutation):
 class AppointmentType(DjangoObjectType):
     class Meta:
         model = Appointment
+        fields = (
+            'title',
+            'comment_doctor',
+            'comment_patient',
+            'calendar',
+            'patient',
+            'created_at',
+            'appointment_start',
+            'appointment_end',
+            'taken')
 
     def resolve_patient(self, info):
-        if info.context.user.has_perm('appointments.view_calendar'):
+        if info.context.user.has_perm('appointments.view_patient'):
             return self.patient
+        return None
+
+    def resolve_comment_doctor(self, info):
+        if info.context.user.has_perm('appointments.view_comment_doctor'):
+            return self.comment_doctor
         return None
 
 
@@ -301,7 +314,7 @@ class Query(graphene.ObjectType):
     get_calendar = graphene.Field(CalendarType, id=graphene.Int())
     get_my_calendars = graphene.List(CalendarType)  # only for doctor
     get_all_calendars = graphene.List(CalendarType)
-    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int()) # only for doctor
+    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
     get_all_taken_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
     get_all_open_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
     get_my_appointments = graphene.List(AppointmentType)
@@ -356,7 +369,8 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
-        if info.context.user.has_perm('appointments.view_appointment_patient')  or info.context.user.has_perm('appointments.view_appointment'):
+        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm(
+                'appointments.view_appointment'):
             id = kwargs.get('id')
             if id is not None:
                 return Appointment.objects.filter(calendar_id=id, taken=False)
