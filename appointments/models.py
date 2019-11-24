@@ -11,8 +11,8 @@ class Calendar(models.Model):
 
     class Meta:
         permissions = (
-            ("view_doctor_calendar", "View doctor"),
-            ("edit_doctor_calendar", "Edit doctor"),
+            ("view_doctor", "View doctor"),
+            ("edit_doctor", "Edit doctor"),
         )
 
 
@@ -20,8 +20,8 @@ class Appointment(models.Model):
     title = models.CharField(max_length=50, null=True)
     comment_doctor = models.TextField(max_length=500, null=False, blank=True, default="")
     comment_patient = models.TextField(max_length=500, null=False, blank=True, default="")
-    calendar_id = models.PositiveIntegerField(null=False, blank=False)
-    patient_id = models.PositiveIntegerField(null=True, blank=False, default=None)
+    calendar = models.ForeignKey(Calendar, null=True, blank=False, on_delete=models.CASCADE)
+    patient = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     appointment_start = models.DateTimeField()
     appointment_end = models.DateTimeField()
@@ -36,4 +36,6 @@ class Appointment(models.Model):
             ("change_appointment_patient", "Change appointment patient"),
             ("delete_appointment_patient", "Delete appointment patient"),
             ("view_appointment_patient", "View appointment patient"),
+            ("view_patient", "View patient"),
+            ("edit_patient", "Edit patient"),
         )

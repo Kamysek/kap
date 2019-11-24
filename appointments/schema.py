@@ -34,7 +34,7 @@ class CalendarType(DjangoObjectType):
         model = Calendar
 
     def resolve_doctor(self, info):
-        if info.context.user.has_perm('appointments.edit_doctor_calendar'):
+        if info.context.user.has_perm('appointments.view_doctor'):
             return self.doctor
         return None
 
@@ -52,7 +52,7 @@ class CreateCalendar(graphene.Mutation):
     @login_required
     def mutate(self, info, input=None):
         if info.context.user.has_perm('appointments.add_calendar'):
-            calendar_instance = Calendar(name=input.name, doctor_id=info.context.user.id)
+            calendar_instance = Calendar(name=input.name, doctor=info.context.user)
             calendar_instance.save()
             return CreateCalendar(calendar=calendar_instance)
         else:
@@ -107,6 +107,11 @@ class AppointmentType(DjangoObjectType):
     class Meta:
         model = Appointment
 
+    def resolve_patient(self, info):
+        if info.context.user.has_perm('appointments.view_calendar'):
+            return self.patient
+        return None
+
 
 class AppointmentInput(graphene.InputObjectType):
     id = graphene.ID()
@@ -132,7 +137,7 @@ class CreateAppointment(graphene.Mutation):
                     if get_calendar:
                         appointment_instance = Appointment(title=input.title,
                                                            comment_doctor="" if input.comment_doctor is None else input.comment_doctor,
-                                                           calendar_id=get_calendar.id,
+                                                           calendar=get_calendar,
                                                            appointment_start=input.appointment_start,
                                                            appointment_end=input.appointment_end, taken=False)
                         checkAppointmentFormat(appointment_instance)
@@ -167,7 +172,7 @@ class UpdateAppointment(graphene.Mutation):
                         try:
                             get_calendar = Calendar.objects.get(pk=input.calendar)
                             if get_calendar:
-                                appointment_instance.calendar_id = get_calendar
+                                appointment_instance.calendar = get_calendar
                         except Calendar.DoesNotExist:
                             raise GraphQLError('Calendar does not exist!')
                     if input.appointment_start:
@@ -222,7 +227,7 @@ class TakeAppointment(graphene.Mutation):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
                 if appointment_instance and not appointment_instance.taken:
-                    appointment_instance.patient = info.context.user.id
+                    appointment_instance.patient = info.context.user
                     appointment_instance.comment_patient = comment_patient
                     appointment_instance.taken = True
                     appointment_instance.save()
@@ -273,7 +278,7 @@ class DeleteTakenAppointment(graphene.Mutation):
         if info.context.user.has_perm('appointments.delete_appointment_patient'):
             try:
                 appointment_instance = Appointment.objects.get(pk=appointment_id)
-                if appointment_instance.patient == info.context.user.id:
+                if appointment_instance.patient == info.context.user:
                     appointment_instance.patient = None
                     appointment_instance.comment_patient = ""
                     appointment_instance.taken = False
