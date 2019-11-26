@@ -8,52 +8,42 @@ schema {
 type AppointmentType {
   appointmentEnd: DateTime!
   appointmentStart: DateTime!
-  calendar: CalendarType!
+  calendar: CalendarType
   commentDoctor: String!
   commentPatient: String!
   createdAt: DateTime
   id: ID!
-  patient: Int
+  patient: UserType
   taken: Boolean!
   title: String
 }
 
 type BoardType {
-  creator: UserType!
+  creator: UserType
   description: String!
-  id: ID!
   name: String!
-  topicSet: [TopicType!]!
 }
 
 type CalendarType {
-  appointmentSet: [AppointmentType!]!
-  doctor: Int!
+  doctor: UserType
   id: ID!
   name: String!
 }
 
 type ChoiceAnswerType {
-  choiceAnswer: ChoiceType!
-  createdBy: UserType!
+  choiceAnswer: ChoiceType
+  createdBy: UserType
   createdOn: DateTime!
-  id: ID!
   question: QuestionType!
   updatedOn: DateTime!
 }
 
 type ChoiceType {
   choiceText: String!
-  choiceanswerSet: [ChoiceAnswerType!]!
-  id: ID!
   question: QuestionType!
 }
 
 type CreateAppointment {
-  appointment: AppointmentType
-}
-
-type CreateAppointmentPatient {
   appointment: AppointmentType
 }
 
@@ -110,11 +100,6 @@ type DeleteAppointment {
   ok: Boolean
 }
 
-type DeleteAppointmentPatient {
-  appointment: AppointmentType
-  ok: Boolean
-}
-
 type DeleteBoard {
   board: BoardType
   ok: Boolean
@@ -155,6 +140,11 @@ type DeleteSurvey {
   survey: SurveyType
 }
 
+type DeleteTakenAppointment {
+  appointment: AppointmentType
+  ok: Boolean
+}
+
 type DeleteTextAnswer {
   ok: Boolean
   textAnswer: TextAnswerType
@@ -165,6 +155,11 @@ type DeleteTopic {
   topic: TopicType
 }
 
+type DeleteUser {
+  ok: Boolean
+  user: UserType
+}
+
 type GroupType {
   id: ID!
   name: String!
@@ -173,12 +168,7 @@ type GroupType {
 }
 
 type Mutation {
-  addToGroup(groupStr: String, userId: Int): UpdateGroup
   createAppointment(input: AppointmentInput!): CreateAppointment
-  createAppointmentPatient(
-    appointmentId: Int!
-    commentPatient: String = ""
-  ): CreateAppointmentPatient
   createBoard(input: BoardInput!): CreateBoard
   createCalendar(input: CalendarInput!): CreateCalendar
   createChoice(input: ChoiceInput!): CreateChoice
@@ -192,7 +182,6 @@ type Mutation {
   createTopic(input: TopicInput!): CreateTopic
   createUser(input: UserInput!): CreateUser
   deleteAppointment(appointmentId: Int!): DeleteAppointment
-  deleteAppointmentPatient(appointmentId: Int!): DeleteAppointmentPatient
   deleteBoard(boardId: Int!): DeleteBoard
   deleteCalendar(calendarId: Int!): DeleteCalendar
   deleteChoice(choiceId: Int!): DeleteChoice
@@ -201,19 +190,18 @@ type Mutation {
   deletePost(postId: Int!): DeletePost
   deleteQuestion(questionId: Int!): DeleteQuestion
   deleteSurvey(surveyId: Int!): DeleteSurvey
+  deleteTakenAppointment(appointmentId: Int!): DeleteTakenAppointment
   deleteTextAnswer(textAnswerId: Int!): DeleteTextAnswer
   deleteTopic(topicId: Int!): DeleteTopic
+  deleteUser(userId: Int!): DeleteUser
   refreshToken(token: String!): Refresh
+  takeAppointment(appointmentId: Int!, commentPatient: String): TakeAppointment
   "Obtain JSON Web Token mutation"
   tokenAuth(password: String!, username: String!): ObtainJSONWebToken
   updateAppointment(
     appointmentId: Int!
     input: AppointmentInput!
   ): UpdateAppointment
-  updateAppointmentPatient(
-    appointmentId: Int!
-    commentPatient: String
-  ): UpdateAppointmentPatient
   updateBoard(boardId: Int!, input: BoardInput!): UpdateBoard
   updateCalendar(calendarId: Int!, input: CalendarInput!): UpdateCalendar
   updateChoice(choiceId: Int!, input: ChoiceInput!): UpdateChoice
@@ -221,6 +209,7 @@ type Mutation {
     choiceAnswerId: Int!
     input: ChoiceAnswerInput!
   ): UpdateChoiceAnswer
+  updateGroup(groupStr: String, userId: Int): UpdateGroup
   updateNumberAnswer(
     input: NumberAnswerInput!
     numberAnswerId: Int!
@@ -228,19 +217,23 @@ type Mutation {
   updatePost(input: PostInput!, postId: Int!): UpdatePost
   updateQuestion(input: QuestionInput!, questionId: Int!): UpdateQuestion
   updateSurvey(input: SurveyInput!, surveyId: Int!): UpdateSurvey
+  updateTakenAppointment(
+    appointmentId: Int!
+    commentPatient: String
+  ): UpdateTakenAppointment
   updateTextAnswer(
     input: TextAnswerInput!
     textAnswerId: Int!
   ): UpdateTextAnswer
   updateTopic(input: TopicInput!, topicId: Int!): UpdateTopic
+  updateUser(input: UserInput!, userId: Int!): UpdateUser
   verifyToken(token: String!): Verify
 }
 
 type NumberAnswerType {
-  createdBy: UserType!
+  createdBy: UserType
   createdOn: DateTime!
-  id: ID!
-  numberAnswer: Int!
+  numberAnswer: Int
   question: QuestionType!
   updatedOn: DateTime!
 }
@@ -252,55 +245,52 @@ type ObtainJSONWebToken {
 
 type PostType {
   createdAt: DateTime!
-  createdBy: UserType!
-  id: ID!
+  createdBy: UserType
   message: String!
-  topic: TopicType!
   updatedAt: DateTime
   updatedBy: UserType
 }
 
 type Query {
-  allAppointmentsDoctor: [AppointmentType]
-  allBoards: [BoardType]
-  allCalendars: [CalendarType]
-  allChoiceAnswers(surveyIdent: Int): [ChoiceAnswerType]
-  allChoices(questionIdent: Int): [ChoiceType]
-  allNumberAnswers(surveyIdent: Int): [NumberAnswerType]
-  allPosts: [PostType]
-  allQuestions(surveyIdent: Int): [QuestionType]
-  allSurveys: [SurveyType]
-  allTextAnswers(surveyIdent: Int): [TextAnswerType]
-  allTopics: [TopicType]
-  appointmentsPatient: [AppointmentType]
-  board(ident: Int): BoardType
-  choice(ident: Int): ChoiceType
-  choiceAnswer(ident: Int): ChoiceAnswerType
-  getCalendar(id: Int): [CalendarType]
-  group: GroupType
-  groups: [GroupType]
-  me: UserType
-  myCalendars: [CalendarType]
-  numberAnswer(ident: Int): NumberAnswerType
-  oneCalendarAppointmentsDoctor(ident: Int): [AppointmentType]
-  post(ident: Int): PostType
-  question(ident: Int): QuestionType
-  survey(ident: Int): SurveyType
-  textAnswer(ident: Int): TextAnswerType
-  topic(ident: Int): TopicType
-  user(id: Int): UserType
-  users: [UserType]
+  getAllAppointmentsFromCalendar(id: Int): [AppointmentType]
+  getAllBoards: [BoardType]
+  getAllCalendars: [CalendarType]
+  getAllChoiceAnswers(id: Int): [ChoiceAnswerType]
+  getAllChoices(id: Int): [ChoiceType]
+  getAllGroups: [GroupType]
+  getAllNumberAnswers(id: Int): [NumberAnswerType]
+  getAllOpenAppointmentsFromCalendar(id: Int): [AppointmentType]
+  getAllPosts: [PostType]
+  getAllQuestions(id: Int): [QuestionType]
+  getAllSurveys: [SurveyType]
+  getAllTakenAppointmentsFromCalendar(id: Int): [AppointmentType]
+  getAllTextAnswers(id: Int): [TextAnswerType]
+  getAllTopics: [TopicType]
+  getAllUsers: [UserType]
+  getBoard(id: Int): BoardType
+  getCalendar(id: Int): CalendarType
+  getChoice(id: Int): ChoiceType
+  getChoiceAnswer(id: Int): ChoiceAnswerType
+  getGroup(name: String): GroupType
+  getMe: UserType
+  getMyAppointments: [AppointmentType]
+  getMyCalendars: [CalendarType]
+  getNumberAnswer(id: Int): NumberAnswerType
+  getPost(id: Int): PostType
+  getQuestion(id: Int): QuestionType
+  getSurvey(id: Int): SurveyType
+  getTextAnswer(id: Int): TextAnswerType
+  getTopic(id: Int): TopicType
+  getUser(id: Int): UserType
 }
 
 type QuestionType {
-  choiceSet: [ChoiceType!]!
-  createdBy: UserType!
+  createdBy: UserType
   createdOn: DateTime!
-  id: ID!
   questionText: String!
   questionType: QuestionQuestionType!
   survey: SurveyType!
-  updatedBy: UserType!
+  updatedBy: UserType
   updatedOn: DateTime!
 }
 
@@ -310,40 +300,35 @@ type Refresh {
 }
 
 type SurveyType {
-  createdBy: UserType!
+  createdBy: UserType
   createdOn: DateTime!
   description: String!
-  id: ID!
   pubDate: DateTime!
-  questionSet: [QuestionType!]!
   surveyName: String!
-  updatedBy: UserType!
+  updatedBy: UserType
   updatedOn: DateTime!
 }
 
+type TakeAppointment {
+  appointment: AppointmentType
+}
+
 type TextAnswerType {
-  createdBy: UserType!
+  createdBy: UserType
   createdOn: DateTime!
-  id: ID!
   question: QuestionType!
-  textAnswer: String!
+  textAnswer: String
   updatedOn: DateTime!
 }
 
 type TopicType {
   board: BoardType!
-  creator: UserType!
-  id: ID!
+  creator: UserType
   lastUpdated: DateTime!
-  postSet: [PostType!]!
   subject: String!
 }
 
 type UpdateAppointment {
-  appointment: AppointmentType
-}
-
-type UpdateAppointmentPatient {
   appointment: AppointmentType
 }
 
@@ -384,6 +369,10 @@ type UpdateSurvey {
   survey: SurveyType
 }
 
+type UpdateTakenAppointment {
+  appointment: AppointmentType
+}
+
 type UpdateTextAnswer {
   textAnswer: TextAnswerType
 }
@@ -392,25 +381,15 @@ type UpdateTopic {
   topic: TopicType
 }
 
+type UpdateUser {
+  user: UserType
+}
+
 type UserType {
-  boardSet: [BoardType!]!
   dateJoined: DateTime!
-  "The groups this user belongs to. A user will get all permissions granted to each of their groups."
-  groups: [GroupType!]!
   id: ID!
   isActive: Boolean!
   isStaff: Boolean!
-  "Designates that this user has all permissions without explicitly assigning them."
-  isSuperuser: Boolean!
-  lastLogin: DateTime
-  password: String!
-  postsCreatedBy: [PostType!]!
-  postsUpdatedBy: [PostType!]!
-  questionCreatedBy: [QuestionType!]!
-  questionUpdatedBy: [QuestionType!]!
-  surveyCreatedBy: [SurveyType!]!
-  surveyUpdatedBy: [SurveyType!]!
-  topicSet: [TopicType!]!
   username: String!
 }
 
@@ -432,7 +411,7 @@ input AppointmentInput {
   appointmentEnd: DateTime
   appointmentStart: DateTime
   calendar: Int
-  commentDoctor: String = ""
+  commentDoctor: String
   id: ID
   title: String
 }
@@ -444,8 +423,7 @@ input BoardInput {
 }
 
 input CalendarInput {
-  id: ID
-  name: String!
+  name: String
 }
 
 input ChoiceAnswerInput {
