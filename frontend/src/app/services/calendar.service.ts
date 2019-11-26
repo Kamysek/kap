@@ -16,65 +16,59 @@ import {
   providedIn: 'root'
 })
 export class CalendarService {
+  private static ALL_CALENDARS_QUERY = gql`
+    query allCalendars {
+      getAllCalendars {
+        name
+        id
+      }
+    }
+  `;
+
+  private static GET_CALENDAR_QUERY = gql`
+    query getCalendar($id: Int!) {
+      getCalendar(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  private static CREATE_CALENDAR_MUTATION = gql`
+    mutation createCalendar($calendarInput: CalendarInput!) {
+      createCalendar(input: $calendarInput) {
+        calendar {
+          id
+          name
+        }
+      }
+    }
+  `;
+
   constructor(private apollo: Apollo) {}
 
   createNew(calendarInput: { name: string }) {
-    const updateQuery = gql`
-      query allCalendars {
-        allCalendars {
-          name
-          id
-        }
-      }
-    `;
-    const query = gql`
-      mutation createCalendar($calendarInput: CalendarInput!) {
-        createCalendar(input: $calendarInput) {
-          calendar {
-            id
-            name
-          }
-        }
-      }
-    `;
     const variables: createCalendarVariables = { calendarInput };
     this.apollo
       .mutate<createCalendar>({
-        mutation: query,
+        mutation: CalendarService.CREATE_CALENDAR_MUTATION,
         variables,
-        refetchQueries: [{ query: updateQuery }]
+        refetchQueries: [{ query: CalendarService.ALL_CALENDARS_QUERY }]
       })
       .subscribe(console.log);
   }
 
   getCalendars() {
-    const query = gql`
-      query allCalendars {
-        allCalendars {
-          name
-          id
-        }
-      }
-    `;
     return this.apollo
-      .watchQuery<allCalendars>({ query })
-      .valueChanges.pipe(map(res => res.data.allCalendars));
+      .watchQuery<allCalendars>({ query: CalendarService.ALL_CALENDARS_QUERY })
+      .valueChanges.pipe(map(res => res.data.getAllCalendars));
   }
 
   getCalendar(id: any) {
-    const query = gql`
-      query getCalendar($id: Int!) {
-        getCalendar(id: $id) {
-          id
-          name
-          appointmentSet {
-            id
-          }
-        }
-      }
-    `;
     const variables: getCalendarVariables = { id };
-    return this.apollo.watchQuery<getCalendar>({ query, variables })
-      .valueChanges;
+    return this.apollo.watchQuery<getCalendar>({
+      query: CalendarService.GET_CALENDAR_QUERY,
+      variables
+    }).valueChanges;
   }
 }
