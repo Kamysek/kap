@@ -8,6 +8,9 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
+    "postinstall": "yarn run codegen",
+    "prebuild": "yarn run codegen",
+    "prestart": "yarn run codegen",
     "codegen": "apollo client:codegen --localSchemaFile schema.json.graphql --target typescript --outputFlat"
   },
   "private": true,
