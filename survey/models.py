@@ -16,8 +16,8 @@ class Survey(models.Model):
 
     class Meta:
         permissions = (
-            ("view_created_by_survey", "View created by survey survey"),
-            ("view_updated_by_survey", "View updated by survey survey"),
+            ("view_created_by_survey", "View created by survey"),
+            ("view_updated_by_survey", "View updated by survey"),
         )
 
 
