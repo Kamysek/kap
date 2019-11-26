@@ -3,19 +3,24 @@ from django.contrib.auth import get_user_model
 
 
 class Calendar(models.Model):
-    name = models.CharField(max_length=150, blank=False, null=False)
-    doctor = models.PositiveIntegerField(null=False,blank=False)#models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, blank=False, null=False)
+    doctor = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        permissions = (
+            ("view_doctor", "View doctor"),
+        )
+
 
 class Appointment(models.Model):
     title = models.CharField(max_length=50, null=True)
-    comment_doctor = models.TextField(max_length=200, null=False, blank=True)
-    comment_patient = models.TextField(max_length=200, null=False, blank=True)
-    calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE)
-    patient = models.PositiveIntegerField(null=True) #models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
+    comment_doctor = models.TextField(max_length=500, null=False, blank=True, default="")
+    comment_patient = models.TextField(max_length=500, null=False, blank=True, default="")
+    calendar = models.ForeignKey(Calendar, null=True, blank=False, on_delete=models.CASCADE)
+    patient = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     appointment_start = models.DateTimeField()
     appointment_end = models.DateTimeField()
@@ -26,8 +31,10 @@ class Appointment(models.Model):
 
     class Meta:
         permissions = (
-            ("can_add_appointment_patient", "Can add appointment patient"),
-            ("can_change_appointment_patient", "Can change appointment patient"),
-            ("can_delete_appointment_patient", "Can delete appointment patient"),
-            ("can_view_appointment_patient", "Can view appointment patient"),
+            ("add_appointment_patient", "Add appointment patient"),
+            ("change_appointment_patient", "Change appointment patient"),
+            ("delete_appointment_patient", "Delete appointment patient"),
+            ("view_appointment_patient", "View appointment patient"),
+            ("view_patient", "View patient"),
+            ("view_comment_doctor", "View comment doctor"),
         )

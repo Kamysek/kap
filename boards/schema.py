@@ -14,6 +14,12 @@ class UnauthorisedAccessError(GraphQLError):
 class BoardType(DjangoObjectType):
     class Meta:
         model = Board
+        fields = ('name', 'description', 'creator')
+
+    def resolve_creator(self, info):
+        if info.context.user.has_perm('boards.view_creator_board'):
+            return self.creator
+        return None
 
 
 class BoardInput(graphene.InputObjectType):
@@ -91,6 +97,12 @@ class DeleteBoard(graphene.Mutation):
 class TopicType(DjangoObjectType):
     class Meta:
         model = Topic
+        fields = ('subject', 'last_updated', 'board', 'creator')
+
+    def resolve_creator(self, info):
+        if info.context.user.has_perm('boards.view_creator_topic'):
+            return self.creator
+        return None
 
 
 class TopicInput(graphene.InputObjectType):
@@ -178,6 +190,17 @@ class DeleteTopic(graphene.Mutation):
 class PostType(DjangoObjectType):
     class Meta:
         model = Post
+        fields = ('message', 'topics', 'created_at', 'created_by', 'updated_at', 'updated_by')
+
+    def resolve_created_by(self, info):
+        if info.context.user.has_perm('boards.view_created_by'):
+            return self.created_by
+        return None
+
+    def resolve_updated_by(self, info):
+        if info.context.user.has_perm('boards.view_updated_by'):
+            return self.updated_by
+        return None
 
 
 class PostInput(graphene.InputObjectType):
@@ -264,45 +287,45 @@ class DeletePost(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    board = graphene.Field(BoardType, ident=graphene.Int())
-    topic = graphene.Field(TopicType, ident=graphene.Int())
-    post = graphene.Field(PostType, ident=graphene.Int())
+    get_board = graphene.Field(BoardType, id=graphene.Int())
+    get_topic = graphene.Field(TopicType, id=graphene.Int())
+    get_post = graphene.Field(PostType, id=graphene.Int())
 
-    all_boards = graphene.List(BoardType)
-    all_topics = graphene.List(TopicType)
-    all_posts = graphene.List(PostType)
+    get_all_boards = graphene.List(BoardType)
+    get_all_topics = graphene.List(TopicType)
+    get_all_posts = graphene.List(PostType)
 
     @login_required
-    def resolve_board(self, info, **kwargs):
+    def resolve_get_board(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_board'):
-            ident = kwargs.get('ident')
-            if ident is not None:
+            id = kwargs.get('id')
+            if id is not None:
                 try:
-                    return Board.objects.get(pk=ident)
+                    return Board.objects.get(pk=id)
                 except Board.DoesNotExist:
                     raise GraphQLError('Board does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
     @login_required
-    def resolve_topic(self, info, **kwargs):
+    def resolve_get_topic(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_topic'):
-            ident = kwargs.get('ident')
-            if ident is not None:
+            id = kwargs.get('id')
+            if id is not None:
                 try:
-                    return Topic.objects.get(pk=ident)
+                    return Topic.objects.get(pk=id)
                 except Topic.DoesNotExist:
                     raise GraphQLError('Topic does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
     @login_required
-    def resolve_post(self, info, **kwargs):
+    def resolve_get_post(self, info, **kwargs):
         if info.context.user.has_perm('boards.can_view_post'):
-            ident = kwargs.get('ident')
-            if ident is not None:
+            id = kwargs.get('id')
+            if id is not None:
                 try:
-                    return Post.objects.get(pk=ident)
+                    return Post.objects.get(pk=id)
                 except Post.DoesNotExist:
                     raise GraphQLError('Post does not exist!')
         else:
@@ -319,7 +342,7 @@ class Query(graphene.ObjectType):
             raise UnauthorisedAccessError(message='No permissions to see the boards!')
 
     @login_required
-    def resolve_all_topics(self, info):
+    def resolve_get_all_topics(self, info):
         if info.context.user.has_perm('boards.can_view_topic'):
             try:
                 return Topic.objects.all()
@@ -329,7 +352,7 @@ class Query(graphene.ObjectType):
             raise UnauthorisedAccessError(message='No permissions to see the topics!')
 
     @login_required
-    def resolve_all_posts(self, info):
+    def resolve_get_all_posts(self, info):
         if info.context.user.has_perm('boards.can_view_post'):
             try:
                 return Post.objects.all()

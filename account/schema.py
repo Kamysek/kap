@@ -15,6 +15,11 @@ class UnauthorisedAccessError(GraphQLError):
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
+        fields = ('id',
+                  'username',
+                  'is_staff',
+                  'is_active',
+                  'date_joined')
 
 
 class UserInput(graphene.InputObjectType):
@@ -62,10 +67,10 @@ class UpdateUser(graphene.Mutation):
                 user_instance = CustomUser.objects.get(pk=user_id)
                 if user_instance:
                     if input.password:
-                        user_instance.password = input.password
-                    if input.is_staff:
+                        user_instance.set_password(input.password)
+                    if input.is_staff and info.context.user.has_perm('account.edit_user'):
                         user_instance.is_staff = input.is_staff
-                    if input.is_active:
+                    if input.is_active and info.context.user.has_perm('account.edit_user'):
                         user_instance.is_active = input.is_active
                     user_instance.save()
                     return UpdateUser(user=user_instance)
@@ -104,6 +109,9 @@ class DeleteUser(graphene.Mutation):
 class GroupType(DjangoObjectType):
     class Meta:
         model = Group
+        fields = ('id',
+                  'name',
+                  'user_set')
 
 
 class GroupInput(graphene.InputObjectType):
@@ -162,15 +170,15 @@ class UpdateGroup(graphene.Mutation):
 
 
 class Query(graphene.AbstractType):
-    me = graphene.Field(UserType)
-    user = graphene.Field(UserType, id=graphene.Int())
-    users = graphene.List(UserType)
+    get_me = graphene.Field(UserType)
+    get_user = graphene.Field(UserType, id=graphene.Int())
+    get_all_users = graphene.List(UserType)
 
-    group = graphene.Field(GroupType)
-    groups = graphene.List(GroupType)
+    get_group = graphene.Field(GroupType, name=graphene.String())
+    get_all_groups = graphene.List(GroupType)
 
     @login_required
-    def resolve_me(self, info, **kwargs):
+    def resolve_get_me(self, info, **kwargs):
         if info.context.user.has_perm('account.can_view_custom_user'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
@@ -184,7 +192,7 @@ class Query(graphene.AbstractType):
             raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    def resolve_user(self, info, **kwargs):
+    def resolve_get_user(self, info, **kwargs):
         if info.context.user.has_perm('account.can_view_custom_user'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
@@ -197,7 +205,7 @@ class Query(graphene.AbstractType):
             raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    def resolve_users(self, info):
+    def resolve_get_all_users(self, info):
         if info.context.user.has_perm('account.can_view_custom_user'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
@@ -208,7 +216,7 @@ class Query(graphene.AbstractType):
             raise UnauthorisedAccessError(message='No permissions to view a user!')
 
     @login_required
-    def resolve_group(self, info, **kwargs):
+    def resolve_get_group(self, info, **kwargs):
         if info.context.user.has_perm('auth.can_update_group'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
@@ -221,7 +229,7 @@ class Query(graphene.AbstractType):
             raise UnauthorisedAccessError(message='No permissions to view a group!')
 
     @login_required
-    def resolve_groups(self, info, **kwargs):
+    def resolve_get_all_groups(self, info, **kwargs):
         if info.context.user.has_perm('auth.can_update_group'):
             if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
                     name='Admin').exists():
@@ -235,4 +243,8 @@ class Query(graphene.AbstractType):
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     create_group = CreateGroup.Field()
-    add_to_group = UpdateGroup.Field()
+
+    update_user = UpdateUser.Field()
+    update_group = UpdateGroup.Field()
+
+    delete_user = DeleteUser.Field()
