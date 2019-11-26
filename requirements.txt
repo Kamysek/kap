@@ -1,6 +1,5 @@
-graphql
 aniso8601==7.0.0
-Django==2.2.7
+django==2.2.7
 django-filter==2.2.0
 django-graphql-jwt==0.2.2
 graphene==2.1.8
