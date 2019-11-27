@@ -1,5 +1,7 @@
+import django_filters
 import graphene
 from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from .models import Appointment, Calendar
@@ -34,20 +36,30 @@ class UnauthorisedAccessError(GraphQLError):
         super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
+class CalendarFilter(django_filters.FilterSet):
+    class Meta:
+        model = Calendar
+        fields = ['name', 'doctor']
+
+
 class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.id
         return -1
 
+    @login_required
     def resolve_name(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.name
         return None
 
+    @login_required
     def resolve_doctor(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.doctor
@@ -123,45 +135,60 @@ class DeleteCalendar(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a calendar!')
 
 
+class AppointmentFilter(django_filters.FilterSet):
+    class Meta:
+        model = Appointment
+        fields = ['title', 'calendar', 'appointment_start', 'appointment_end', 'taken']
+
+
 class AppointmentType(DjangoObjectType):
     class Meta:
         model = Appointment
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.id
         return -1
 
+    @login_required
     def resolve_title(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.title
         return None
 
+    @login_required
     def resolve_comment_doctor(self, info):
         if hasGroup(["Admin", "Doctor"], info):
             return self.comment_doctor
         return None
 
+    @login_required
     def resolve_comment_patient(self, info):
         if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
             return self.comment_patient
         return None
 
+    @login_required
     def resolve_calendar(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.calendar
         return None
 
+    @login_required
     def resolve_patient(self, info):
         if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
             return self.patient
         return None
 
+    @login_required
     def resolve_created_at(self, info):
         if hasGroup(["Admin", "Doctor"], info):
             return self.created_at
         return None
 
+    @login_required
     def resolve_appointment_start(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             if not self.taken:
@@ -171,6 +198,7 @@ class AppointmentType(DjangoObjectType):
                     return self.appointment_start
         return None
 
+    @login_required
     def resolve_appointment_end(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             if not self.taken:
@@ -180,6 +208,7 @@ class AppointmentType(DjangoObjectType):
                     return self.appointment_end
         return None
 
+    @login_required
     def resolve_taken(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.taken
@@ -374,6 +403,15 @@ class DeleteTakenAppointment(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
+
+    get_calendar = graphene.relay.Node.Field(CalendarType)
+    get_calendars = DjangoFilterConnectionField(CalendarType, filterset_class=CalendarFilter)
+
+    get_appointment = graphene.relay.Node.Field(AppointmentType)
+    get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
+
+
+    """
     get_calendar = graphene.List(CalendarType, id=graphene.Int(required=False, default_value=None))
     appointment = graphene.List(AppointmentType, id=graphene.Int(required=False, default_value=None),
                                 title=graphene.String(required=False, default_value=None),
@@ -406,6 +444,8 @@ class Query(graphene.ObjectType):
         if only_mine:
             objects = objects.filter(patient_id=info.context.user.id)
         return objects
+
+    """
 
 
 class Mutation(graphene.ObjectType):
