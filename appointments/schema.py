@@ -147,7 +147,7 @@ class AppointmentType(DjangoObjectType):
         return None
 
     def resolve_comment_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor"], info) or self.patient==info.context.user:
             return self.comment_patient
         return None
 
@@ -157,12 +157,12 @@ class AppointmentType(DjangoObjectType):
         return None
 
     def resolve_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor"], info) or self.patient==info.context.user:
             return self.patient
         return None
 
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor"], info) or self.patient==info.context.user:
             return self.created_at
         return None
 
