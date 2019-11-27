@@ -18,7 +18,7 @@ class Calendar(models.Model):
 class Appointment(models.Model):
     title = models.CharField(max_length=50, null=True)
     comment_doctor = models.TextField(max_length=500, null=False, blank=True, default="")
-    comment_patient = models.TextField(max_length=500, null=True, blank=True, default="")
+    comment_patient = models.TextField(max_length=500, null=False, blank=True, default="")
     calendar = models.ForeignKey(Calendar, null=True, blank=False, on_delete=models.CASCADE)
     patient = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True)

@@ -15,11 +15,6 @@ def isAppointmentFree(newAppointment, allAppointments):
             return False
     return True
 
-def hasGroup(groups, info):
-    for role in groups:
-        if info.context.user.groups.filter(name=role).exists() :
-            return True
-    return False
 
 def checkAppointmentFormat(newAppointment):
     print(str(newAppointment.appointment_end - newAppointment.appointment_start))
@@ -35,19 +30,12 @@ class UnauthorisedAccessError(GraphQLError):
 class CalendarType(DjangoObjectType):
     class Meta:
         model = Calendar
-        fields = ('id','name','doctor','appointment_set')
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.id
-        return None
-
-    def resolve_name(self,info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.id
-        return None
+        fields = ('id',
+                  'name',
+                  'doctor')
 
     def resolve_doctor(self, info):
-        if hasGroup(["Admin","Doctor","Patient"],info):
+        if info.context.user.has_perm('appointments.view_doctor'):
             return self.doctor
         return None
 
@@ -131,54 +119,14 @@ class AppointmentType(DjangoObjectType):
             'appointment_end',
             'taken')
 
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.id
-        return None
-
-    def resolve_title(self, info):
-        if hasGroup(["Admin","Doctor","Patient"],info):
-            return self.title
-        return None
-
-    def resolve_comment_doctor(self, info):
-        if hasGroup(["Admin", "Doctor","Patient"], info):
-            return self.comment_doctor
-        return None
-
-    def resolve_comment_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.comment_patient
-        return None
-
-    def resolve_calendar(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.calendar
-        return None
-
     def resolve_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if info.context.user.has_perm('appointments.view_patient'):
             return self.patient
         return None
 
-    def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.created_at
-        return None
-
-    def resolve_appointment_start(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.appointment_start
-        return None
-
-    def resolve_appointment_end(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.appointment_end
-        return None
-
-    def resolve_taken(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.taken
+    def resolve_comment_doctor(self, info):
+        if info.context.user.has_perm('appointments.view_comment_doctor'):
+            return self.comment_doctor
         return None
 
 
@@ -362,21 +310,79 @@ class DeleteTakenAppointment(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    calendar = graphene.List(CalendarType, id=graphene.Int(required=False, default_value=None), doctor=graphene.String(required=False, default_value=None),taken = graphene.Boolean(required=False,default_value=None))
-    all_calendars = graphene.List(CalendarType)
+    get_calendar = graphene.Field(CalendarType, id=graphene.Int())
+    get_my_calendars = graphene.List(CalendarType)  # only for doctor
+    get_all_calendars = graphene.List(CalendarType)
+    get_all_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
+    get_all_taken_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())  # only for doctor
+    get_all_open_appointments_from_calendar = graphene.List(AppointmentType, id=graphene.Int())
     get_my_appointments = graphene.List(AppointmentType)
 
     @login_required
-    def resolve_calendar(self, info, **kwargs):
-        id=kwargs.get('id')
-        doctor = kwargs.get('doctor')
-        taken = kwargs.get('taken')
-        objects = Calendar.objects.all()
+    def resolve_get_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_calendar'):
+            id = kwargs.get('id')
+            if id is not None:
+                try:
+                    return Calendar.objects.get(pk=id)
+                except Calendar.DoesNotExist:
+                    raise GraphQLError('Calendar does not exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the calendar!')
 
-        if id is not None :
-            print("FILTERING")
-            objects = objects.filter(id=id)
-        return objects
+    @login_required
+    def resolve_get_my_calendars(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.add_calendar'):
+            return Calendar.objects.filter(doctor_id=info.context.user.id)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the calendars!')
+
+    @login_required
+    def resolve_get_all_calendars(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_calendar'):
+            return Calendar.objects.all()
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the calendars!')
+
+    @login_required
+    def resolve_get_all_appointments_from_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_appointment'):
+            id = kwargs.get('id')
+            if id is not None:
+                return Appointment.objects.filter(calendar_id=id)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+
+    @login_required
+    def resolve_get_all_taken_appointments_from_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_appointment'):
+            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(name='Admin').exists():
+                id = kwargs.get('id')
+                if id is not None:
+                    return Appointment.objects.filter(calendar_id=id, taken=True)
+            else:
+                raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+
+    @login_required
+    def resolve_get_all_open_appointments_from_calendar(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm('appointments.view_appointment'):
+            id = kwargs.get('id')
+            if id is not None:
+                return Appointment.objects.filter(calendar_id=id, taken=False)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
+
+    @login_required
+    def resolve_get_my_appointments(self, info, **kwargs):
+        if info.context.user.has_perm('appointments.view_appointment_patient') or info.context.user.has_perm('appointments.view_appointment'):
+            try:
+                return Appointment.objects.filter(patient_id=info.context.user.id)
+            except Appointment.DoesNotExist:
+                raise GraphQLError('No appointments exist!')
+        else:
+            raise UnauthorisedAccessError(message='No permissions to see the appointments!')
 
 
 class Mutation(graphene.ObjectType):
