@@ -362,21 +362,37 @@ class DeleteTakenAppointment(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    calendar = graphene.List(CalendarType, id=graphene.Int(required=False, default_value=None), doctor=graphene.String(required=False, default_value=None),taken = graphene.Boolean(required=False,default_value=None))
-    all_calendars = graphene.List(CalendarType)
-    get_my_appointments = graphene.List(AppointmentType)
+    calendar = graphene.List(CalendarType, id=graphene.Int(required=False, default_value=None))
+    appointment = graphene.List(AppointmentType, id=graphene.Int(required=False, default_value=None), title=graphene.String(required=False, default_value=None),taken = graphene.Boolean(required=False,default_value=None),only_mine=graphene.Boolean(required=False,default_value=None))
+
 
     @login_required
     def resolve_calendar(self, info, **kwargs):
         id=kwargs.get('id')
-        doctor = kwargs.get('doctor')
-        taken = kwargs.get('taken')
         objects = Calendar.objects.all()
 
         if id is not None :
             print("FILTERING")
             objects = objects.filter(id=id)
         return objects
+
+    @login_required
+    def resolve_appointment(self,info,**kwargs):
+        id = kwargs.get('id')
+        title = kwargs.get('title')
+        taken = kwargs.get('taken')
+        only_mine = kwargs.get('only_mine')
+        objects = Appointment.objects.all()
+        if id is not None:
+            objects = objects.filter(id=id)
+        if title is not None:
+            objects = objects.filter(title=title)
+        if taken is not None:
+            objects = objects.filter(taken=taken)
+        if only_mine:
+            objects = objects.filter(patient_id=info.context.user.id)
+        return objects
+
 
 
 class Mutation(graphene.ObjectType):
