@@ -1,0 +1,135 @@
+mutation{
+  createCalendar(input:{name: "Test"}) {
+    clientMutationId
+  	calendar{
+      id
+      name
+      appointmentSet{
+        edges{
+          node{
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation{
+  updateCalendar(input:{id:"Q2FsZW5kYXJUeXBlOjI=" name: "TestTest"}) {
+    clientMutationId
+    calendar{
+      name
+      id
+    }
+  }
+}
+
+mutation{
+  deleteCalendar(input:{id:"Q2FsZW5kYXJUeXBlOjI="}) {
+    ok
+    clientMutationId
+    calendar{
+      id
+    }
+  }
+}
+
+query{
+  getCalendars {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+ 	getCalendar(id:"Q2FsZW5kYXJUeXBlOjM=") {
+   	doctor {
+   	  id
+      username
+    }
+ 	}
+}
+
+mutation{
+  createAppointment(input:{appointmentStart:"2019-11-19T18:21:12+00:00",appointmentEnd:"2019-11-19T18:30:12+00:00",commentDoctor:"graphql created this comment",title:"GraphQL",calendar:"Q2FsZW5kYXJUeXBlOjE=",}) {
+		appointment{
+      title
+      appointmentEnd
+      appointmentStart
+      patient {
+        id
+      }
+      calendar{
+        doctor{
+        	id
+        }
+      }
+    }
+  }
+}
+
+mutation{
+  updateAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjQ=" title:"GraphQasdfasdfL"}) {
+		appointment{
+      id
+      title
+      appointmentEnd
+      appointmentStart
+      patient {
+        id
+      }
+      calendar{
+        doctor{
+        	id
+        }
+      }
+    }
+  }
+}
+
+mutation{
+	deleteAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjQ="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+mutation{
+ 	takeAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg="}) {
+ 	  clientMutationId
+ 	}
+}
+
+mutation{
+ 	updateTakenAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg=" commentPatient:"TestTest"}) {
+ 	  clientMutationId
+    appointment {
+      id
+      title
+      patient{
+        id
+        isStaff
+        isActive
+      }
+    }
+
+ 	}
+}
+
+mutation{
+ 	deleteAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg="}){
+    ok
+    appointment{
+      taken
+      patient{
+        id
+      }
+      title
+    }
+  }
+}

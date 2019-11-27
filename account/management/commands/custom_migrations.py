@@ -106,6 +106,7 @@ class Command(BaseCommand):
                     except Permission.DoesNotExist:
                         self.stdout.write(codename + " not found")
 
+"""
     # add custom permissions
         proj_add_perm1 = Permission.objects.get(name='Add appointment patient')
         proj_add_perm2 = Permission.objects.get(name='Change appointment patient')
@@ -169,3 +170,4 @@ class Command(BaseCommand):
         Group.objects.get(name='Patient').permissions.add(proj_add_perm2)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm3)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm4)
+"""
