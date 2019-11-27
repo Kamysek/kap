@@ -39,11 +39,11 @@ class CalendarType(DjangoObjectType):
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.id
-        return None
+        return -1
 
     def resolve_name(self,info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.id
+            return self.name
         return None
 
     def resolve_doctor(self, info):
