@@ -1,10 +1,21 @@
+import django_filters
 import graphene
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from graphene_django import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
+from graphql_relay import from_global_id
+
 from account.models import CustomUser
 from graphql_jwt.decorators import login_required
+
+
+def hasGroup(groups, info):
+    for role in groups:
+        if info.context.user.groups.filter(name=role).exists():
+            return True
+    return False
 
 
 class UnauthorisedAccessError(GraphQLError):
@@ -12,66 +23,61 @@ class UnauthorisedAccessError(GraphQLError):
         super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
+class UserFilter(django_filters.FilterSet):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined']
+
+
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
-        fields = ('id',
-                  'username',
-                  'is_staff',
-                  'is_active',
-                  'date_joined')
+        interfaces = (graphene.relay.Node,)
 
 
-class UserInput(graphene.InputObjectType):
-    id = graphene.ID()
-    username = graphene.String()
-    password = graphene.String()
-    is_staff = graphene.Boolean()
-    is_active = graphene.Boolean()
-
-
-class CreateUser(graphene.Mutation):
-    class Arguments:
-        input = UserInput(required=True)
-
+class CreateUser(graphene.relay.ClientIDMutation):
     user = graphene.Field(UserType)
 
+    class Input:
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
+        is_staff = graphene.Boolean(required=True)
+        is_active = graphene.Boolean(required=True)
+
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('account.can_add_custom_user'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                user_instance = get_user_model()(
-                    username=input.username,
-                )
-                user_instance.set_password(input.password)
-                user_instance.save()
-                return CreateUser(user=user_instance)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to create user!')
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            user_instance = get_user_model()(
+                username=input.get('username'),
+            )
+            user_instance.set_password(input.get('password'))
+            user_instance.save()
+            return CreateUser(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a user!')
 
 
-class UpdateUser(graphene.Mutation):
-    class Arguments:
-        user_id = graphene.Int(required=True)
-        input = UserInput(required=True)
-
+class UpdateUser(graphene.relay.ClientIDMutation):
     user = graphene.Field(UserType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        password = graphene.String()
+        is_staff = graphene.Boolean()
+        is_active = graphene.Boolean()
+
     @login_required
-    def mutate(self, info, user_id, input=None):
-        if info.context.user.has_perm('account.can_change_custom_user'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=user_id)
+                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('id'))[1])
                 if user_instance:
-                    if input.password:
-                        user_instance.set_password(input.password)
-                    if input.is_staff and info.context.user.has_perm('account.edit_user'):
-                        user_instance.is_staff = input.is_staff
-                    if input.is_active and info.context.user.has_perm('account.edit_user'):
-                        user_instance.is_active = input.is_active
+                    if input.get('password'):
+                        user_instance.set_password(input.get('password'))
+                    if input.get('is_staff'):
+                        user_instance.is_staff = input.get('is_staff')
+                    if input.get('is_active'):
+                        user_instance.is_active = input.get('is_active')
                     user_instance.save()
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
@@ -80,164 +86,100 @@ class UpdateUser(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to change a user!')
 
 
-class DeleteUser(graphene.Mutation):
+class DeleteUser(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        user_id = graphene.Int(required=True)
-
     user = graphene.Field(UserType)
 
+    class Input:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, user_id):
-        if info.context.user.has_perm('account.can_delete_custom_user'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                try:
-                    user_instance = CustomUser.objects.get(pk=user_id)
-                    if user_instance:
-                        user_instance.delete()
-                        return DeleteUser(ok=True)
-                except CustomUser.DoesNotExist:
-                    raise GraphQLError('User does not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to delete user!')
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            try:
+                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('id'))[1])
+                if user_instance:
+                    user_instance.delete()
+                    return DeleteUser(ok=True)
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a user!')
+
+
+class GroupFilter(django_filters.FilterSet):
+    class Meta:
+        model = CustomUser
+        fields = ['id']
 
 
 class GroupType(DjangoObjectType):
     class Meta:
         model = Group
-        fields = ('id',
-                  'name',
-                  'user_set')
+        interfaces = (graphene.relay.Node,)
 
 
-class GroupInput(graphene.InputObjectType):
-    name = graphene.String()
-
-
-class CreateGroup(graphene.Mutation):
-    class Arguments:
-        input = GroupInput(required=True)
-
+class CreateGroup(graphene.relay.ClientIDMutation):
     group = graphene.Field(GroupType)
 
-    @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('auth.can_add_group'):
-            if info.context.user.groups.filter(name='Admin').exists():
-                group_instance = Group.objects.get_or_create(name=input.name)
-                group_instance.save()
+    class Input:
+        name = graphene.String()
 
-                return CreateGroup(group=group_instance)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to create the group!')
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin"], info):
+            group_instance = Group.objects.get_or_create(name=input.get('name'))
+            group_instance.save()
+            return CreateGroup(group=group_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a group!')
 
 
-class UpdateGroup(graphene.Mutation):
-    group_str = graphene.String()
-    user_id = graphene.Int()
-
-    class Arguments:
+class UpdateGroup(graphene.relay.ClientIDMutation):
+    class Input:
         group_str = graphene.String()
-        user_id = graphene.Int()
+        user_id = graphene.ID()
 
     @login_required
-    def mutate(self, info, group_str, user_id):
-        if info.context.user.has_perm('auth.can_update_group'):
-            if info.context.user.groups.filter(name='Admin').exists():
-                try:
-                    user_instance = CustomUser.objects.get(id=user_id)
-                except CustomUser.DoesNotExist:
-                    raise GraphQLError('User does not exist!')
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin"], info):
+            try:
+                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
 
-                try:
-                    group_instance = Group.objects.get(name=group_str)
-                except Group.DoesNotExist:
-                    raise GraphQLError('Group does not exist!')
+            try:
+                group_instance = Group.objects.get(name=from_global_id(input.get('group_str'))[1])
+            except Group.DoesNotExist:
+                raise GraphQLError('Group does not exist!')
 
-                user_instance.groups.add(group_instance)
+            user_instance.groups.add(group_instance)
 
-                return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to update the group!')
+            return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
         else:
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
 
 class Query(graphene.AbstractType):
-    get_me = graphene.Field(UserType)
-    get_user = graphene.Field(UserType, id=graphene.Int())
-    get_all_users = graphene.List(UserType)
+    get_user = graphene.relay.Node.Field(UserType)
+    get_users = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
 
-    get_group = graphene.Field(GroupType, name=graphene.String())
-    get_all_groups = graphene.List(GroupType)
+    get_group = graphene.relay.Node.Field(GroupType)
+    get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)
 
-    @login_required
-    def resolve_get_me(self, info, **kwargs):
-        if info.context.user.has_perm('account.can_view_custom_user'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                user = info.context.user
-                if user.is_anonymous:
-                    raise GraphQLError('Not logged in!')
-                return user
-            else:
-                raise UnauthorisedAccessError(message='No permissions to view the user!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view a user!')
+    get_user_group = graphene.String()
 
     @login_required
-    def resolve_get_user(self, info, **kwargs):
-        if info.context.user.has_perm('account.can_view_custom_user'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    return get_user_model().objects.get(pk=id)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to view the user!')
+    def resolve_get_user_group(self, info, **kwargs):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            if info.context.user.groups.filter(name="Admin").exists():
+                return "Admin"
+            if info.context.user.groups.filter(name="Doctor").exists():
+                return "Doctor"
+            if info.context.user.groups.filter(name="Patient").exists():
+                return "Patient"
         else:
-            raise UnauthorisedAccessError(message='No permissions to view a user!')
-
-    @login_required
-    def resolve_get_all_users(self, info):
-        if info.context.user.has_perm('account.can_view_custom_user'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                return get_user_model().objects.all()
-            else:
-                raise UnauthorisedAccessError(message='No permissions to view the user!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view a user!')
-
-    @login_required
-    def resolve_get_group(self, info, **kwargs):
-        if info.context.user.has_perm('auth.can_update_group'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                name = kwargs.get('name')
-                if name is not None:
-                    return Group.objects.get(name=name)
-            else:
-                raise UnauthorisedAccessError(message='No permissions to view the group!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view a group!')
-
-    @login_required
-    def resolve_get_all_groups(self, info, **kwargs):
-        if info.context.user.has_perm('auth.can_update_group'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                return Group.objects.all()
-            else:
-                raise UnauthorisedAccessError(message='No permissions to view the group!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view a group!')
+            raise UnauthorisedAccessError(message='No permissions to view the user group!')
 
 
 class Mutation(graphene.ObjectType):
