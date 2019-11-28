@@ -1,9 +1,40 @@
+import django_filters
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
+from graphql_relay import from_global_id
+from graphene_django.filter import DjangoFilterConnectionField
 from survey.models import *
 from datetime import datetime
 from graphql_jwt.decorators import login_required
+
+
+def hasGroup(groups, info):
+    for role in groups:
+        if info.context.user.groups.filter(name=role).exists():
+            return True
+    return False
+
+
+def checkIfTextAnswered(question, user):
+    if TextAnswer.objects.filter(question=question, created_by=user):
+        return True
+    else:
+        return False
+
+
+def checkIfChoiceAnswered(question, user):
+    if ChoiceAnswer.objects.filter(question=question, created_by=user):
+        return True
+    else:
+        return False
+
+
+def checkIfNumberAnswered(question, user):
+    if NumberAnswer.objects.filter(question=question, created_by=user):
+        return True
+    else:
+        return False
 
 
 class UnauthorisedAccessError(GraphQLError):
@@ -11,70 +42,108 @@ class UnauthorisedAccessError(GraphQLError):
         super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
+class SurveyFilter(django_filters.FilterSet):
+    class Meta:
+        model = Survey
+        fields = ['survey_name', 'description', 'created_on', 'created_by', 'updated_on', 'updated_by', 'pub_date']
+
+
 class SurveyType(DjangoObjectType):
     class Meta:
         model = Survey
-        fields = ('survey_name', 'description', 'created_on', 'created_by', 'updated_on', 'updated_by', 'pub_date')
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_survey_name(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.survey_name
+        return None
+
+    @login_required
+    def resolve_description(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.description
+        return None
+
+    @login_required
+    def resolve_created_on(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.created_on
+        return None
+
+    @login_required
     def resolve_created_by(self, info):
-        if info.context.user.has_perm('survey.view_created_by_survey'):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.created_by
         return None
 
+    @login_required
+    def resolve_updated_on(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.updated_on
+        return None
+
+    @login_required
     def resolve_updated_by(self, info):
-        if info.context.user.has_perm('survey.view_updated_by_survey'):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.updated_by
         return None
 
+    @login_required
+    def resolve_pub_date(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.pub_date
+        return None
 
-class SurveyInput(graphene.InputObjectType):
-    id = graphene.ID()
-    survey_name = graphene.String()
-    description = graphene.String()
-    pub_date = graphene.DateTime()
 
-
-class CreateSurvey(graphene.Mutation):
-    class Arguments:
-        input = SurveyInput(required=True)
-
+class CreateSurvey(graphene.relay.ClientIDMutation):
     survey = graphene.Field(SurveyType)
 
+    class Input:
+        survey_name = graphene.String(required=True)
+        description = graphene.String(required=True)
+        pub_date = graphene.DateTime()
+
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_survey'):
-            if input.survey_name is not None and input.description is not None and info.context.user is not None:
-                survey_instance = Survey(survey_name=input.survey_name, description=input.description,
-                                         created_on=datetime.now(), created_by=info.context.user,
-                                         updated_on=datetime.now(), updated_by=info.context.user,
-                                         pub_date=datetime.now() if input.pub_date is None else input.pub_date)
-                survey_instance.save()
-                return CreateSurvey(survey=survey_instance)
-            else:
-                raise GraphQLError('Please provide complete information!')
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            survey_instance = Survey(survey_name=input.get('survey_name'), description=input.get('description'),
+                                     created_on=datetime.now(), created_by=info.context.user,
+                                     updated_on=datetime.now(), updated_by=info.context.user,
+                                     pub_date=datetime.now() if input.get('pub_date') is None else input.get('pub_date'))
+            survey_instance.save()
+            return CreateSurvey(survey=survey_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a survey!')
 
 
-class UpdateSurvey(graphene.Mutation):
-    class Arguments:
-        survey_id = graphene.Int(required=True)
-        input = SurveyInput(required=True)
-
+class UpdateSurvey(graphene.relay.ClientIDMutation):
     survey = graphene.Field(SurveyType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        survey_name = graphene.String()
+        description = graphene.String()
+        pub_date = graphene.DateTime()
+
     @login_required
-    def mutate(self, info, survey_id, input=None):
-        if info.context.user.has_perm('survey.change_survey'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                survey_instance = Survey.objects.get(pk=survey_id)
+                survey_instance = Survey.objects.get(pk=from_global_id(input.get('id'))[1])
                 if survey_instance:
-                    if input.survey_name:
-                        survey_instance.survey_name = input.survey_name
-                    if input.description:
-                        survey_instance.description = input.description
-                    if input.pub_date:
-                        survey_instance.pub_date = input.pub_date
+                    if input.get('survey_name'):
+                        survey_instance.survey_name = input.get('survey_name')
+                    if input.get('description'):
+                        survey_instance.description = input.get('description')
+                    if input.get('pub_date'):
+                        survey_instance.pub_date = input.get('pub_date')
                     survey_instance.updated_by = info.context.user
                     survey_instance.updated_on = datetime.now()
                     survey_instance.save()
@@ -85,19 +154,18 @@ class UpdateSurvey(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a survey!')
 
 
-class DeleteSurvey(graphene.Mutation):
+class DeleteSurvey(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        survey_id = graphene.Int(required=True)
-
     survey = graphene.Field(SurveyType)
 
+    class Input:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, survey_id):
-        if info.context.user.has_perm('survey.delete_survey'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                survey_instance = Survey.objects.get(pk=survey_id)
+                survey_instance = Survey.objects.get(pk=from_global_id(input.get('id'))[1])
                 if survey_instance:
                     survey_instance.delete()
                     return DeleteSurvey(ok=True)
@@ -107,73 +175,111 @@ class DeleteSurvey(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a survey!')
 
 
+class QuestionFilter(django_filters.FilterSet):
+    class Meta:
+        model = Question
+        fields = ['question_text', 'created_on', 'created_by', 'updated_on', 'updated_by', 'question_type', 'survey']
+
+
 class QuestionType(DjangoObjectType):
     class Meta:
         model = Question
-        fields = ('question_text', 'created_on', 'created_by', 'updated_on', 'updated_by', 'question_type', 'survey')
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_question_text(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.question_text
+        return None
+
+    @login_required
+    def resolve_created_on(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.created_on
+        return None
+
+    @login_required
     def resolve_created_by(self, info):
-        if info.context.user.has_perm('survey.view_created_by_question'):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.created_by
         return None
 
+    @login_required
+    def resolve_updated_on(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.updated_on
+        return None
+
+    @login_required
     def resolve_updated_by(self, info):
-        if info.context.user.has_perm('survey.view_updated_by_question'):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
             return self.updated_by
         return None
 
-
-class QuestionInput(graphene.InputObjectType):
-    id = graphene.ID()
-    question_text = graphene.String()
-    question_type = graphene.String()
-    survey = graphene.Int()
-
-
-class CreateQuestion(graphene.Mutation):
-    class Arguments:
-        input = QuestionInput(required=True)
-
-    question = graphene.Field(QuestionType)
+    @login_required
+    def resolve_question_type(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.question_type
+        return None
 
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_question'):
-            if input.question_text is not None and input.question_type is not None and input.survey is not None and info.context.user is not None:
-                try:
-                    get_survey = Survey.objects.get(pk=input.survey)
-                    question_instance = Question(question_text=input.question_text, created_on=datetime.now(),
-                                                 created_by=info.context.user, updated_on=datetime.now(),
-                                                 updated_by=info.context.user, question_type=input.question_type,
-                                                 survey=get_survey)
-                    question_instance.save()
-                    return CreateQuestion(question=question_instance)
-                except Question.DoesNotExist:
-                    raise GraphQLError('Survey does not exist!')
-            else:
-                raise GraphQLError('Please provide complete information!')
+    def resolve_survey(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.survey
+        return None
+
+
+class CreateQuestion(graphene.relay.ClientIDMutation):
+    question = graphene.Field(QuestionType)
+
+    class Input:
+        question_text = graphene.String(required=True)
+        question_type = graphene.String(required=True)
+        survey = graphene.ID(required=True)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            try:
+                get_survey = Survey.objects.get(pk=from_global_id(input.get('survey'))[1])
+                question_instance = Question(question_text=input.get('question_text'), created_on=datetime.now(),
+                                             created_by=info.context.user, updated_on=datetime.now(),
+                                             updated_by=info.context.user, question_type=input.get('question_type'),
+                                             survey=get_survey)
+                question_instance.save()
+                return CreateQuestion(question=question_instance)
+            except Question.DoesNotExist:
+                raise GraphQLError('Survey does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a question!')
 
 
-class UpdateQuestion(graphene.Mutation):
-    class Arguments:
-        question_id = graphene.Int(required=True)
-        input = QuestionInput(required=True)
-
+class UpdateQuestion(graphene.relay.ClientIDMutation):
     question = graphene.Field(QuestionType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        question_text = graphene.String()
+        question_type = graphene.String()
+        survey = graphene.ID()
+
     @login_required
-    def mutate(self, info, question_id, input=None):
-        if info.context.user.has_perm('survey.change_question'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                question_instance = Question.objects.get(pk=question_id)
+                question_instance = Question.objects.get(pk=from_global_id(input.get('id'))[1])
                 if question_instance:
-                    if input.question_text:
-                        question_instance.question_text = input.question_text
-                    if input.survey:
+                    if input.get('question_text'):
+                        question_instance.question_text = input.get('question_text')
+                    if input.get('survey'):
                         try:
-                            get_survey = Survey.objects.get(pk=input.survey)
+                            get_survey = Survey.objects.get(pk=from_global_id(input.get('survey'))[1])
                             question_instance.survey = get_survey
                         except Survey.DoesNotExist:
                             raise GraphQLError('Survey does not exist!')
@@ -187,19 +293,18 @@ class UpdateQuestion(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a question!')
 
 
-class DeleteQuestion(graphene.Mutation):
+class DeleteQuestion(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        question_id = graphene.Int(required=True)
-
     question = graphene.Field(QuestionType)
 
+    class Arguments:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, question_id):
-        if info.context.user.has_perm('survey.delete_question'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                question_instance = Question.objects.get(pk=question_id)
+                question_instance = Question.objects.get(pk=from_global_id(input.get('id'))[1])
                 if question_instance:
                     question_instance.delete()
                     return DeleteQuestion(ok=True)
@@ -209,62 +314,79 @@ class DeleteQuestion(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a question!')
 
 
+class ChoiceFilter(django_filters.FilterSet):
+    class Meta:
+        model = Choice
+        fields = ['choice_text', 'question']
+
+
 class ChoiceType(DjangoObjectType):
     class Meta:
         model = Choice
-        fields = ('choice_text', 'question')
-
-
-class ChoiceInput(graphene.InputObjectType):
-    id = graphene.ID()
-    choice_text = graphene.String()
-    question = graphene.Int()
-
-
-class CreateChoice(graphene.Mutation):
-    class Arguments:
-        input = ChoiceInput(required=True)
-
-    choice = graphene.Field(ChoiceType)
+        interfaces = (graphene.relay.Node,)
 
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_choice'):
-            if input.choice_text is not None and input.question is not None and info.context.user is not None:
-                try:
-                    get_question = Question.objects.get(pk=input.question)
-                    if get_question.question_type == Question.CHOICE:
-                        choice_instance = Choice(choice_text=input.choice_text, question=get_question)
-                        choice_instance.save()
-                        return CreateChoice(choice=choice_instance)
-                    else:
-                        raise GraphQLError('Wrong question type!')
-                except Question.DoesNotExist:
-                    raise GraphQLError('Question does not exist!')
-            else:
-                raise GraphQLError('Please provide complete information!')
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_choice_text(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.choice_text
+        return None
+
+    @login_required
+    def resolve_question(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.question
+        return None
+
+
+class CreateChoice(graphene.relay.ClientIDMutation):
+    choice = graphene.Field(ChoiceType)
+
+    class Input:
+        choice_text = graphene.String(required=True)
+        question = graphene.ID(required=True)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            try:
+                get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
+                if get_question.question_type == Question.CHOICE:
+                    choice_instance = Choice(choice_text=input.get('choice_text'), question=get_question)
+                    choice_instance.save()
+                    return CreateChoice(choice=choice_instance)
+                else:
+                    raise GraphQLError('Wrong question type!')
+            except Question.DoesNotExist:
+                raise GraphQLError('Question does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a choice!')
 
 
-class UpdateChoice(graphene.Mutation):
-    class Arguments:
-        choice_id = graphene.Int(required=True)
-        input = ChoiceInput(required=True)
-
+class UpdateChoice(graphene.relay.ClientIDMutation):
     choice = graphene.Field(ChoiceType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        choice_text = graphene.String()
+        question = graphene.ID()
+
     @login_required
-    def mutate(self, info, choice_id, input=None):
-        if info.context.user.has_perm('survey.change_choice'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                choice_instance = Choice.objects.get(pk=choice_id)
+                choice_instance = Choice.objects.get(pk=from_global_id(input.get('id'))[1])
                 if choice_instance:
-                    if input.choice_text:
-                        choice_instance.choice_text = input.choice_text
-                    if input.question:
+                    if input.get('choice_text'):
+                        choice_instance.choice_text = input.get('choice_text')
+                    if input.get('question'):
                         try:
-                            get_question = Question.objects.get(pk=input.question)
+                            get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
                             choice_instance.question = get_question
                         except Question.DoesNotExist:
                             raise GraphQLError('Question does not exist!')
@@ -276,19 +398,18 @@ class UpdateChoice(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a choice!')
 
 
-class DeleteChoice(graphene.Mutation):
+class DeleteChoice(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        choice_id = graphene.Int(required=True)
-
     choice = graphene.Field(ChoiceType)
 
+    class Input:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, choice_id):
-        if info.context.user.has_perm('survey.delete_choice'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
             try:
-                choice_instance = Choice.objects.get(pk=choice_id)
+                choice_instance = Choice.objects.get(pk=from_global_id(input.get('id'))[1])
                 if choice_instance:
                     choice_instance.delete()
                     return DeleteChoice(ok=True)
@@ -298,77 +419,100 @@ class DeleteChoice(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a choice!')
 
 
+class TextAnswerFilter(django_filters.FilterSet):
+    class Meta:
+        model = TextAnswer
+        fields = ['text_answer', 'created_on', 'created_by', 'updated_on', 'question']
+
+
 class TextAnswerType(DjangoObjectType):
     class Meta:
         model = TextAnswer
-        fields = ('text_answer', 'created_on', 'created_by', 'updated_on', 'question')
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_created_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.created_on
+        return None
+
+    @login_required
     def resolve_created_by(self, info):
-        if info.context.user.has_perm('survey.view_created_by_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
-    def resolve_updated_by(self, info):
-        if info.context.user.has_perm('survey.view_updated_by_answer'):
-            return self.updated_by
+    @login_required
+    def resolve_updated_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.updated_on
         return None
 
+    @login_required
     def resolve_text_answer(self, info):
-        if info.context.user.has_perm('survey.view_text_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.text_answer
         return None
 
+    @login_required
+    def resolve_question(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.question
+        return None
 
-class TextAnswerInput(graphene.InputObjectType):
-    id = graphene.ID()
-    text_answer = graphene.String()
-    question = graphene.Int()
 
-
-class CreateTextAnswer(graphene.Mutation):
-    class Arguments:
-        input = TextAnswerInput(required=True)
-
+class CreateTextAnswer(graphene.relay.ClientIDMutation):
     text_answer = graphene.Field(TextAnswerType)
 
+    class Input:
+        text_answer = graphene.String(required=True)
+        question = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_text_answer'):
-            if input.text_answer is not None and input.question is not None and info.context.user is not None:
-                try:
-                    get_question = Question.objects.get(pk=input.question)
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
+            try:
+                get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
+                if checkIfTextAnswered(get_question, info.context.user):
                     if get_question.question_type == Question.TEXT:
-                        text_answer_instance = TextAnswer(text_answer=input.text_answer, question=get_question)
+                        text_answer_instance = TextAnswer(text_answer=input.get('text_answer'), question=get_question)
                         text_answer_instance.save()
                         return CreateTextAnswer(text_answer=text_answer_instance)
                     else:
                         raise GraphQLError('Wrong question type!')
-                except Question.DoesNotExist:
-                    raise GraphQLError('Question does not exist!')
-            else:
-                raise GraphQLError('Please provide complete information!')
+                else:
+                    raise GraphQLError('Question already answered!')
+            except Question.DoesNotExist:
+                raise GraphQLError('Question does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a text answer!')
 
 
-class UpdateTextAnswer(graphene.Mutation):
-    class Arguments:
-        text_answer_id = graphene.Int(required=True)
-        input = TextAnswerInput(required=True)
-
+class UpdateTextAnswer(graphene.relay.ClientIDMutation):
     text_answer = graphene.Field(TextAnswerType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        text_answer = graphene.String()
+        question = graphene.ID()
+
     @login_required
-    def mutate(self, info, text_answer_id, input=None):
-        if info.context.user.has_perm('survey.change_text_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                text_answer_instance = TextAnswer.objects.get(pk=text_answer_id)
+                text_answer_instance = TextAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if text_answer_instance:
-                    if input.text_answer:
-                        text_answer_instance.text_answer = input.text_answer
-                    if input.question:
+                    if input.get('text_answer'):
+                        text_answer_instance.text_answer = input.get('text_answer')
+                    if input.get('question'):
                         try:
-                            get_question = Question.objects.get(pk=input.question)
+                            get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
                             text_answer_instance.question = get_question
                         except Question.DoesNotExist:
                             raise GraphQLError('Question does not exist!')
@@ -380,19 +524,18 @@ class UpdateTextAnswer(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a text answer!')
 
 
-class DeleteTextAnswer(graphene.Mutation):
+class DeleteTextAnswer(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        text_answer_id = graphene.Int(required=True)
-
     text_answer = graphene.Field(TextAnswerType)
 
+    class Arguments:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, text_answer_id):
-        if info.context.user.has_perm('survey.delete_text_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                text_answer_instance = TextAnswer.objects.get(pk=text_answer_id)
+                text_answer_instance = TextAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if text_answer_instance:
                     text_answer_instance.delete()
                     return DeleteTextAnswer(ok=True)
@@ -402,77 +545,100 @@ class DeleteTextAnswer(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a text answer!')
 
 
+class NumberAnswerFilter(django_filters.FilterSet):
+    class Meta:
+        model = NumberAnswer
+        fields = ['number_answer', 'created_on', 'created_by', 'updated_on', 'question']
+
+
 class NumberAnswerType(DjangoObjectType):
     class Meta:
         model = NumberAnswer
-        fields = ('number_answer', 'created_on', 'created_by', 'updated_on', 'question')
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_created_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.created_on
+        return None
+
+    @login_required
     def resolve_created_by(self, info):
-        if info.context.user.has_perm('survey.view_created_by_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
-    def resolve_updated_by(self, info):
-        if info.context.user.has_perm('survey.view_updated_by_answer'):
-            return self.updated_by
+    @login_required
+    def resolve_updated_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.updated_on
         return None
 
+    @login_required
     def resolve_number_answer(self, info):
-        if info.context.user.has_perm('survey.view_number_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.number_answer
         return None
 
+    @login_required
+    def resolve_question(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.question
+        return None
 
-class NumberAnswerInput(graphene.InputObjectType):
-    id = graphene.ID()
-    number_answer = graphene.String()
-    question = graphene.Int()
 
-
-class CreateNumberAnswer(graphene.Mutation):
-    class Arguments:
-        input = NumberAnswerInput(required=True)
-
+class CreateNumberAnswer(graphene.relay.ClientIDMutation):
     number_answer = graphene.Field(NumberAnswerType)
 
+    class Input:
+        number_answer = graphene.String(required=True)
+        question = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_number_answer'):
-            if input.number_answer is not None and input.question is not None and info.context.user is not None:
-                try:
-                    get_question = Question.objects.get(pk=input.question)
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
+            try:
+                get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
+                if checkIfNumberAnswered(get_question, info.context.user):
                     if get_question.question_type == Question.NUMBER:
-                        number_answer_instance = NumberAnswer(number_answer=input.number_answer, question=get_question)
+                        number_answer_instance = NumberAnswer(number_answer=input.get('number_answer'), question=get_question)
                         number_answer_instance.save()
                         return CreateNumberAnswer(number_answer=number_answer_instance)
                     else:
                         raise GraphQLError('Wrong question type!')
-                except Question.DoesNotExist:
-                    raise GraphQLError('Question does not exist!')
-            else:
-                raise GraphQLError('Please provide complete information!')
+                else:
+                    raise GraphQLError('Question already answered!')
+            except Question.DoesNotExist:
+                raise GraphQLError('Question does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a number answer!')
 
 
-class UpdateNumberAnswer(graphene.Mutation):
-    class Arguments:
-        number_answer_id = graphene.Int(required=True)
-        input = NumberAnswerInput(required=True)
-
+class UpdateNumberAnswer(graphene.relay.ClientIDMutation):
     number_answer = graphene.Field(NumberAnswerType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        number_answer = graphene.String()
+        question = graphene.ID()
+
     @login_required
-    def mutate(self, info, number_answer_id, input=None):
-        if info.context.user.has_perm('survey.change_number_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                number_answer_instance = NumberAnswer.objects.get(pk=number_answer_id)
+                number_answer_instance = NumberAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if number_answer_instance:
-                    if input.number_answer:
-                        number_answer_instance.number_answer = input.number_answer
-                    if input.question:
+                    if input.get('number_answer'):
+                        number_answer_instance.number_answer = input.get('number_answer')
+                    if input.get('question'):
                         try:
-                            get_question = Question.objects.get(pk=input.question)
+                            get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
                             number_answer_instance.question = get_question
                         except Question.DoesNotExist:
                             raise GraphQLError('Question does not exist!')
@@ -484,19 +650,18 @@ class UpdateNumberAnswer(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a number answer!')
 
 
-class DeleteNumberAnswer(graphene.Mutation):
+class DeleteNumberAnswer(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        number_answer_id = graphene.Int(required=True)
-
     number_answer = graphene.Field(NumberAnswerType)
 
+    class Inputs:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, number_answer_id):
-        if info.context.user.has_perm('survey.delete_number_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                number_answer_instance = NumberAnswer.objects.get(pk=number_answer_id)
+                number_answer_instance = NumberAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if number_answer_instance:
                     number_answer_instance.delete()
                     return DeleteNumberAnswer(ok=True)
@@ -506,48 +671,70 @@ class DeleteNumberAnswer(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to delete a number answer!')
 
 
+class ChoiceAnswerFilter(django_filters.FilterSet):
+    class Meta:
+        model = ChoiceAnswer
+        fields = ['choice_answer', 'created_on', 'created_by', 'updated_on', 'question']
+
+
 class ChoiceAnswerType(DjangoObjectType):
     class Meta:
         model = ChoiceAnswer
-        fields = ('choice_answer', 'created_on', 'created_by', 'updated_on', 'question')
+        interfaces = (graphene.relay.Node,)
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_created_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.created_on
+        return None
+
+    @login_required
     def resolve_created_by(self, info):
-        if info.context.user.has_perm('survey.view_created_by_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
-    def resolve_updated_by(self, info):
-        if info.context.user.has_perm('survey.view_updated_by_answer'):
-            return self.updated_by
+    @login_required
+    def resolve_updated_on(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.updated_on
         return None
 
+    @login_required
     def resolve_choice_answer(self, info):
-        if info.context.user.has_perm('survey.view_choice_answer'):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
             return self.choice_answer
         return None
 
+    @login_required
+    def resolve_question(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+            return self.question
+        return None
 
-class ChoiceAnswerInput(graphene.InputObjectType):
-    id = graphene.ID()
-    choice_answer = graphene.Int()
-    question = graphene.Int()
 
-
-class CreateChoiceAnswer(graphene.Mutation):
-    class Arguments:
-        input = ChoiceAnswerInput(required=True)
-
+class CreateChoiceAnswer(graphene.relay.ClientIDMutation):
     choice_answer = graphene.Field(ChoiceAnswerType)
 
+    class Input:
+        choice_answer = graphene.ID(required=True)
+        question = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, input=None):
-        if info.context.user.has_perm('survey.add_choice_answer'):
-            if input.choice_answer is not None and input.question is not None and info.context.user is not None:
-                try:
-                    get_question = Question.objects.get(pk=input.question)
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
+            try:
+                get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
+                if checkIfChoiceAnswered(get_question, info.context.user):
                     if get_question.question_type == Question.CHOICE:
                         try:
-                            get_choice = Choice.objects.get(pk=input.choice_answer)
+                            get_choice = Choice.objects.get(pk=from_global_id(input.get('choice_answer'))[1])
                             choice_answer_instance = ChoiceAnswer(choice_answer=get_choice,
                                                                   question=get_question)
                             choice_answer_instance.save()
@@ -556,36 +743,37 @@ class CreateChoiceAnswer(graphene.Mutation):
                             raise GraphQLError('Choice does not exist!')
                     else:
                         raise GraphQLError('Wrong question type!')
-                except Question.DoesNotExist:
-                    raise GraphQLError('Question does not exist!')
-            else:
-                raise GraphQLError('Please provide complete information!')
+                else:
+                    raise GraphQLError('Question already answered!')
+            except Question.DoesNotExist:
+                raise GraphQLError('Question does not exist!')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a choice answer!')
 
 
-class UpdateChoiceAnswer(graphene.Mutation):
-    class Arguments:
-        choice_answer_id = graphene.Int(required=True)
-        input = ChoiceAnswerInput(required=True)
-
+class UpdateChoiceAnswer(graphene.relay.ClientIDMutation):
     choice_answer = graphene.Field(ChoiceAnswerType)
 
+    class Input:
+        id = graphene.ID(required=True)
+        choice_answer = graphene.ID()
+        question = graphene.ID()
+
     @login_required
-    def mutate(self, info, choice_answer_id, input=None):
-        if info.context.user.has_perm('survey.change_choice_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                choice_answer_instance = ChoiceAnswer.objects.get(pk=choice_answer_id)
+                choice_answer_instance = ChoiceAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if choice_answer_instance:
-                    if input.choice_answer:
+                    if input.get('choice_answer'):
                         try:
-                            get_choice = Choice.objects.get(pk=input.choice_answer)
+                            get_choice = Choice.objects.get(pk=from_global_id(input.get('choice_answer'))[1])
                             choice_answer_instance.choice_answer = get_choice
                         except Choice.DoesNotExist:
                             raise GraphQLError('Choice does not exist!')
-                    if input.question:
+                    if input.get('question'):
                         try:
-                            get_question = Question.objects.get(pk=input.question)
+                            get_question = Question.objects.get(pk=from_global_id(input.get('question'))[1])
                             choice_answer_instance.question = get_question
                         except Question.DoesNotExist:
                             raise GraphQLError('Question does not exist!')
@@ -597,19 +785,18 @@ class UpdateChoiceAnswer(graphene.Mutation):
             raise UnauthorisedAccessError(message='No permissions to update a choice answer!')
 
 
-class DeleteChoiceAnswer(graphene.Mutation):
+class DeleteChoiceAnswer(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
-
-    class Arguments:
-        choice_answer_id = graphene.Int(required=True)
-
     choice_answer = graphene.Field(ChoiceAnswerType)
 
+    class Input:
+        id = graphene.ID(required=True)
+
     @login_required
-    def mutate(self, info, choice_answer_id):
-        if info.context.user.has_perm('survey.delete_choice_answer'):
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Patient"], info):
             try:
-                choice_answer_instance = ChoiceAnswer.objects.get(pk=choice_answer_id)
+                choice_answer_instance = ChoiceAnswer.objects.get(pk=from_global_id(input.get('id'))[1])
                 if choice_answer_instance:
                     choice_answer_instance.delete()
                     return DeleteChoiceAnswer(ok=True)
@@ -620,205 +807,19 @@ class DeleteChoiceAnswer(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    get_survey = graphene.Field(SurveyType, id=graphene.Int())
-    get_question = graphene.Field(QuestionType, id=graphene.Int())
-    get_choice = graphene.Field(ChoiceType, id=graphene.Int())
-    get_text_answer = graphene.Field(TextAnswerType, id=graphene.Int())
-    get_choice_answer = graphene.Field(ChoiceAnswerType, id=graphene.Int())
-    get_number_answer = graphene.Field(NumberAnswerType, id=graphene.Int())
+    get_survey = graphene.relay.Node.Field(SurveyType)
+    get_question = graphene.relay.Node.Field(QuestionType)
+    get_choice = graphene.relay.Node.Field(ChoiceType)
+    get_text_answer = graphene.relay.Node.Field(TextAnswerType)
+    get_choice_answer = graphene.relay.Node.Field(ChoiceAnswerType)
+    get_number_answer = graphene.relay.Node.Field(NumberAnswerType)
 
-    get_all_surveys = graphene.List(SurveyType)
-    get_all_questions = graphene.List(QuestionType, id=graphene.Int())
-    get_all_choices = graphene.List(ChoiceType, id=graphene.Int())
-    get_all_text_answers = graphene.List(TextAnswerType, id=graphene.Int())
-    get_all_choice_answers = graphene.List(ChoiceAnswerType, id=graphene.Int())
-    get_all_number_answers = graphene.List(NumberAnswerType, id=graphene.Int())
-
-    @login_required
-    def resolve_get_survey(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_survey'):
-            id = kwargs.get('id')
-            if id is not None:
-                try:
-                    return Survey.objects.get(pk=id)
-                except Survey.DoesNotExist:
-                    raise GraphQLError('Survey does not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the survey!')
-
-    @login_required
-    def resolve_get_question(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_question'):
-            id = kwargs.get('id')
-            if id is not None:
-                try:
-                    return Question.objects.get(pk=id)
-                except Question.DoesNotExist:
-                    raise GraphQLError('Question does not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the question!')
-
-    @login_required
-    def resolve_get_choice(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_choice'):
-            id = kwargs.get('id')
-            if id is not None:
-                try:
-                    return Choice.objects.get(pk=id)
-                except Choice.DoesNotExist:
-                    raise GraphQLError('Choice does not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the choice!')
-
-    @login_required
-    def resolve_get_text_answer(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_text_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        return TextAnswer.objects.get(pk=id)
-                    except TextAnswer.DoesNotExist:
-                        raise GraphQLError('Text answer does not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the text answers!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the text answer!')
-
-    @login_required
-    def resolve_get_choice_answer(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_choice_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        return ChoiceAnswer.objects.get(pk=id)
-                    except ChoiceAnswer.DoesNotExist:
-                        raise GraphQLError('Choice answer does not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the choice answer!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the choice answer!')
-
-    @login_required
-    def resolve_get_number_answer(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_number_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        return NumberAnswer.objects.get(pk=id)
-                    except NumberAnswer.DoesNotExist:
-                        raise GraphQLError('Number answer does not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the number answer!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the number answer!')
-
-    @login_required
-    def resolve_get_all_surveys(self, info):
-        if info.context.user.has_perm('survey.view_survey'):
-            try:
-                return Survey.objects.all()
-            except Survey.DoesNotExist:
-                raise GraphQLError('Surveys do not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the surveys!')
-
-    @login_required
-    def resolve_get_all_questions(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_questions'):
-            id = kwargs.get('id')
-            if id is not None:
-                try:
-                    try:
-                        get_survey = Survey.objects.get(pk=id)
-                    except Survey.DoesNotExist:
-                        raise GraphQLError('Survey does not exist!')
-                    return Question.objects.filter(survey=get_survey)
-                except Question.DoesNotExist:
-                    raise GraphQLError('Questions do not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the questions!')
-
-    @login_required
-    def resolve_get_all_choices(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_choices'):
-            id = kwargs.get('id')
-            if id is not None:
-                try:
-                    try:
-                        get_question = Question.objects.get(pk=id)
-                    except Question.DoesNotExist:
-                        raise GraphQLError('Question does not exist!')
-                    return Choice.objects.filter(question=get_question)
-                except Choice.DoesNotExist:
-                    raise GraphQLError('Choices do not exist!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the choices!')
-
-    @login_required
-    def resolve_get_all_text_answers(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_text_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        try:
-                            get_questions = self.resolve_get_all_questions(id)
-                        except Survey.DoesNotExist:
-                            raise GraphQLError('Survey does not exist!')
-                        return get_questions.objects.filter(question_type=Question.TEXT)
-                    except Question.DoesNotExist:
-                        raise GraphQLError('Questions do not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the text answers!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the text answer!')
-
-    @login_required
-    def resolve_get_all_choice_answers(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_choice_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        try:
-                            get_questions = self.resolve_get_all_questions(id)
-                        except Survey.DoesNotExist:
-                            raise GraphQLError('Survey does not exist!')
-                        return get_questions.objects.filter(question_type=Question.CHOICE)
-                    except Question.DoesNotExist:
-                        raise GraphQLError('Questions do not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the choice answers!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the choice answer!')
-
-    @login_required
-    def resolve_get_all_number_answers(self, info, **kwargs):
-        if info.context.user.has_perm('survey.view_number_answer'):
-            if info.context.user.groups.filter(name='Doctor').exists() or info.context.user.groups.filter(
-                    name='Admin').exists():
-                id = kwargs.get('id')
-                if id is not None:
-                    try:
-                        try:
-                            get_questions = self.resolve_get_all_questions(id)
-                        except Survey.DoesNotExist:
-                            raise GraphQLError('Survey does not exist!')
-                        return get_questions.objects.filter(question_type=Question.NUMBER)
-                    except Question.DoesNotExist:
-                        raise GraphQLError('Questions do not exist!')
-            else:
-                raise UnauthorisedAccessError(message='No permissions to see the number answers!')
-        else:
-            raise UnauthorisedAccessError(message='No permissions to see the number answer!')
+    get_surveys = DjangoFilterConnectionField(SurveyType, filterset_class=SurveyFilter)
+    get_questions = DjangoFilterConnectionField(QuestionType, filterset_class=QuestionFilter)
+    get_choices = DjangoFilterConnectionField(ChoiceType, filterset_class=ChoiceFilter)
+    get_text_answers = DjangoFilterConnectionField(TextAnswerType, filterset_class=TextAnswerFilter)
+    get_choice_answers = DjangoFilterConnectionField(ChoiceAnswerType, filterset_class=ChoiceAnswerFilter)
+    get_number_answers = DjangoFilterConnectionField(NumberAnswerType, filterset_class=NumberAnswerFilter)
 
 
 class Mutation(graphene.ObjectType):

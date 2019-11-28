@@ -5,7 +5,6 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
-
 from .models import Appointment, Calendar
 
 
@@ -367,7 +366,7 @@ class DeleteTakenAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Patient","Admin"], info):
+        if hasGroup(["Patient", "Admin"], info):
             try:
                 appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
                 if appointment_instance.patient == info.context.user:

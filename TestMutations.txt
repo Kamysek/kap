@@ -261,3 +261,76 @@ mutation{
     clientMutationId
   }
 }
+
+mutation{
+  createSurvey(input:{surveyName: "Test" description:"TEst"}) {
+    clientMutationId
+    survey {
+      id
+      description
+    }
+  }
+}
+
+mutation{
+  updateSurvey(input:{id:"U3VydmV5VHlwZTo1" surveyName:"TestTestTest"}) {
+    clientMutationId
+    survey{
+      surveyName
+      id
+    }
+  }
+}
+
+query{
+  getSurveys {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+ getSurvey(id:"U3VydmV5VHlwZTo1") {
+   id
+ }
+}
+
+mutation{
+  deleteSurvey(input:{id:"U3VydmV5VHlwZTo1"}) {
+    ok
+    clientMutationId
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"number" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"choice" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"text" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
