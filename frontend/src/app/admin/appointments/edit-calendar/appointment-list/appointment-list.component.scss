@@ -1,0 +1,17 @@
+:root {
+  display: block;
+}
+
+.appointments {
+  .item {
+    border: 3px transparent solid;
+    padding: 4px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+
+    &.active {
+      border: 3px grey solid;
+    }
+  }
+}

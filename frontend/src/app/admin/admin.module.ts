@@ -10,7 +10,8 @@ import {
   MatFormFieldModule,
   MatIconModule,
   MatInputModule,
-  MatListModule
+  MatListModule,
+  MatTableModule
 } from '@angular/material';
 import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -23,10 +24,15 @@ import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { ViewAppointmentComponent } from './appointments/edit-calendar/appointment-list/view-appointment/view-appointment.component';
 import { AppointmentResolver } from './resolvers/appointment.resolver';
 import { AppointmentInfoComponent } from './appointments/edit-calendar/appointment-list/view-appointment/appointment-info/appointment-info.component';
+import { UsersComponent } from './users/users.component';
+import { AdminComponent } from './admin.component';
+import { UsersResolver } from './resolvers/users.resolver';
+import { NewUserDialogComponent } from './users/new-user-dialog/new-user-dialog.component';
 
 const routes: Routes = [
   {
     path: 'admin',
+    component: AdminComponent,
     children: [
       {
         path: 'calendars',
@@ -45,6 +51,13 @@ const routes: Routes = [
             ]
           }
         ]
+      },
+      {
+        path: 'users',
+        component: UsersComponent,
+        resolve: {
+          users: UsersResolver
+        }
       }
     ]
   }
@@ -59,7 +72,10 @@ const routes: Routes = [
     NewAppointmentComponent,
     AppointmentFormComponent,
     ViewAppointmentComponent,
-    AppointmentInfoComponent
+    AppointmentInfoComponent,
+    UsersComponent,
+    AdminComponent,
+    NewUserDialogComponent
   ],
   imports: [
     CommonModule,
@@ -73,8 +89,9 @@ const routes: Routes = [
     MatFormFieldModule,
     MatDatepickerModule,
     MatMomentDateModule,
-    MatIconModule
+    MatIconModule,
+    MatTableModule
   ],
-  entryComponents: [NewCalendarDialogComponent]
+  entryComponents: [NewCalendarDialogComponent, NewUserDialogComponent]
 })
 export class AdminModule {}

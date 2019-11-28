@@ -1,12 +1,13 @@
 <main class="mat-app-background mat-typography" fxLayout="column">
   <h1>Manage Appointments</h1>
-  <div fxLayout="row">
+  <div fxLayout="row" fxLayoutGap="2rem">
     <section fxLayout="column">
       <h2>Calendars</h2>
       <mat-nav-list>
         <a
-          *ngFor="let calendar of calendars$ | async as calendars"
+          *ngFor="let calendar of calendars$ | async"
           [routerLink]="calendar.id"
+          routerLinkActive="active"
           mat-list-item
           >{{ calendar.name }}</a
         >

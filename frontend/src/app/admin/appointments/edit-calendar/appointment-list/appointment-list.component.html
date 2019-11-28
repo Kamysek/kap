@@ -1,11 +1,14 @@
 <h3>Appointments</h3>
-<div fxLayout="row">
+<div fxLayout="row" fxLayoutGap="2rem">
   <div>
-    <div fxLayout="column" fxLayoutGap="1rem">
+    <div class="appointments" fxLayout="column" fxLayoutGap="1rem">
       <div
+        [routerLink]="['view', appointment.id]"
         *ngFor="let appointment of calendar.appointments"
         fxLayout="row"
         fxLayoutGap="0.5rem"
+        class="item"
+        routerLinkActive="active"
       >
         <mat-icon>{{
           appointment.taken ? 'hourglass_full' : 'hourglass_empty'
@@ -16,18 +19,6 @@
             >{{ appointment.appointmentStart | date: 'medium' }} -
             {{ appointment.appointmentEnd | date: 'medium' }}</small
           >
-          <div fxLayout="row" fxLayoutGap="0.5rem">
-            <button mat-flat-button style="text-transform: uppercase" disabled>
-              Edit
-            </button>
-            <button
-              mat-flat-button
-              style="text-transform: uppercase"
-              [routerLink]="['view', appointment.id]"
-            >
-              Show
-            </button>
-          </div>
         </div>
       </div>
     </div>

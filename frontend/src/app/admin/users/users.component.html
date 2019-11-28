@@ -1,0 +1,26 @@
+<main class="mat-typography mat-app-background">
+  <h1>Manage Users</h1>
+  <button (click)="createUser()" mat-raised-button>Create User</button>
+  <!--<mat-form-field class="full-width">
+    <input matInput [formControl]="filterControl" placeholder="Filter">
+  </mat-form-field>-->
+  <table [dataSource]="users$" class="full-width" mat-table>
+    <ng-container matColumnDef="id">
+      <th *matHeaderCellDef mat-header-cell>ID</th>
+      <td *matCellDef="let element" mat-cell>{{ element.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="username">
+      <th *matHeaderCellDef mat-header-cell>Username</th>
+      <td *matCellDef="let element" mat-cell>{{ element.username }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th *matHeaderCellDef mat-header-cell></th>
+      <td *matCellDef="let element" mat-cell><a mat-button>VIEW</a></td>
+    </ng-container>
+
+    <tr *matHeaderRowDef="displayedColumns" mat-header-row></tr>
+    <tr *matRowDef="let row; columns: displayedColumns" mat-row></tr>
+  </table>
+</main>
