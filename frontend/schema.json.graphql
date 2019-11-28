@@ -5,17 +5,39 @@ schema {
   mutation: Mutation
 }
 
-type AppointmentType {
-  appointmentEnd: DateTime!
-  appointmentStart: DateTime!
+"An object with an ID"
+interface Node {
+  "The ID of the object."
+  id: ID!
+}
+
+type AppointmentType implements Node {
+  appointmentEnd: DateTime
+  appointmentStart: DateTime
   calendar: CalendarType
-  commentDoctor: String!
-  commentPatient: String!
+  commentDoctor: String
+  commentPatient: String
   createdAt: DateTime
+  "The ID of the object."
   id: ID!
   patient: UserType
   taken: Boolean!
   title: String
+}
+
+type AppointmentTypeConnection {
+  "Contains the nodes in this connection."
+  edges: [AppointmentTypeEdge]!
+  "Pagination data for this connection."
+  pageInfo: PageInfo!
+}
+
+"A Relay edge containing a `AppointmentType` and its cursor."
+type AppointmentTypeEdge {
+  "A cursor for use in pagination"
+  cursor: String!
+  "The item at the end of the edge"
+  node: AppointmentType
 }
 
 type BoardType {
@@ -24,10 +46,32 @@ type BoardType {
   name: String!
 }
 
-type CalendarType {
+type CalendarType implements Node {
+  appointmentSet(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): AppointmentTypeConnection!
   doctor: UserType
+  "The ID of the object."
   id: ID!
-  name: String!
+  name: String
+}
+
+type CalendarTypeConnection {
+  "Contains the nodes in this connection."
+  edges: [CalendarTypeEdge]!
+  "Pagination data for this connection."
+  pageInfo: PageInfo!
+}
+
+"A Relay edge containing a `CalendarType` and its cursor."
+type CalendarTypeEdge {
+  "A cursor for use in pagination"
+  cursor: String!
+  "The item at the end of the edge"
+  node: CalendarType
 }
 
 type ChoiceAnswerType {
@@ -43,16 +87,18 @@ type ChoiceType {
   question: QuestionType!
 }
 
-type CreateAppointment {
+type CreateAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
 }
 
 type CreateBoard {
   board: BoardType
 }
 
-type CreateCalendar {
+type CreateCalendarPayload {
   calendar: CalendarType
+  clientMutationId: String
 }
 
 type CreateChoice {
@@ -95,8 +141,9 @@ type CreateUser {
   user: UserType
 }
 
-type DeleteAppointment {
+type DeleteAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
   ok: Boolean
 }
 
@@ -105,8 +152,9 @@ type DeleteBoard {
   ok: Boolean
 }
 
-type DeleteCalendar {
+type DeleteCalendarPayload {
   calendar: CalendarType
+  clientMutationId: String
   ok: Boolean
 }
 
@@ -140,8 +188,9 @@ type DeleteSurvey {
   survey: SurveyType
 }
 
-type DeleteTakenAppointment {
+type DeleteTakenAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
   ok: Boolean
 }
 
@@ -168,9 +217,9 @@ type GroupType {
 }
 
 type Mutation {
-  createAppointment(input: AppointmentInput!): CreateAppointment
+  createAppointment(input: CreateAppointmentInput!): CreateAppointmentPayload
   createBoard(input: BoardInput!): CreateBoard
-  createCalendar(input: CalendarInput!): CreateCalendar
+  createCalendar(input: CreateCalendarInput!): CreateCalendarPayload
   createChoice(input: ChoiceInput!): CreateChoice
   createChoiceAnswer(input: ChoiceAnswerInput!): CreateChoiceAnswer
   createGroup(input: GroupInput!): CreateGroup
@@ -181,29 +230,28 @@ type Mutation {
   createTextAnswer(input: TextAnswerInput!): CreateTextAnswer
   createTopic(input: TopicInput!): CreateTopic
   createUser(input: UserInput!): CreateUser
-  deleteAppointment(appointmentId: Int!): DeleteAppointment
+  deleteAppointment(input: DeleteAppointmentInput!): DeleteAppointmentPayload
   deleteBoard(boardId: Int!): DeleteBoard
-  deleteCalendar(calendarId: Int!): DeleteCalendar
+  deleteCalendar(input: DeleteCalendarInput!): DeleteCalendarPayload
   deleteChoice(choiceId: Int!): DeleteChoice
   deleteChoiceAnswer(choiceAnswerId: Int!): DeleteChoiceAnswer
   deleteNumberAnswer(numberAnswerId: Int!): DeleteNumberAnswer
   deletePost(postId: Int!): DeletePost
   deleteQuestion(questionId: Int!): DeleteQuestion
   deleteSurvey(surveyId: Int!): DeleteSurvey
-  deleteTakenAppointment(appointmentId: Int!): DeleteTakenAppointment
+  deleteTakenAppointment(
+    input: DeleteTakenAppointmentInput!
+  ): DeleteTakenAppointmentPayload
   deleteTextAnswer(textAnswerId: Int!): DeleteTextAnswer
   deleteTopic(topicId: Int!): DeleteTopic
   deleteUser(userId: Int!): DeleteUser
   refreshToken(token: String!): Refresh
-  takeAppointment(appointmentId: Int!, commentPatient: String): TakeAppointment
+  takeAppointment(input: TakeAppointmentInput!): TakeAppointmentPayload
   "Obtain JSON Web Token mutation"
   tokenAuth(password: String!, username: String!): ObtainJSONWebToken
-  updateAppointment(
-    appointmentId: Int!
-    input: AppointmentInput!
-  ): UpdateAppointment
+  updateAppointment(input: UpdateAppointmentInput!): UpdateAppointmentPayload
   updateBoard(boardId: Int!, input: BoardInput!): UpdateBoard
-  updateCalendar(calendarId: Int!, input: CalendarInput!): UpdateCalendar
+  updateCalendar(input: UpdateCalendarInput!): UpdateCalendarPayload
   updateChoice(choiceId: Int!, input: ChoiceInput!): UpdateChoice
   updateChoiceAnswer(
     choiceAnswerId: Int!
@@ -218,9 +266,8 @@ type Mutation {
   updateQuestion(input: QuestionInput!, questionId: Int!): UpdateQuestion
   updateSurvey(input: SurveyInput!, surveyId: Int!): UpdateSurvey
   updateTakenAppointment(
-    appointmentId: Int!
-    commentPatient: String
-  ): UpdateTakenAppointment
+    input: UpdateTakenAppointmentInput!
+  ): UpdateTakenAppointmentPayload
   updateTextAnswer(
     input: TextAnswerInput!
     textAnswerId: Int!
@@ -243,6 +290,18 @@ type ObtainJSONWebToken {
   token: String
 }
 
+"The Relay compliant `PageInfo` type, containing data necessary to paginate this connection."
+type PageInfo {
+  "When paginating forwards, the cursor to continue."
+  endCursor: String
+  "When paginating forwards, are there more items?"
+  hasNextPage: Boolean!
+  "When paginating backwards, are there more items?"
+  hasPreviousPage: Boolean!
+  "When paginating backwards, the cursor to continue."
+  startCursor: String
+}
+
 type PostType {
   createdAt: DateTime!
   createdBy: UserType
@@ -252,29 +311,45 @@ type PostType {
 }
 
 type Query {
-  getAllAppointmentsFromCalendar(id: Int): [AppointmentType]
   getAllBoards: [BoardType]
-  getAllCalendars: [CalendarType]
   getAllChoiceAnswers(id: Int): [ChoiceAnswerType]
   getAllChoices(id: Int): [ChoiceType]
   getAllGroups: [GroupType]
   getAllNumberAnswers(id: Int): [NumberAnswerType]
-  getAllOpenAppointmentsFromCalendar(id: Int): [AppointmentType]
   getAllPosts: [PostType]
   getAllQuestions(id: Int): [QuestionType]
   getAllSurveys: [SurveyType]
-  getAllTakenAppointmentsFromCalendar(id: Int): [AppointmentType]
   getAllTextAnswers(id: Int): [TextAnswerType]
   getAllTopics: [TopicType]
   getAllUsers: [UserType]
+  "The ID of the object"
+  getAppointment(id: ID!): AppointmentType
+  getAppointments(
+    after: String
+    appointmentEnd: DateTime
+    appointmentStart: DateTime
+    before: String
+    calendar: ID
+    first: Int
+    last: Int
+    taken: Boolean
+    title: String
+  ): AppointmentTypeConnection
   getBoard(id: Int): BoardType
-  getCalendar(id: Int): CalendarType
+  "The ID of the object"
+  getCalendar(id: ID!): CalendarType
+  getCalendars(
+    after: String
+    before: String
+    doctor: ID
+    first: Int
+    last: Int
+    name: String
+  ): CalendarTypeConnection
   getChoice(id: Int): ChoiceType
   getChoiceAnswer(id: Int): ChoiceAnswerType
   getGroup(name: String): GroupType
   getMe: UserType
-  getMyAppointments: [AppointmentType]
-  getMyCalendars: [CalendarType]
   getNumberAnswer(id: Int): NumberAnswerType
   getPost(id: Int): PostType
   getQuestion(id: Int): QuestionType
@@ -309,8 +384,9 @@ type SurveyType {
   updatedOn: DateTime!
 }
 
-type TakeAppointment {
+type TakeAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
 }
 
 type TextAnswerType {
@@ -328,16 +404,18 @@ type TopicType {
   subject: String!
 }
 
-type UpdateAppointment {
+type UpdateAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
 }
 
 type UpdateBoard {
   board: BoardType
 }
 
-type UpdateCalendar {
+type UpdateCalendarPayload {
   calendar: CalendarType
+  clientMutationId: String
 }
 
 type UpdateChoice {
@@ -369,8 +447,9 @@ type UpdateSurvey {
   survey: SurveyType
 }
 
-type UpdateTakenAppointment {
+type UpdateTakenAppointmentPayload {
   appointment: AppointmentType
+  clientMutationId: String
 }
 
 type UpdateTextAnswer {
@@ -407,22 +486,9 @@ enum QuestionQuestionType {
   TEXT
 }
 
-input AppointmentInput {
-  appointmentEnd: DateTime
-  appointmentStart: DateTime
-  calendar: Int
-  commentDoctor: String
-  id: ID
-  title: String
-}
-
 input BoardInput {
   description: String
   id: ID
-  name: String
-}
-
-input CalendarInput {
   name: String
 }
 
@@ -436,6 +502,35 @@ input ChoiceInput {
   choiceText: String
   id: ID
   question: Int
+}
+
+input CreateAppointmentInput {
+  appointmentEnd: DateTime!
+  appointmentStart: DateTime!
+  calendar: ID!
+  clientMutationId: String
+  commentDoctor: String
+  title: String!
+}
+
+input CreateCalendarInput {
+  clientMutationId: String
+  name: String!
+}
+
+input DeleteAppointmentInput {
+  clientMutationId: String
+  id: ID!
+}
+
+input DeleteCalendarInput {
+  clientMutationId: String
+  id: ID!
+}
+
+input DeleteTakenAppointmentInput {
+  clientMutationId: String
+  id: ID!
 }
 
 input GroupInput {
@@ -468,6 +563,12 @@ input SurveyInput {
   surveyName: String
 }
 
+input TakeAppointmentInput {
+  clientMutationId: String
+  commentPatient: String
+  id: ID!
+}
+
 input TextAnswerInput {
   id: ID
   question: Int
@@ -479,6 +580,28 @@ input TopicInput {
   id: ID
   lastUpdated: DateTime
   subject: String
+}
+
+input UpdateAppointmentInput {
+  appointmentEnd: DateTime
+  appointmentStart: DateTime
+  calendar: ID
+  clientMutationId: String
+  commentDoctor: String
+  id: ID!
+  title: String
+}
+
+input UpdateCalendarInput {
+  clientMutationId: String
+  id: ID!
+  name: String
+}
+
+input UpdateTakenAppointmentInput {
+  clientMutationId: String
+  commentPatient: String
+  id: ID!
 }
 
 input UserInput {

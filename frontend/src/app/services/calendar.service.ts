@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import {
   createCalendar,
   createCalendarVariables
@@ -11,10 +11,6 @@ import {
   getCalendar,
   getCalendarVariables
 } from '../../../__generated__/getCalendar';
-import {
-  getAppointmentsForCalendar,
-  getAppointmentsForCalendarVariables
-} from '../../../__generated__/getAppointmentsForCalendar';
 
 @Injectable({
   providedIn: 'root'
@@ -22,15 +18,19 @@ import {
 export class CalendarService {
   private static ALL_CALENDARS_QUERY = gql`
     query allCalendars {
-      getAllCalendars {
-        name
-        id
+      getCalendars {
+        edges {
+          node {
+            name
+            id
+          }
+        }
       }
     }
   `;
 
   private static GET_CALENDAR_QUERY = gql`
-    query getCalendar($id: Int!) {
+    query getCalendar($id: ID!) {
       getCalendar(id: $id) {
         id
         name
@@ -38,24 +38,23 @@ export class CalendarService {
           username
           id
         }
-      }
-    }
-  `;
-
-  private static GET_APPOINTMENTS_FOR_CALENDAR = gql`
-    query getAppointmentsForCalendar($id: Int!) {
-      getAllAppointmentsFromCalendar(id: $id) {
-        id
-        appointmentStart
-        appointmentEnd
-        title
-        taken
+        appointmentSet {
+          edges {
+            node {
+              id
+              appointmentStart
+              appointmentEnd
+              title
+              taken
+            }
+          }
+        }
       }
     }
   `;
 
   private static CREATE_CALENDAR_MUTATION = gql`
-    mutation createCalendar($calendarInput: CalendarInput!) {
+    mutation createCalendar($calendarInput: CreateCalendarInput!) {
       createCalendar(input: $calendarInput) {
         calendar {
           id
@@ -81,7 +80,9 @@ export class CalendarService {
   getCalendars() {
     return this.apollo
       .watchQuery<allCalendars>({ query: CalendarService.ALL_CALENDARS_QUERY })
-      .valueChanges.pipe(map(res => res.data.getAllCalendars));
+      .valueChanges.pipe(
+        map(res => res.data.getCalendars.edges.map(edge => edge.node))
+      );
   }
 
   getCalendar(id: any) {
@@ -91,25 +92,6 @@ export class CalendarService {
         query: CalendarService.GET_CALENDAR_QUERY,
         variables
       })
-      .valueChanges.pipe(
-        switchMap(calendarRes =>
-          this.apollo
-            .watchQuery<
-              getAppointmentsForCalendar,
-              getAppointmentsForCalendarVariables
-            >({
-              query: CalendarService.GET_APPOINTMENTS_FOR_CALENDAR,
-              variables
-            })
-            .valueChanges.pipe(
-              map(appointmentRes =>
-                Object.assign({}, calendarRes.data.getCalendar, {
-                  appointments:
-                    appointmentRes.data.getAllAppointmentsFromCalendar
-                })
-              )
-            )
-        )
-      );
+      .valueChanges.pipe(map(res => res.data.getCalendar));
   }
 }
