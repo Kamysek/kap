@@ -5,13 +5,13 @@
       <h2>Calendars</h2>
       <mat-nav-list>
         <a
-          mat-list-item
           *ngFor="let calendar of calendars$ | async as calendars"
           [routerLink]="calendar.id"
+          mat-list-item
           >{{ calendar.name }}</a
         >
       </mat-nav-list>
-      <button mat-stroked-button (click)="createCalendar()">
+      <button (click)="createCalendar()" mat-stroked-button>
         Create a new Calendar
       </button>
     </section>

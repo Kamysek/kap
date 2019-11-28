@@ -1,8 +1,8 @@
 <main
+  class="mat-app-background"
   fxFill
   fxLayout="row"
   fxLayoutAlign="center center"
-  class="mat-app-background"
 >
   <mat-card class="mat-elevation-z5">
     <mat-card-title>Login</mat-card-title>
@@ -10,28 +10,28 @@
       <form [formGroup]="loginForm" fxLayout="column">
         <mat-form-field>
           <input
-            type="text"
             formControlName="username"
             matInput
             placeholder="username"
+            type="text"
           />
         </mat-form-field>
         <mat-form-field>
           <input
-            type="password"
             formControlName="password"
             matInput
             placeholder="password"
+            type="password"
           />
         </mat-form-field>
       </form>
     </mat-card-content>
     <mat-card-actions>
       <button
-        mat-raised-button
-        color="primary"
-        [disabled]="loginForm.invalid"
         (click)="submitForm()"
+        [disabled]="loginForm.invalid"
+        color="primary"
+        mat-raised-button
       >
         Login
       </button>

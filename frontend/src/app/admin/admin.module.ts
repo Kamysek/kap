@@ -5,7 +5,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import {
   MatButtonModule,
+  MatDatepickerModule,
   MatDialogModule,
+  MatFormFieldModule,
   MatInputModule,
   MatListModule
 } from '@angular/material';
@@ -15,6 +17,8 @@ import { EditCalendarComponent } from './appointments/edit-calendar/edit-calenda
 import { CalendarResolver } from './resolvers/calendar.resolver';
 import { AppointmentListComponent } from './appointments/edit-calendar/appointment-list/appointment-list.component';
 import { NewAppointmentComponent } from './appointments/edit-calendar/new-appointment/new-appointment.component';
+import { AppointmentFormComponent } from './appointments/edit-calendar/appointment-form/appointment-form.component';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
 
 const routes: Routes = [
   {
@@ -41,7 +45,8 @@ const routes: Routes = [
     NewCalendarDialogComponent,
     EditCalendarComponent,
     AppointmentListComponent,
-    NewAppointmentComponent
+    NewAppointmentComponent,
+    AppointmentFormComponent
   ],
   imports: [
     CommonModule,
@@ -51,7 +56,10 @@ const routes: Routes = [
     MatButtonModule,
     MatDialogModule,
     ReactiveFormsModule,
-    MatInputModule
+    MatInputModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatMomentDateModule
   ],
   entryComponents: [NewCalendarDialogComponent]
 })

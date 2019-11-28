@@ -11,6 +11,11 @@ import {
   getCalendar,
   getCalendarVariables
 } from '../../../__generated__/getCalendar';
+import { CreateAppointmentInput } from '../../../__generated__/globalTypes';
+import {
+  createAppointment,
+  createAppointmentVariables
+} from '../../../__generated__/createAppointment';
 
 @Injectable({
   providedIn: 'root'
@@ -64,6 +69,16 @@ export class CalendarService {
     }
   `;
 
+  private static CREATE_APPOINTMENT_MUTATION = gql`
+    mutation createAppointment($appointmentInput: CreateAppointmentInput!) {
+      createAppointment(input: $appointmentInput) {
+        appointment {
+          id
+        }
+      }
+    }
+  `;
+
   constructor(private apollo: Apollo) {}
 
   createNew(calendarInput: { name: string }) {
@@ -85,13 +100,36 @@ export class CalendarService {
       );
   }
 
-  getCalendar(id: any) {
+  getCalendar(id: getCalendarVariables['id']) {
     const variables = { id };
     return this.apollo
       .watchQuery<getCalendar, getCalendarVariables>({
         query: CalendarService.GET_CALENDAR_QUERY,
         variables
       })
-      .valueChanges.pipe(map(res => res.data.getCalendar));
+      .valueChanges.pipe(
+        map(res => res.data.getCalendar),
+        map(calendar =>
+          Object.assign({}, calendar, {
+            appointments: calendar.appointmentSet.edges.map(edge => edge.node)
+          })
+        )
+      );
+  }
+
+  addAppointment(appointmentInput: CreateAppointmentInput) {
+    const variables = { appointmentInput };
+    this.apollo
+      .mutate<createAppointment, createAppointmentVariables>({
+        mutation: CalendarService.CREATE_APPOINTMENT_MUTATION,
+        variables,
+        refetchQueries: [
+          {
+            query: CalendarService.GET_CALENDAR_QUERY,
+            variables: { id: variables.appointmentInput.calendar }
+          }
+        ]
+      })
+      .subscribe(console.log);
   }
 }

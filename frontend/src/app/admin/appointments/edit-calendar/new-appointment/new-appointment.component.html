@@ -1,1 +1,6 @@
-<p>new-appointment works!</p>
+<h3>New Appointment</h3>
+<kap-appointment-form
+  (cancel)="done.emit()"
+  (save)="saveAppointment($event)"
+  [appointment]="null"
+></kap-appointment-form>

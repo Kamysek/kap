@@ -10,4 +10,13 @@
     </p>
   </mat-list-item>
 </mat-list>
-<button mat-stroked-button>Add appointment</button>
+<ng-template #newButton>
+  <button (click)="showNewAppointment = true" mat-stroked-button>
+    Add appointment
+  </button>
+</ng-template>
+<kap-new-appointment
+  (done)="showNewAppointment = false"
+  *ngIf="showNewAppointment; else newButton"
+  [calendarId]="calendar.id"
+></kap-new-appointment>
