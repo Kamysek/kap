@@ -1,0 +1,13 @@
+<h3>Appointments</h3>
+<mat-list>
+  <mat-list-item *ngFor="let appointment of calendar.appointments">
+    <h2 mat-line>
+      {{ appointment.title }} ({{ appointment.taken ? 'taken' : 'free' }})
+    </h2>
+    <p mat-line>
+      {{ appointment.appointmentStart | date: 'medium' }} -
+      {{ appointment.appointmentEnd | date: 'medium' }}
+    </p>
+  </mat-list-item>
+</mat-list>
+<button mat-stroked-button>Add appointment</button>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
-import { CalendarService } from '../../../services/calendar.service';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'kap-edit-calendar',
@@ -9,17 +9,15 @@ import { CalendarService } from '../../../services/calendar.service';
   styleUrls: ['./edit-calendar.component.scss']
 })
 export class EditCalendarComponent implements OnInit {
-  calendar$;
+  calendar$: Observable<any>;
+  title$: Observable<string>;
 
-  constructor(
-    private route: ActivatedRoute,
-    private calendarService: CalendarService
-  ) {}
+  constructor(private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.calendar$ = this.route.paramMap.pipe(
-      switchMap(params => this.calendarService.getCalendar(params.get('id')))
+    this.calendar$ = this.route.data.pipe(map(data => data.calendar));
+    this.title$ = this.calendar$.pipe(
+      map(calendar => `${calendar.name} (${calendar.id})`)
     );
-    this.calendar$.subscribe(console.log);
   }
 }

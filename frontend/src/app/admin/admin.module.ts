@@ -12,6 +12,8 @@ import {
 import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { EditCalendarComponent } from './appointments/edit-calendar/edit-calendar.component';
+import { CalendarResolver } from './resolvers/calendar.resolver';
+import { AppointmentListComponent } from './appointments/edit-calendar/appointment-list/appointment-list.component';
 
 const routes: Routes = [
   {
@@ -20,7 +22,13 @@ const routes: Routes = [
       {
         path: 'appointments',
         component: AppointmentsComponent,
-        children: [{ path: ':id', component: EditCalendarComponent }]
+        children: [
+          {
+            path: ':id',
+            component: EditCalendarComponent,
+            resolve: { calendar: CalendarResolver }
+          }
+        ]
       }
     ]
   }
@@ -30,7 +38,8 @@ const routes: Routes = [
   declarations: [
     AppointmentsComponent,
     NewCalendarDialogComponent,
-    EditCalendarComponent
+    EditCalendarComponent,
+    AppointmentListComponent
   ],
   imports: [
     CommonModule,

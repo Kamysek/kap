@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { map } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import {
   createCalendar,
   createCalendarVariables
@@ -11,6 +11,10 @@ import {
   getCalendar,
   getCalendarVariables
 } from '../../../__generated__/getCalendar';
+import {
+  getAppointmentsForCalendar,
+  getAppointmentsForCalendarVariables
+} from '../../../__generated__/getAppointmentsForCalendar';
 
 @Injectable({
   providedIn: 'root'
@@ -30,6 +34,22 @@ export class CalendarService {
       getCalendar(id: $id) {
         id
         name
+        doctor {
+          username
+          id
+        }
+      }
+    }
+  `;
+
+  private static GET_APPOINTMENTS_FOR_CALENDAR = gql`
+    query getAppointmentsForCalendar($id: Int!) {
+      getAllAppointmentsFromCalendar(id: $id) {
+        id
+        appointmentStart
+        appointmentEnd
+        title
+        taken
       }
     }
   `;
@@ -65,10 +85,31 @@ export class CalendarService {
   }
 
   getCalendar(id: any) {
-    const variables: getCalendarVariables = { id };
-    return this.apollo.watchQuery<getCalendar>({
-      query: CalendarService.GET_CALENDAR_QUERY,
-      variables
-    }).valueChanges;
+    const variables = { id };
+    return this.apollo
+      .watchQuery<getCalendar, getCalendarVariables>({
+        query: CalendarService.GET_CALENDAR_QUERY,
+        variables
+      })
+      .valueChanges.pipe(
+        switchMap(calendarRes =>
+          this.apollo
+            .watchQuery<
+              getAppointmentsForCalendar,
+              getAppointmentsForCalendarVariables
+            >({
+              query: CalendarService.GET_APPOINTMENTS_FOR_CALENDAR,
+              variables
+            })
+            .valueChanges.pipe(
+              map(appointmentRes =>
+                Object.assign({}, calendarRes.data.getCalendar, {
+                  appointments:
+                    appointmentRes.data.getAllAppointmentsFromCalendar
+                })
+              )
+            )
+        )
+      );
   }
 }
