@@ -19,6 +19,7 @@ import { AdminModule } from './admin/admin.module';
 import { GraphQLModule } from './graphql.module';
 import { MAT_DATE_LOCALE } from '@angular/material';
 import { registerLocaleData } from '@angular/common';
+import { PatientModule } from './patient/patient.module';
 
 registerLocaleData(localeEn, 'en-DE', localeEnExtra);
 
@@ -36,6 +37,7 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
     MatInputModule,
     ReactiveFormsModule,
     AdminModule,
+    PatientModule,
     GraphQLModule
   ],
   providers: [

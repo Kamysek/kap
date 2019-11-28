@@ -7,9 +7,11 @@ import { Router } from '@angular/router';
 })
 export class AuthService {
   private authToken: string;
+  private group: string;
 
   constructor(private http: HttpClient, private router: Router) {
     this.authToken = localStorage.getItem('kap-token');
+    this.authToken = localStorage.getItem('kap-group');
   }
 
   get authorization() {
@@ -33,7 +35,26 @@ export class AuthService {
         if (res.hasOwnProperty('data')) {
           this.authToken = res.data.tokenAuth.token;
           localStorage.setItem('kap-token', this.authToken);
-          this.router.navigate(['/admin/calendars']);
+          this.http
+            .post<{ data?: { getUserGroup: string } }>('/graphql/', {
+              query: `query{getUserGroup}`
+            })
+            .subscribe(groupRes => {
+              if (groupRes.hasOwnProperty('data')) {
+                this.group = groupRes.data.getUserGroup;
+                localStorage.setItem('kap-group', this.group);
+                switch (this.group) {
+                  case 'Admin': {
+                    this.router.navigate(['/admin/calendars']);
+                    break;
+                  }
+                  default: {
+                    this.router.navigate(['/patient']);
+                    break;
+                  }
+                }
+              }
+            });
         }
       });
   }
@@ -41,5 +62,7 @@ export class AuthService {
   logout() {
     this.authToken = null;
     localStorage.setItem('kap-token', this.authToken);
+    this.group = null;
+    localStorage.setItem('kap-group', this.group);
   }
 }
