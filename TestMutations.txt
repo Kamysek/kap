@@ -133,3 +133,204 @@ mutation{
     }
   }
 }
+
+
+#####################
+#####################
+#####################
+#####################
+#####################
+#####################
+
+mutation{
+  createBoard(input:{name:"asdfasdf" description:"aasdfasdf"}){
+    board{
+      id
+      name
+      description
+    }
+  }
+}
+
+mutation{
+	updateBoard(input:{id:"Qm9hcmRUeXBlOjI=" name:"haasdnsdampf"}) {
+	  clientMutationId
+    board{
+      name
+      id
+    }
+	}
+}
+
+mutation{
+	deleteBoard(input:{id:"Qm9hcmRUeXBlOjI="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+query{
+  getBoards {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+  getBoard(id:"Qm9hcmRUeXBlOjE=") {
+    id
+  }
+}
+
+mutation{
+  createTopic(input:{subject:"test" board:"Qm9hcmRUeXBlOjE="}) {
+    clientMutationId
+    topic{
+      id
+      subject
+    }
+  }
+}
+
+mutation{
+	updateTopic(input:{id:"VG9waWNUeXBlOjY=" subject:"testtest"}){
+    topic{
+      subject
+      creator {
+        id
+      }
+    }
+  }
+}
+
+mutation{
+	deleteTopic(input:{id:"VG9waWNUeXBlOjY="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+query{
+  getTopics {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+  getTopic(id:"VG9waWNUeXBlOjE=") {
+    id
+  }
+}
+
+mutation{
+  createPost(input:{message:"testtest" topic:"VG9waWNUeXBlOjE="}) {
+    clientMutationId
+    post {
+      id
+      topic {
+        id
+      }
+    }
+  }
+}
+
+mutation{
+  updatePost(input:{id:"UG9zdFR5cGU6Mg==" message:"Test"}) {
+    clientMutationId
+    post{
+      topic {
+        id
+        subject
+      }
+      id
+      message
+    }
+  }
+}
+
+mutation{
+  deletePost(input:{id:"UG9zdFR5cGU6Mg=="}) {
+    ok
+    clientMutationId
+  }
+}
+
+mutation{
+  createSurvey(input:{surveyName: "Test" description:"TEst"}) {
+    clientMutationId
+    survey {
+      id
+      description
+    }
+  }
+}
+
+mutation{
+  updateSurvey(input:{id:"U3VydmV5VHlwZTo1" surveyName:"TestTestTest"}) {
+    clientMutationId
+    survey{
+      surveyName
+      id
+    }
+  }
+}
+
+query{
+  getSurveys {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+ getSurvey(id:"U3VydmV5VHlwZTo1") {
+   id
+ }
+}
+
+mutation{
+  deleteSurvey(input:{id:"U3VydmV5VHlwZTo1"}) {
+    ok
+    clientMutationId
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"number" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"choice" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"text" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}

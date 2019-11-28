@@ -5,7 +5,6 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
-
 from .models import Appointment, Calendar
 
 
@@ -77,8 +76,6 @@ class CreateCalendar(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if input.get('name') is None:
-                raise GraphQLError('Please provide name!')
             if info.context.user is None:
                 raise GraphQLError('Please provide user!')
             calendar_instance = Calendar(name=input.get('name'), doctor=info.context.user)
@@ -225,16 +222,6 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if input.get('title') is None:
-                raise GraphQLError('Please provide title!')
-            if input.get('calendar') is None:
-                raise GraphQLError('Please provide calendar!')
-            if input.get('appointment_start') is None:
-                raise GraphQLError('Please provide appointment start!')
-            if input.get('appointment_end') is None:
-                raise GraphQLError('Please provide appointment end!')
-            if info.context.user is None:
-                raise GraphQLError('Please provide user!')
             try:
                 get_calendar = Calendar.objects.get(pk=from_global_id(input.get('calendar'))[1])
                 if get_calendar:
@@ -379,7 +366,7 @@ class DeleteTakenAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Patient","Admin"], info):
+        if hasGroup(["Patient", "Admin"], info):
             try:
                 appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
                 if appointment_instance.patient == info.context.user:
