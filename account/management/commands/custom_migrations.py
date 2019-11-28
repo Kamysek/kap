@@ -106,6 +106,7 @@ class Command(BaseCommand):
                     except Permission.DoesNotExist:
                         self.stdout.write(codename + " not found")
 
+"""
     # add custom permissions
         proj_add_perm1 = Permission.objects.get(name='Add appointment patient')
         proj_add_perm2 = Permission.objects.get(name='Change appointment patient')
@@ -122,11 +123,13 @@ class Command(BaseCommand):
         proj_add_perm11 = Permission.objects.get(name='View created by Board')
         proj_add_perm12 = Permission.objects.get(name='View updated by Board')
 
-        #proj_add_perm13 = Permission.objects.get(name='View created by survey')
-        #proj_add_perm14 = Permission.objects.get(name='View updated by survey')
-        #proj_add_perm15 = Permission.objects.get(name='View text answer')
-        #proj_add_perm16 = Permission.objects.get(name='View choice answer')
-        #proj_add_perm17 = Permission.objects.get(name='View number answer')
+        proj_add_perm13 = Permission.objects.get(name='View created by survey')
+        proj_add_perm14 = Permission.objects.get(name='View updated by survey')
+        proj_add_perm15 = Permission.objects.get(name='View created by survey question')
+        proj_add_perm16 = Permission.objects.get(name='View updated by survey answer')
+        proj_add_perm17 = Permission.objects.get(name='View text answer survey')
+        proj_add_perm18 = Permission.objects.get(name='View choice answer survey')
+        proj_add_perm19 = Permission.objects.get(name='View number answer survey')
 
         Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm2)
@@ -140,11 +143,13 @@ class Command(BaseCommand):
         Group.objects.get(name='Admin').permissions.add(proj_add_perm10)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm11)
         Group.objects.get(name='Admin').permissions.add(proj_add_perm12)
-        #Group.objects.get(name='Admin').permissions.add(proj_add_perm13)
-        #Group.objects.get(name='Admin').permissions.add(proj_add_perm14)
-        #Group.objects.get(name='Admin').permissions.add(proj_add_perm15)
-        #Group.objects.get(name='Admin').permissions.add(proj_add_perm16)
-        #Group.objects.get(name='Admin').permissions.add(proj_add_perm17)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm13)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm14)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm15)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm16)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm17)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm18)
+        Group.objects.get(name='Admin').permissions.add(proj_add_perm19)
 
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm5)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm6)
@@ -153,13 +158,16 @@ class Command(BaseCommand):
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm10)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm11)
         Group.objects.get(name='Doctor').permissions.add(proj_add_perm12)
-        #Group.objects.get(name='Doctor').permissions.add(proj_add_perm13)
-        #Group.objects.get(name='Doctor').permissions.add(proj_add_perm14)
-        #Group.objects.get(name='Doctor').permissions.add(proj_add_perm15)
-        #Group.objects.get(name='Doctor').permissions.add(proj_add_perm16)
-        #Group.objects.get(name='Doctor').permissions.add(proj_add_perm17)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm13)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm14)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm15)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm16)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm17)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm18)
+        Group.objects.get(name='Doctor').permissions.add(proj_add_perm19)
 
         Group.objects.get(name='Patient').permissions.add(proj_add_perm1)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm2)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm3)
         Group.objects.get(name='Patient').permissions.add(proj_add_perm4)
+"""
