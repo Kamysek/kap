@@ -1,22 +1,46 @@
 <h3>Appointments</h3>
-<mat-list>
-  <mat-list-item *ngFor="let appointment of calendar.appointments">
-    <h2 mat-line>
-      {{ appointment.title }} ({{ appointment.taken ? 'taken' : 'free' }})
-    </h2>
-    <p mat-line>
-      {{ appointment.appointmentStart | date: 'medium' }} -
-      {{ appointment.appointmentEnd | date: 'medium' }}
-    </p>
-  </mat-list-item>
-</mat-list>
-<ng-template #newButton>
-  <button (click)="showNewAppointment = true" mat-stroked-button>
-    Add appointment
-  </button>
-</ng-template>
-<kap-new-appointment
-  (done)="showNewAppointment = false"
-  *ngIf="showNewAppointment; else newButton"
-  [calendarId]="calendar.id"
-></kap-new-appointment>
+<div fxLayout="row">
+  <div>
+    <div fxLayout="column" fxLayoutGap="1rem">
+      <div
+        *ngFor="let appointment of calendar.appointments"
+        fxLayout="row"
+        fxLayoutGap="0.5rem"
+      >
+        <mat-icon>{{
+          appointment.taken ? 'hourglass_full' : 'hourglass_empty'
+        }}</mat-icon>
+        <div fxLayout="column" fxLayoutGap="0.5rem">
+          <strong>{{ appointment.title }}</strong>
+          <small
+            >{{ appointment.appointmentStart | date: 'medium' }} -
+            {{ appointment.appointmentEnd | date: 'medium' }}</small
+          >
+          <div fxLayout="row" fxLayoutGap="0.5rem">
+            <button mat-flat-button style="text-transform: uppercase" disabled>
+              Edit
+            </button>
+            <button
+              mat-flat-button
+              style="text-transform: uppercase"
+              [routerLink]="['view', appointment.id]"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #newButton>
+      <button (click)="showNewAppointment = true" mat-stroked-button>
+        Add appointment
+      </button>
+    </ng-template>
+    <kap-new-appointment
+      (done)="showNewAppointment = false"
+      *ngIf="showNewAppointment; else newButton"
+      [calendarId]="calendar.id"
+    ></kap-new-appointment>
+  </div>
+  <router-outlet></router-outlet>
+</div>

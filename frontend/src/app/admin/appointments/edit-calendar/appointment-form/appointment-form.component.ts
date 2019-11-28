@@ -24,7 +24,7 @@ export class AppointmentFormComponent implements OnInit {
     this.appointmentForm = fb.group({
       appointmentStart: [null, Validators.required],
       appointmentStartTime: [
-        ' ',
+        '',
         Validators.pattern('^([01]\\d|2[0-3]):([0-5]\\d)$')
       ],
       title: ['', Validators.required]

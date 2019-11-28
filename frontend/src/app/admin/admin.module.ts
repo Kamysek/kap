@@ -8,6 +8,7 @@ import {
   MatDatepickerModule,
   MatDialogModule,
   MatFormFieldModule,
+  MatIconModule,
   MatInputModule,
   MatListModule
 } from '@angular/material';
@@ -19,19 +20,29 @@ import { AppointmentListComponent } from './appointments/edit-calendar/appointme
 import { NewAppointmentComponent } from './appointments/edit-calendar/new-appointment/new-appointment.component';
 import { AppointmentFormComponent } from './appointments/edit-calendar/appointment-form/appointment-form.component';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
+import { ViewAppointmentComponent } from './appointments/edit-calendar/appointment-list/view-appointment/view-appointment.component';
+import { AppointmentResolver } from './resolvers/appointment.resolver';
+import { AppointmentInfoComponent } from './appointments/edit-calendar/appointment-list/view-appointment/appointment-info/appointment-info.component';
 
 const routes: Routes = [
   {
     path: 'admin',
     children: [
       {
-        path: 'appointments',
+        path: 'calendars',
         component: AppointmentsComponent,
         children: [
           {
             path: ':id',
             component: EditCalendarComponent,
-            resolve: { calendar: CalendarResolver }
+            resolve: { calendar: CalendarResolver },
+            children: [
+              {
+                path: 'view/:appointmentId',
+                component: ViewAppointmentComponent,
+                resolve: { appointment: AppointmentResolver }
+              }
+            ]
           }
         ]
       }
@@ -46,7 +57,9 @@ const routes: Routes = [
     EditCalendarComponent,
     AppointmentListComponent,
     NewAppointmentComponent,
-    AppointmentFormComponent
+    AppointmentFormComponent,
+    ViewAppointmentComponent,
+    AppointmentInfoComponent
   ],
   imports: [
     CommonModule,
@@ -59,7 +72,8 @@ const routes: Routes = [
     MatInputModule,
     MatFormFieldModule,
     MatDatepickerModule,
-    MatMomentDateModule
+    MatMomentDateModule,
+    MatIconModule
   ],
   entryComponents: [NewCalendarDialogComponent]
 })

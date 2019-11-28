@@ -16,6 +16,10 @@ import {
   createAppointment,
   createAppointmentVariables
 } from '../../../__generated__/createAppointment';
+import {
+  getAppointment,
+  getAppointmentVariables
+} from '../../../__generated__/getAppointment';
 
 @Injectable({
   providedIn: 'root'
@@ -53,6 +57,23 @@ export class CalendarService {
               taken
             }
           }
+        }
+      }
+    }
+  `;
+
+  private static GET_APPOINTMENT_QUERY = gql`
+    query getAppointment($id: ID!) {
+      getAppointment(id: $id) {
+        id
+        appointmentStart
+        appointmentEnd
+        commentDoctor
+        commentPatient
+        title
+        taken
+        patient {
+          username
         }
       }
     }
@@ -114,6 +135,23 @@ export class CalendarService {
             appointments: calendar.appointmentSet.edges.map(edge => edge.node)
           })
         )
+      );
+  }
+
+  getAppointment(id: getAppointmentVariables['id']) {
+    const variables = { id };
+    return this.apollo
+      .watchQuery<getAppointment, getAppointmentVariables>({
+        query: CalendarService.GET_APPOINTMENT_QUERY,
+        variables
+      })
+      .valueChanges.pipe(
+        map(res => res.data.getAppointment)
+        /*map(calendar =>
+          Object.assign({}, calendar, {
+            appointments: calendar.appointmentSet.edges.map(edge => edge.node)
+          })
+        )*/
       );
   }
 

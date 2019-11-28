@@ -33,7 +33,7 @@ export class AuthService {
         if (res.hasOwnProperty('data')) {
           this.authToken = res.data.tokenAuth.token;
           localStorage.setItem('kap-token', this.authToken);
-          this.router.navigate(['/admin/appointments']);
+          this.router.navigate(['/admin/calendars']);
         }
       });
   }
