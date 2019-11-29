@@ -25,7 +25,7 @@ SECRET_KEY = 'bi_rogq69s$hirj_h@u-7u+@=(=bc8&)q_^lg-z@2hhc!!(+0v'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1","localhost"]
 
 
 # Application definition
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'graphene_django',
     'boards.apps.BoardsConfig',
     'account.apps.AccountConfig',
+    'appointments.apps.AppointmentsConfig',
+    'survey.apps.SurveyConfig',
 ]
 
 MIDDLEWARE = [

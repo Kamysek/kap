@@ -3,25 +3,31 @@ from django.contrib.auth import get_user_model
 
 
 class Board(models.Model):
-    name = models.CharField(max_length=30, unique=True)
-    description = models.CharField(max_length=100)
-    creator = models.ForeignKey(get_user_model(), related_name='boards', on_delete=models.CASCADE)
+    name = models.CharField(max_length=30, unique=True, blank=False, null=True)
+    description = models.CharField(max_length=100, blank=False, null=True)
+    creator = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
 
 class Topic(models.Model):
-    subject = models.CharField(max_length=255)
-    last_updated = models.DateTimeField(auto_now_add=True)
-    board = models.ForeignKey(Board, related_name='topics', on_delete=models.CASCADE)
-    creator = models.ForeignKey(get_user_model(), related_name='topics', on_delete=models.CASCADE)
+    subject = models.CharField(max_length=255, blank=False, null=True)
+    last_updated = models.DateTimeField(auto_now_add=True, blank=False, null=True)
+    board = models.ForeignKey(Board, blank=False, null=True, on_delete=models.CASCADE)
+    creator = models.ForeignKey(get_user_model(), null=True, blank=False, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.subject
 
 
 class Post(models.Model):
-    message = models.TextField(max_length=4000)
-    topic = models.ForeignKey(Topic, related_name='posts', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(null=True)
-    created_by = models.ForeignKey(get_user_model(), related_name='posts', on_delete=models.CASCADE)
-    updated_by = models.ForeignKey(get_user_model(), null=True, related_name='+', on_delete=models.CASCADE)
+    message = models.TextField(max_length=4000, blank=False, null=True)
+    topic = models.ForeignKey(Topic, blank=False, null=True, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=False, null=True)
+    updated_at = models.DateTimeField(null=True, blank=False)
+    created_by = models.ForeignKey(get_user_model(), null=True, blank=False, related_name='posts_created_by', on_delete=models.CASCADE)
+    updated_by = models.ForeignKey(get_user_model(), null=True, blank=False, related_name='posts_updated_by', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.message

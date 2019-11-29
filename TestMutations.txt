@@ -1,0 +1,336 @@
+mutation{
+  createCalendar(input:{name: "Test"}) {
+    clientMutationId
+  	calendar{
+      id
+      name
+      appointmentSet{
+        edges{
+          node{
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation{
+  updateCalendar(input:{id:"Q2FsZW5kYXJUeXBlOjI=" name: "TestTest"}) {
+    clientMutationId
+    calendar{
+      name
+      id
+    }
+  }
+}
+
+mutation{
+  deleteCalendar(input:{id:"Q2FsZW5kYXJUeXBlOjI="}) {
+    ok
+    clientMutationId
+    calendar{
+      id
+    }
+  }
+}
+
+query{
+  getCalendars {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+ 	getCalendar(id:"Q2FsZW5kYXJUeXBlOjM=") {
+   	doctor {
+   	  id
+      username
+    }
+ 	}
+}
+
+mutation{
+  createAppointment(input:{appointmentStart:"2019-11-19T18:21:12+00:00",appointmentEnd:"2019-11-19T18:30:12+00:00",commentDoctor:"graphql created this comment",title:"GraphQL",calendar:"Q2FsZW5kYXJUeXBlOjE=",}) {
+		appointment{
+      title
+      appointmentEnd
+      appointmentStart
+      patient {
+        id
+      }
+      calendar{
+        doctor{
+        	id
+        }
+      }
+    }
+  }
+}
+
+mutation{
+  updateAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjQ=" title:"GraphQasdfasdfL"}) {
+		appointment{
+      id
+      title
+      appointmentEnd
+      appointmentStart
+      patient {
+        id
+      }
+      calendar{
+        doctor{
+        	id
+        }
+      }
+    }
+  }
+}
+
+mutation{
+	deleteAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjQ="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+mutation{
+ 	takeAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg="}) {
+ 	  clientMutationId
+ 	}
+}
+
+mutation{
+ 	updateTakenAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg=" commentPatient:"TestTest"}) {
+ 	  clientMutationId
+    appointment {
+      id
+      title
+      patient{
+        id
+        isStaff
+        isActive
+      }
+    }
+
+ 	}
+}
+
+mutation{
+ 	deleteAppointment(input:{id:"QXBwb2ludG1lbnRUeXBlOjg="}){
+    ok
+    appointment{
+      taken
+      patient{
+        id
+      }
+      title
+    }
+  }
+}
+
+
+#####################
+#####################
+#####################
+#####################
+#####################
+#####################
+
+mutation{
+  createBoard(input:{name:"asdfasdf" description:"aasdfasdf"}){
+    board{
+      id
+      name
+      description
+    }
+  }
+}
+
+mutation{
+	updateBoard(input:{id:"Qm9hcmRUeXBlOjI=" name:"haasdnsdampf"}) {
+	  clientMutationId
+    board{
+      name
+      id
+    }
+	}
+}
+
+mutation{
+	deleteBoard(input:{id:"Qm9hcmRUeXBlOjI="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+query{
+  getBoards {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+  getBoard(id:"Qm9hcmRUeXBlOjE=") {
+    id
+  }
+}
+
+mutation{
+  createTopic(input:{subject:"test" board:"Qm9hcmRUeXBlOjE="}) {
+    clientMutationId
+    topic{
+      id
+      subject
+    }
+  }
+}
+
+mutation{
+	updateTopic(input:{id:"VG9waWNUeXBlOjY=" subject:"testtest"}){
+    topic{
+      subject
+      creator {
+        id
+      }
+    }
+  }
+}
+
+mutation{
+	deleteTopic(input:{id:"VG9waWNUeXBlOjY="}) {
+	  ok
+	  clientMutationId
+	}
+}
+
+query{
+  getTopics {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+  getTopic(id:"VG9waWNUeXBlOjE=") {
+    id
+  }
+}
+
+mutation{
+  createPost(input:{message:"testtest" topic:"VG9waWNUeXBlOjE="}) {
+    clientMutationId
+    post {
+      id
+      topic {
+        id
+      }
+    }
+  }
+}
+
+mutation{
+  updatePost(input:{id:"UG9zdFR5cGU6Mg==" message:"Test"}) {
+    clientMutationId
+    post{
+      topic {
+        id
+        subject
+      }
+      id
+      message
+    }
+  }
+}
+
+mutation{
+  deletePost(input:{id:"UG9zdFR5cGU6Mg=="}) {
+    ok
+    clientMutationId
+  }
+}
+
+mutation{
+  createSurvey(input:{surveyName: "Test" description:"TEst"}) {
+    clientMutationId
+    survey {
+      id
+      description
+    }
+  }
+}
+
+mutation{
+  updateSurvey(input:{id:"U3VydmV5VHlwZTo1" surveyName:"TestTestTest"}) {
+    clientMutationId
+    survey{
+      surveyName
+      id
+    }
+  }
+}
+
+query{
+  getSurveys {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
+
+query{
+ getSurvey(id:"U3VydmV5VHlwZTo1") {
+   id
+ }
+}
+
+mutation{
+  deleteSurvey(input:{id:"U3VydmV5VHlwZTo1"}) {
+    ok
+    clientMutationId
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"number" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"choice" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
+
+mutation{
+  createQuestion(input:{questionText:"Test" questionType:"text" survey:"U3VydmV5VHlwZTox"}) {
+    clientMutationId
+    question{
+      questionText
+      questionType
+    }
+  }
+}
