@@ -32,4 +32,5 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def set_password(self, password):
         super(CustomUser, self).set_password(password)
         if self.date_joined < (timezone.now() - timedelta(seconds=3)):
+            # So the password initialization doesnt automatically set this flag
             self.password_changed = True
