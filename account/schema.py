@@ -54,7 +54,7 @@ class CreateUser(graphene.relay.ClientIDMutation):
             )
             user_instance.set_password(input.get('password'))
             groupInput = input.get('group')
-            if groupInput is not None:
+            if groupInput:
                 g = Group.objects.get(name=groupInput)
                 user_instance.save()
                 g.user_set.add(user_instance)
@@ -73,6 +73,8 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         password = graphene.String()
         is_staff = graphene.Boolean()
         is_active = graphene.Boolean()
+        addgroup = graphene.String(required=False)
+        removegroup = graphene.String(required=False)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -86,6 +88,14 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.is_staff = input.get('is_staff')
                     if input.get('is_active'):
                         user_instance.is_active = input.get('is_active')
+                    groupInput = input.get('addgroup')
+                    if groupInput:
+                        g = Group.objects.get(name=groupInput)
+                        g.user_set.add(user_instance)
+                    groupInput = input.get('removegroup')
+                    if groupInput:
+                        g = Group.objects.get(name=groupInput)
+                        g.user_set.remove(user_instance)
                     user_instance.save()
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
