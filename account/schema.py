@@ -43,15 +43,23 @@ class CreateUser(graphene.relay.ClientIDMutation):
         password = graphene.String(required=True)
         is_staff = graphene.Boolean(required=True)
         is_active = graphene.Boolean(required=True)
+        group = graphene.String(required=False)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
             user_instance = get_user_model()(
                 username=input.get('username'),
+
             )
             user_instance.set_password(input.get('password'))
-            user_instance.save()
+            groupInput = input.get('group')
+            if groupInput is not None:
+                g = Group.objects.get(name=groupInput)
+                user_instance.save()
+                g.user_set.add(user_instance)
+            else:
+                user_instance.save()
             return CreateUser(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a user!')
