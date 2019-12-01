@@ -26,7 +26,7 @@ class UnauthorisedAccessError(GraphQLError):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined','password_changed']
 
 
 class UserType(DjangoObjectType):
