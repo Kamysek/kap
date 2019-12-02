@@ -26,7 +26,7 @@ class UnauthorisedAccessError(GraphQLError):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined','password_changed']
 
 
 class UserType(DjangoObjectType):
@@ -43,15 +43,23 @@ class CreateUser(graphene.relay.ClientIDMutation):
         password = graphene.String(required=True)
         is_staff = graphene.Boolean(required=True)
         is_active = graphene.Boolean(required=True)
+        group = graphene.String(required=False)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
             user_instance = get_user_model()(
                 username=input.get('username'),
+
             )
             user_instance.set_password(input.get('password'))
-            user_instance.save()
+            groupInput = input.get('group')
+            if groupInput:
+                g = Group.objects.get(name=groupInput)
+                user_instance.save()
+                g.user_set.add(user_instance)
+            else:
+                user_instance.save()
             return CreateUser(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a user!')
@@ -65,6 +73,8 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         password = graphene.String()
         is_staff = graphene.Boolean()
         is_active = graphene.Boolean()
+        addgroup = graphene.String(required=False)
+        removegroup = graphene.String(required=False)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -78,6 +88,14 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.is_staff = input.get('is_staff')
                     if input.get('is_active'):
                         user_instance.is_active = input.get('is_active')
+                    groupInput = input.get('addgroup')
+                    if groupInput:
+                        g = Group.objects.get(name=groupInput)
+                        g.user_set.add(user_instance)
+                    groupInput = input.get('removegroup')
+                    if groupInput:
+                        g = Group.objects.get(name=groupInput)
+                        g.user_set.remove(user_instance)
                     user_instance.save()
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
