@@ -1,1 +1,7 @@
-<p>patient works!</p>
+<main class="mat-app-background mat-typography">
+  <h2>Welcome</h2>
+  <kap-appointment-overview
+    [calendars]="calendars$ | async"
+    (takeAppointment)="takeAppointment($event)"
+  ></kap-appointment-overview>
+</main>

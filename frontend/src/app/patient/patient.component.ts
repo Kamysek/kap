@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CalendarService } from '../services/calendar.service';
 
 @Component({
   selector: 'kap-patient',
@@ -6,7 +7,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./patient.component.scss']
 })
 export class PatientComponent implements OnInit {
-  constructor() {}
+  calendars$;
 
-  ngOnInit() {}
+  constructor(private calendarService: CalendarService) {}
+
+  ngOnInit() {
+    this.calendars$ = this.calendarService.getAppointments();
+  }
+
+  takeAppointment(id) {
+    console.log(id);
+    this.calendarService.takeAppointment({ id });
+  }
 }

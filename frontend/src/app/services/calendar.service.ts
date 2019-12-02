@@ -11,7 +11,10 @@ import {
   getCalendar,
   getCalendarVariables
 } from '../../../__generated__/getCalendar';
-import { CreateAppointmentInput } from '../../../__generated__/globalTypes';
+import {
+  CreateAppointmentInput,
+  TakeAppointmentInput
+} from '../../../__generated__/globalTypes';
 import {
   createAppointment,
   createAppointmentVariables
@@ -20,6 +23,11 @@ import {
   getAppointment,
   getAppointmentVariables
 } from '../../../__generated__/getAppointment';
+import { allAppointments } from '../../../__generated__/allAppointments';
+import {
+  takeAppointment,
+  takeAppointmentVariables
+} from '../../../__generated__/takeAppointment';
 
 @Injectable({
   providedIn: 'root'
@@ -32,6 +40,36 @@ export class CalendarService {
           node {
             name
             id
+          }
+        }
+      }
+    }
+  `;
+
+  private static CALENDARS_WITH_APPOINTMENTS = gql`
+    query allAppointments {
+      getCalendars {
+        edges {
+          node {
+            name
+            id
+            doctor {
+              username
+            }
+            appointmentSet {
+              edges {
+                node {
+                  id
+                  title
+                  appointmentStart
+                  appointmentEnd
+                  taken
+                  patient {
+                    id
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -90,6 +128,16 @@ export class CalendarService {
     }
   `;
 
+  private static TAKE_APPOINTMENT_MUTATION = gql`
+    mutation takeAppointment($appointmentInput: TakeAppointmentInput!) {
+      takeAppointment(input: $appointmentInput) {
+        appointment {
+          taken
+        }
+      }
+    }
+  `;
+
   private static CREATE_APPOINTMENT_MUTATION = gql`
     mutation createAppointment($appointmentInput: CreateAppointmentInput!) {
       createAppointment(input: $appointmentInput) {
@@ -118,6 +166,24 @@ export class CalendarService {
       .watchQuery<allCalendars>({ query: CalendarService.ALL_CALENDARS_QUERY })
       .valueChanges.pipe(
         map(res => res.data.getCalendars.edges.map(edge => edge.node))
+      );
+  }
+
+  getAppointments() {
+    return this.apollo
+      .watchQuery<allAppointments>({
+        query: CalendarService.CALENDARS_WITH_APPOINTMENTS
+      })
+      .valueChanges.pipe(
+        map(res =>
+          res.data.getCalendars.edges.map(calEdge =>
+            Object.assign({}, calEdge.node, {
+              appointments: calEdge.node.appointmentSet.edges.map(
+                appEdge => appEdge.node
+              )
+            })
+          )
+        )
       );
   }
 
@@ -165,6 +231,21 @@ export class CalendarService {
           {
             query: CalendarService.GET_CALENDAR_QUERY,
             variables: { id: variables.appointmentInput.calendar }
+          }
+        ]
+      })
+      .subscribe(console.log);
+  }
+
+  takeAppointment(appointmentInput: TakeAppointmentInput) {
+    const variables = { appointmentInput };
+    this.apollo
+      .mutate<takeAppointment, takeAppointmentVariables>({
+        mutation: CalendarService.TAKE_APPOINTMENT_MUTATION,
+        variables,
+        refetchQueries: [
+          {
+            query: CalendarService.CALENDARS_WITH_APPOINTMENTS
           }
         ]
       })
