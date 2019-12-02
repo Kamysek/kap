@@ -601,6 +601,7 @@ type Query {
     isActive: Boolean
     isStaff: Boolean
     last: Int
+    passwordChanged: Boolean
     username: String
   ): UserTypeConnection
 }
@@ -840,6 +841,7 @@ type UserType implements Node {
   isSuperuser: Boolean!
   lastLogin: DateTime
   password: String!
+  passwordChanged: Boolean!
   postsCreatedBy(
     after: String
     before: String
@@ -991,6 +993,7 @@ input CreateTopicInput {
 
 input CreateUserInput {
   clientMutationId: String
+  group: String
   isActive: Boolean!
   isStaff: Boolean!
   password: String!
@@ -1159,11 +1162,13 @@ input UpdateTopicInput {
 }
 
 input UpdateUserInput {
+  addgroup: String
   clientMutationId: String
   id: ID!
   isActive: Boolean
   isStaff: Boolean
   password: String
+  removegroup: String
 }
 
 """
