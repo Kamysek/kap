@@ -8,6 +8,7 @@ import {
   createUserVariables
 } from '../../../__generated__/createUser';
 import { CreateUserInput } from '../../../__generated__/globalTypes';
+import { getUserDetails } from '../../../__generated__/getUserDetails';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,24 @@ export class UsersService {
           node {
             username
             id
+          }
+        }
+      }
+    }
+  `;
+
+  private static LOAD_USER_DETAILS = gql`
+    query getUserDetails {
+      getMe {
+        id
+        username
+        appointmentSet {
+          edges {
+            node {
+              appointmentStart
+              appointmentEnd
+              title
+            }
           }
         }
       }
@@ -43,6 +62,19 @@ export class UsersService {
       .watchQuery<getUsers>({ query: UsersService.LOAD_USERS_QUERY })
       .valueChanges.pipe(
         map(res => res.data.getUsers.edges.map(edge => edge.node))
+      );
+  }
+
+  getOwnDetails() {
+    return this.apollo
+      .watchQuery<getUserDetails>({ query: UsersService.LOAD_USER_DETAILS })
+      .valueChanges.pipe(
+        map(res => res.data.getMe),
+        map(me =>
+          Object.assign({}, me, {
+            appointments: me.appointmentSet.edges.map(edge => edge.node)
+          })
+        )
       );
   }
 

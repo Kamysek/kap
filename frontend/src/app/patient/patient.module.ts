@@ -5,11 +5,16 @@ import { RouterModule, Routes } from '@angular/router';
 import { AppointmentOverviewComponent } from './appointment-overview/appointment-overview.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule } from '@angular/material';
+import { PatientDataComponent } from './patient-data/patient-data.component';
 
 const routes: Routes = [{ path: 'patient', component: PatientComponent }];
 
 @NgModule({
-  declarations: [PatientComponent, AppointmentOverviewComponent],
+  declarations: [
+    PatientComponent,
+    AppointmentOverviewComponent,
+    PatientDataComponent
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),

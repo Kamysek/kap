@@ -508,6 +508,7 @@ type Query {
     id: ID
     last: Int
   ): GroupTypeConnection
+  getMe: UserType
   "The ID of the object"
   getNumberAnswer(id: ID!): NumberAnswerType
   getNumberAnswers(
