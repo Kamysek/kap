@@ -17,6 +17,13 @@
         type="password"
       />
     </mat-form-field>
+    <mat-form-field formControlName="group">
+      <mat-select placeholder="Permission group">
+        <mat-option value="Patient">Patient</mat-option>
+        <mat-option value="Doctor">Doctor</mat-option>
+        <mat-option value="Admin">Admin</mat-option>
+      </mat-select>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
 <mat-dialog-actions>

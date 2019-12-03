@@ -11,6 +11,7 @@ import {
   MatIconModule,
   MatInputModule,
   MatListModule,
+  MatSelectModule,
   MatTableModule
 } from '@angular/material';
 import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
@@ -90,7 +91,8 @@ const routes: Routes = [
     MatDatepickerModule,
     MatMomentDateModule,
     MatIconModule,
-    MatTableModule
+    MatTableModule,
+    MatSelectModule
   ],
   entryComponents: [NewCalendarDialogComponent, NewUserDialogComponent]
 })

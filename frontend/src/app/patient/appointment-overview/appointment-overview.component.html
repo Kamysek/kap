@@ -4,6 +4,7 @@
   <div
     fxLayout="column"
     fxLayoutGap="0.5rem"
+    class="calendar"
     *ngFor="let calendar of calendars"
   >
     <h3>{{ calendar.name }} ({{ calendar.doctor.username }})</h3>
@@ -12,7 +13,10 @@
       [ngClass]="{ taken: appointment.taken }"
       *ngFor="let appointment of calendar.appointments"
     >
-      <strong>{{ appointment.title }}</strong>
+      <strong
+        >{{ appointment.title }}
+        {{ appointment.taken ? '(taken)' : '' }}</strong
+      >
       <p>
         {{ appointment.appointmentStart | date: 'medium' }} -
         {{ appointment.appointmentEnd | date: 'medium' }}

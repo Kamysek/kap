@@ -12,7 +12,8 @@ export class NewUserDialogComponent {
   constructor(fb: FormBuilder) {
     this.userForm = fb.group({
       username: ['', Validators.required],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      group: ['', Validators.required]
     });
   }
 }
