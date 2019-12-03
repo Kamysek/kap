@@ -1,1 +1,13 @@
-<p>patient-data works!</p>
+<h2>Personal Data</h2>
+<p><strong>Username: </strong>{{ patient.username }}</p>
+<p><strong>Joined: </strong>{{ patient.dateJoined | date }}</p>
+<p>
+  <strong>Number of Appointments booked: </strong
+  >{{ patient.appointments.length }}
+</p>
+<strong>Messages:</strong>
+<div class="messages" fxLayout="column" fxLayoutGap="1rem">
+  <div class="message">
+    <p>Your next checkup is 2 weeks overdue!</p>
+  </div>
+</div>

@@ -1,12 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'kap-patient-data',
   templateUrl: './patient-data.component.html',
-  styleUrls: ['./patient-data.component.scss']
+  styleUrls: ['./patient-data.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PatientDataComponent implements OnInit {
-  constructor() {}
-
-  ngOnInit() {}
+export class PatientDataComponent {
+  @Input() patient;
 }

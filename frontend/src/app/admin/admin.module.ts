@@ -29,11 +29,13 @@ import { UsersComponent } from './users/users.component';
 import { AdminComponent } from './admin.component';
 import { UsersResolver } from './resolvers/users.resolver';
 import { NewUserDialogComponent } from './users/new-user-dialog/new-user-dialog.component';
+import { AuthGuard } from '../guards/auth.guard';
 
 const routes: Routes = [
   {
     path: 'admin',
     component: AdminComponent,
+    canActivate: [AuthGuard],
     children: [
       {
         path: 'calendars',

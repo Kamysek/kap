@@ -13,7 +13,7 @@ import { getUserDetails } from '../../../__generated__/getUserDetails';
 @Injectable({
   providedIn: 'root'
 })
-export class UsersService {
+export class UserService {
   private static LOAD_USERS_QUERY = gql`
     query getUsers {
       getUsers {
@@ -32,6 +32,7 @@ export class UsersService {
       getMe {
         id
         username
+        dateJoined
         appointmentSet {
           edges {
             node {
@@ -59,7 +60,7 @@ export class UsersService {
 
   getUsers() {
     return this.apollo
-      .watchQuery<getUsers>({ query: UsersService.LOAD_USERS_QUERY })
+      .watchQuery<getUsers>({ query: UserService.LOAD_USERS_QUERY })
       .valueChanges.pipe(
         map(res => res.data.getUsers.edges.map(edge => edge.node))
       );
@@ -67,7 +68,7 @@ export class UsersService {
 
   getOwnDetails() {
     return this.apollo
-      .watchQuery<getUserDetails>({ query: UsersService.LOAD_USER_DETAILS })
+      .watchQuery<getUserDetails>({ query: UserService.LOAD_USER_DETAILS })
       .valueChanges.pipe(
         map(res => res.data.getMe),
         map(me =>
@@ -81,11 +82,11 @@ export class UsersService {
   createUser(userInput: CreateUserInput) {
     this.apollo
       .mutate<createUser, createUserVariables>({
-        mutation: UsersService.CREATE_USER_MUTATION,
+        mutation: UserService.CREATE_USER_MUTATION,
         variables: {
           userInput: { ...userInput, isActive: true, isStaff: false }
         },
-        refetchQueries: [{ query: UsersService.LOAD_USERS_QUERY }]
+        refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
       })
       .subscribe(console.log);
   }

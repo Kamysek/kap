@@ -61,8 +61,9 @@ export class AuthService {
 
   logout() {
     this.authToken = null;
-    localStorage.setItem('kap-token', this.authToken);
+    localStorage.removeItem('kap-token');
     this.group = null;
-    localStorage.setItem('kap-group', this.group);
+    localStorage.removeItem('kap-group');
+    this.router.navigate(['login']);
   }
 }

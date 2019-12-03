@@ -6,14 +6,19 @@ import { AppointmentOverviewComponent } from './appointment-overview/appointment
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule } from '@angular/material';
 import { PatientDataComponent } from './patient-data/patient-data.component';
+import { AuthGuard } from '../guards/auth.guard';
+import { SurveyOverviewComponent } from './survey-overview/survey-overview.component';
 
-const routes: Routes = [{ path: 'patient', component: PatientComponent }];
+const routes: Routes = [
+  { path: 'patient', component: PatientComponent, canActivate: [AuthGuard] }
+];
 
 @NgModule({
   declarations: [
     PatientComponent,
     AppointmentOverviewComponent,
-    PatientDataComponent
+    PatientDataComponent,
+    SurveyOverviewComponent
   ],
   imports: [
     CommonModule,

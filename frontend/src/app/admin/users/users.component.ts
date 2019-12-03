@@ -5,7 +5,7 @@ import { MatDialog, MatTableDataSource } from '@angular/material';
 import { FormControl } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.component';
-import { UsersService } from '../../services/users.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'kap-users',
@@ -24,7 +24,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private usersService: UsersService
+    private usersService: UserService
   ) {}
 
   async ngOnInit() {
