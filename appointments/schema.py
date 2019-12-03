@@ -185,21 +185,13 @@ class AppointmentType(DjangoObjectType):
     @login_required
     def resolve_appointment_start(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            if not self.taken:
-                return self.appointment_start
-            else:
-                if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
-                    return self.appointment_start
+            return self.appointment_start
         return None
 
     @login_required
     def resolve_appointment_end(self, info):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            if not self.taken:
-                return self.appointment_end
-            else:
-                if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
-                    return self.appointment_end
+            return self.appointment_end
         return None
 
     @login_required
