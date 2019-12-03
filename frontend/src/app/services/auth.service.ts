@@ -11,7 +11,7 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {
     this.authToken = localStorage.getItem('kap-token');
-    this.authToken = localStorage.getItem('kap-group');
+    this.group = localStorage.getItem('kap-group');
   }
 
   get authorization() {
