@@ -187,6 +187,7 @@ class UpdateGroup(graphene.relay.ClientIDMutation):
 class Query(graphene.AbstractType):
     get_user = graphene.relay.Node.Field(UserType)
     get_users = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
+    get_me = graphene.Field(UserType)
 
     get_group = graphene.relay.Node.Field(GroupType)
     get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)
@@ -202,6 +203,13 @@ class Query(graphene.AbstractType):
                 return "Doctor"
             if info.context.user.groups.filter(name="Patient").exists():
                 return "Patient"
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+
+    @login_required
+    def resolve_get_me(self, info, **kwargs):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return info.context.user
         else:
             raise UnauthorisedAccessError(message='No permissions to view the user group!')
 
