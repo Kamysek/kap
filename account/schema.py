@@ -55,6 +55,8 @@ class CreateUser(graphene.relay.ClientIDMutation):
             user_instance.set_password(input.get('password'))
             groupInput = input.get('group')
             if groupInput:
+                if groupInput == "Admin" and not hasGroup(["Admin"],info):
+                    raise UnauthorisedAccessError(message='Must be Admin to create Admin')
                 g = Group.objects.get(name=groupInput)
                 user_instance.save()
                 g.user_set.add(user_instance)
@@ -90,10 +92,14 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.is_active = input.get('is_active')
                     groupInput = input.get('addgroup')
                     if groupInput:
+                        if groupInput == "Admin" and not hasGroup(["Admin"], info):
+                            raise UnauthorisedAccessError(message='Must be Admin to create Admin')
                         g = Group.objects.get(name=groupInput)
                         g.user_set.add(user_instance)
                     groupInput = input.get('removegroup')
                     if groupInput:
+                        if groupInput == "Admin" and not hasGroup(["Admin"], info):
+                            raise UnauthorisedAccessError(message='Must be Admin to remove Admin')
                         g = Group.objects.get(name=groupInput)
                         g.user_set.remove(user_instance)
                     user_instance.save()
