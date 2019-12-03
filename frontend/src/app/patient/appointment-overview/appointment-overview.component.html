@@ -2,16 +2,16 @@
 <h3>Currently available</h3>
 <div fxLayout="row" fxLayoutGap="1rem">
   <div
+    *ngFor="let calendar of calendars"
+    class="calendar"
     fxLayout="column"
     fxLayoutGap="0.5rem"
-    class="calendar"
-    *ngFor="let calendar of calendars"
   >
     <h3>{{ calendar.name }} ({{ calendar.doctor.username }})</h3>
     <div
-      class="appointment"
-      [ngClass]="{ taken: appointment.taken }"
       *ngFor="let appointment of calendar.appointments"
+      [ngClass]="{ taken: appointment.taken }"
+      class="appointment"
     >
       <strong
         >{{ appointment.title }}
@@ -23,9 +23,9 @@
       </p>
       <ng-container *ngIf="!appointment.taken">
         <button
-          mat-stroked-button
-          color="primary"
           (click)="takeAppointment.emit(appointment.id)"
+          color="primary"
+          mat-stroked-button
         >
           Take Appointment
         </button>

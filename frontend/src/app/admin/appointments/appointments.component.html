@@ -7,8 +7,8 @@
         <a
           *ngFor="let calendar of calendars$ | async"
           [routerLink]="calendar.id"
-          routerLinkActive="active"
           mat-list-item
+          routerLinkActive="active"
           >{{ calendar.name }}</a
         >
       </mat-nav-list>

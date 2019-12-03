@@ -3,11 +3,11 @@
   <div>
     <div class="appointments" fxLayout="column" fxLayoutGap="1rem">
       <div
-        [routerLink]="['view', appointment.id]"
         *ngFor="let appointment of calendar.appointments"
+        [routerLink]="['view', appointment.id]"
+        class="item"
         fxLayout="row"
         fxLayoutGap="0.5rem"
-        class="item"
         routerLinkActive="active"
       >
         <mat-icon>{{

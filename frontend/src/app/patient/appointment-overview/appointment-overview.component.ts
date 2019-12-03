@@ -15,5 +15,6 @@ import {
 export class AppointmentOverviewComponent {
   @Input() calendars;
   @Output() takeAppointment = new EventEmitter();
+
   constructor() {}
 }
