@@ -1,0 +1,35 @@
+<h3>Make a new Appointment</h3>
+<p>Currently available</p>
+<div fxLayout="row" fxLayoutGap="1rem">
+  <div
+    fxLayout="column"
+    fxLayoutGap="0.5rem"
+    class="calendar"
+    *ngFor="let calendar of calendars"
+  >
+    <h3>{{ calendar.name }} ({{ calendar.doctor.username }})</h3>
+    <div
+      class="appointment"
+      [ngClass]="{ taken: appointment.taken }"
+      *ngFor="let appointment of calendar.appointments"
+    >
+      <strong
+        >{{ appointment.title }}
+        {{ appointment.taken ? '(taken)' : '' }}</strong
+      >
+      <p>
+        {{ appointment.appointmentStart | date: 'medium' }} -
+        {{ appointment.appointmentEnd | date: 'medium' }}
+      </p>
+      <ng-container *ngIf="!appointment.taken">
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="takeAppointment.emit(appointment.id)"
+        >
+          Take Appointment
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>

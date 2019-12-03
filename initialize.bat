@@ -6,4 +6,5 @@ del db.sqlite3
 python manage.py makemigrations
 python manage.py migrate
 python manage.py custom_migrations
+python manage.py graphql_schema
 python manage.py exampleDB

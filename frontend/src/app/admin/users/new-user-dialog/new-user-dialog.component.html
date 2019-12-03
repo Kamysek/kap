@@ -1,0 +1,39 @@
+<h1 mat-dialog-title>Create new User</h1>
+<mat-dialog-content>
+  <form [formGroup]="userForm" fxLayout="column">
+    <mat-form-field>
+      <input
+        formControlName="username"
+        matInput
+        placeholder="Username"
+        type="text"
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        formControlName="password"
+        matInput
+        placeholder="Password"
+        type="password"
+      />
+    </mat-form-field>
+    <mat-form-field formControlName="group">
+      <mat-select placeholder="Permission group">
+        <mat-option value="Patient">Patient</mat-option>
+        <mat-option value="Doctor">Doctor</mat-option>
+        <mat-option value="Admin">Admin</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button
+    [disabled]="userForm.invalid"
+    [mat-dialog-close]="userForm.value"
+    color="primary"
+    mat-flat-button
+  >
+    Save
+  </button>
+  <button mat-dialog-close mat-stroked-button>Cancel</button>
+</mat-dialog-actions>

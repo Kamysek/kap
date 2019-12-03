@@ -1,1 +1,3 @@
-<p>edit-calendar works!</p>
+<h2>{{ title$ | async }}</h2>
+<p>Appointments for: {{ (calendar$ | async).doctor.username }}</p>
+<kap-appointment-list [calendar]="calendar$ | async"></kap-appointment-list>

@@ -1,3 +1,13 @@
 :root {
   display: block;
 }
+
+main {
+  padding: 1rem;
+}
+
+mat-nav-list {
+  .active {
+    text-decoration: underline;
+  }
+}
