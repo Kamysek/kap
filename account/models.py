@@ -8,16 +8,17 @@ from account.managers import CustomUserManager
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(unique=True, max_length=150)
-    # uncomment if email is needed
-    # email = models.EmailField(_('email address'), unique=True)
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    date_joined = models.DateTimeField(default=timezone.now)
-    password_changed = models.BooleanField(default=False)
+    username = models.CharField(unique=True, max_length=150, null=True, blank=False)
+    email = models.EmailField(_('email address'), unique=True, null=True, blank=False)
+    email_notification = models.BooleanField(default=False, null=True, blank=False)
+    is_staff = models.BooleanField(default=False, null=True, blank=False)
+    is_active = models.BooleanField(default=True, null=True, blank=False)
+    date_joined = models.DateTimeField(default=timezone.now, null=True, blank=False)
+    password_changed = models.BooleanField(default=False, null=True, blank=False)
+    called = models.IntegerField(default=0, null=True, blank=False)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['email']
 
     objects = CustomUserManager()
 

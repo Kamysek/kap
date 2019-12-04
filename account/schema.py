@@ -6,7 +6,6 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-
 from account.models import CustomUser
 from graphql_jwt.decorators import login_required
 
@@ -26,13 +25,74 @@ class UnauthorisedAccessError(GraphQLError):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined','password_changed']
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined','password_changed']
 
 
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
+        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+            return self.id
+        return -1
+
+    @login_required
+    def resolve_username(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.username
+        return None
+
+    @login_required
+    def resolve_password(self, info):
+        if self == info.context.user:
+            return self.password
+        return None
+
+    @login_required
+    def resolve_email(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.email
+        return None
+
+    @login_required
+    def resolve_email_notification(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.email_notification
+        return None
+
+    @login_required
+    def resolve_is_staff(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.is_staff
+        return None
+
+    @login_required
+    def resolve_is_active(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.is_active
+        return None
+
+    @login_required
+    def resolve_date_joined(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.date_joined
+        return None
+
+    @login_required
+    def resolve_password_changed(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.password_changed
+        return None
+
+    @login_required
+    def resolve_called(self, info):
+        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.called
+        return None
 
 
 class CreateUser(graphene.relay.ClientIDMutation):
@@ -41,27 +101,29 @@ class CreateUser(graphene.relay.ClientIDMutation):
     class Input:
         username = graphene.String(required=True)
         password = graphene.String(required=True)
+        email = graphene.String(required=True)
         is_staff = graphene.Boolean(required=True)
         is_active = graphene.Boolean(required=True)
         group = graphene.String(required=False)
+        email_notification = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
             user_instance = get_user_model()(
                 username=input.get('username'),
-
+                email=input.get('email'),
+                is_staff=input.get('is_staff'),
+                is_active=input.get('is_active'),
+                email_notification=input.get('email_notification'),
             )
             user_instance.set_password(input.get('password'))
-            groupInput = input.get('group')
-            if groupInput:
-                if groupInput == "Admin" and not hasGroup(["Admin"],info):
-                    raise UnauthorisedAccessError(message='Must be Admin to create Admin')
-                g = Group.objects.get(name=groupInput)
-                user_instance.save()
-                g.user_set.add(user_instance)
-            else:
-                user_instance.save()
+            user_instance.save()
+
+            if input.get('group') == "Admin" and not hasGroup(["Admin"], info):
+                raise UnauthorisedAccessError(message='Must be Admin to create Admin')
+            Group.objects.get(name=input.get('group')).add(user_instance)
+
             return CreateUser(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a user!')
@@ -75,8 +137,11 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         password = graphene.String()
         is_staff = graphene.Boolean()
         is_active = graphene.Boolean()
-        addgroup = graphene.String(required=False)
-        removegroup = graphene.String(required=False)
+        add_group = graphene.String()
+        remove_group = graphene.String()
+        email = graphene.String()
+        email_notification = graphene.Boolean()
+        called = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -86,22 +151,24 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                 if user_instance:
                     if input.get('password'):
                         user_instance.set_password(input.get('password'))
+                    if input.get('email'):
+                        user_instance.email = input.get('password')
                     if input.get('is_staff'):
                         user_instance.is_staff = input.get('is_staff')
                     if input.get('is_active'):
                         user_instance.is_active = input.get('is_active')
-                    groupInput = input.get('addgroup')
-                    if groupInput:
-                        if groupInput == "Admin" and not hasGroup(["Admin"], info):
+                    if input.get('email_notification'):
+                        user_instance.email_notification = input.get('email_notification')
+                    if input.get('called'):
+                        user_instance.called += 1
+                    if input.get('add_group'):
+                        if input.get('add_group') == "Admin" and not hasGroup(["Admin"], info):
                             raise UnauthorisedAccessError(message='Must be Admin to create Admin')
-                        g = Group.objects.get(name=groupInput)
-                        g.user_set.add(user_instance)
-                    groupInput = input.get('removegroup')
-                    if groupInput:
-                        if groupInput == "Admin" and not hasGroup(["Admin"], info):
+                        Group.objects.get(name=input.get('add_group')).user_set.add(user_instance)
+                    if input.get('remove_group'):
+                        if input.get('remove_group') == "Admin" and not hasGroup(["Admin"], info):
                             raise UnauthorisedAccessError(message='Must be Admin to remove Admin')
-                        g = Group.objects.get(name=groupInput)
-                        g.user_set.remove(user_instance)
+                        Group.objects.get(name=input.get('removegroup')).user_set.remove(user_instance)
                     user_instance.save()
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:

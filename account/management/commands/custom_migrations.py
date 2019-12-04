@@ -1,7 +1,7 @@
 # backend/management/commands/initgroups.py
 from django.core.management import BaseCommand
 from django.contrib.auth.models import Group, Permission
-from appointments.models import Appointment, Calendar
+from appointments.models import Appointment
 from boards.models import Board, Post, Topic
 from account.models import CustomUser
 from django.contrib.admin.models import LogEntry
@@ -24,7 +24,6 @@ GROUPS_PERMISSIONS = {
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
 
-        Calendar: ['add', 'change', 'delete', 'view'],
         Appointment: ['add', 'change', 'delete', 'view'],
 
         Survey: ['add', 'change', 'delete', 'view'],
@@ -43,7 +42,6 @@ GROUPS_PERMISSIONS = {
         Post: ['add', 'change', 'delete', 'view'],
         Topic: ['add', 'change', 'delete', 'view'],
 
-        Calendar: ['add', 'change', 'delete', 'view'],
         Appointment: ['add', 'change', 'delete', 'view'],
 
         Survey: ['add', 'change', 'delete', 'view'],
@@ -58,8 +56,6 @@ GROUPS_PERMISSIONS = {
         Board: ['view'],
         Post: ['view'],
         Topic: ['view'],
-
-        Calendar: ['view'],
 
         Survey: ['view'],
         Question: ['view'],
@@ -105,69 +101,3 @@ class Command(BaseCommand):
                                           + group.__str__())
                     except Permission.DoesNotExist:
                         self.stdout.write(codename + " not found")
-
-"""
-    # add custom permissions
-        proj_add_perm1 = Permission.objects.get(name='Add appointment patient')
-        proj_add_perm2 = Permission.objects.get(name='Change appointment patient')
-        proj_add_perm3 = Permission.objects.get(name='Delete appointment patient')
-        proj_add_perm4 = Permission.objects.get(name='View appointment patient')
-        proj_add_perm5 = Permission.objects.get(name='View patient')
-        proj_add_perm6 = Permission.objects.get(name='View comment doctor')
-        proj_add_perm7 = Permission.objects.get(name='View doctor')
-
-        proj_add_perm8 = Permission.objects.get(name='Edit user')
-
-        proj_add_perm9 = Permission.objects.get(name='View board creator')
-        proj_add_perm10 = Permission.objects.get(name='View topic creator')
-        proj_add_perm11 = Permission.objects.get(name='View created by Board')
-        proj_add_perm12 = Permission.objects.get(name='View updated by Board')
-
-        proj_add_perm13 = Permission.objects.get(name='View created by survey')
-        proj_add_perm14 = Permission.objects.get(name='View updated by survey')
-        proj_add_perm15 = Permission.objects.get(name='View created by survey question')
-        proj_add_perm16 = Permission.objects.get(name='View updated by survey answer')
-        proj_add_perm17 = Permission.objects.get(name='View text answer survey')
-        proj_add_perm18 = Permission.objects.get(name='View choice answer survey')
-        proj_add_perm19 = Permission.objects.get(name='View number answer survey')
-
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm1)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm2)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm3)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm4)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm5)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm6)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm7)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm8)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm9)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm10)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm11)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm12)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm13)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm14)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm15)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm16)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm17)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm18)
-        Group.objects.get(name='Admin').permissions.add(proj_add_perm19)
-
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm5)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm6)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm7)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm9)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm10)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm11)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm12)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm13)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm14)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm15)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm16)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm17)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm18)
-        Group.objects.get(name='Doctor').permissions.add(proj_add_perm19)
-
-        Group.objects.get(name='Patient').permissions.add(proj_add_perm1)
-        Group.objects.get(name='Patient').permissions.add(proj_add_perm2)
-        Group.objects.get(name='Patient').permissions.add(proj_add_perm3)
-        Group.objects.get(name='Patient').permissions.add(proj_add_perm4)
-"""
