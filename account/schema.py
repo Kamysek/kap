@@ -6,7 +6,7 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from account.models import CustomUser
+from account.models import CustomUser,Checkup,Study
 from graphql_jwt.decorators import login_required
 
 
@@ -27,18 +27,91 @@ class UserFilter(django_filters.FilterSet):
         model = CustomUser
         fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined','password_changed']
 
+class CheckupFilter(django_filters.FilterSet):
+    class Meta:
+        model = Checkup
+        fields = ['name','order','interval','study']
+
+class StudyFilter(django_filters.FilterSet):
+    class Meta:
+        model = Study
+        fields = ['name']
+
+
+class StudyType(DjangoObjectType):
+    class Meta:
+        model = Study
+        interfaces = (graphene.relay.Node,)
+        fields = ('name','customuser_set','checkup_set')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.id
+        return []
+
+    @login_required
+    def resolve_name(self,info):
+        if hasGroup(["Admin","Doctor"],info):
+            return self.name
+        return None
+
+    @login_required
+    def resolve_customuser_set(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.customuser_set
+        return []
+
+    @login_required
+    def resolve_checkup_set(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.checkup_set
+        return []
+
+class CheckupType(DjangoObjectType):
+    class Meta:
+        model = Checkup
+        interfaces = (graphene.relay.Node,)
+        fields = ('name','order','interval','study')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.id
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+
+    @login_required
+    def resolve_name(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.name
+        return None
+
+    @login_required
+    def resolve_order(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.order
+        return None
+
+    @login_required
+    def resolve_interval(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.interval
+        return None
+
+    @login_required
+    def resolve_study(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.study
+        return None
+
 
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
-        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed')
+        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','study_participation')
 
-    @login_required
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-            return self.id
-        return -1
 
     @login_required
     def resolve_username(self, info):
@@ -255,6 +328,9 @@ class Query(graphene.AbstractType):
     get_user = graphene.relay.Node.Field(UserType)
     get_users = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
     get_me = graphene.Field(UserType)
+
+    get_checkup = graphene.relay.Node.Field(CheckupType)
+    get_studies = DjangoFilterConnectionField(StudyType,filterset_class=StudyFilter)
 
     get_group = graphene.relay.Node.Field(GroupType)
     get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)

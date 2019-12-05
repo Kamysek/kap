@@ -8,4 +8,3 @@ python manage.py migrate
 python manage.py custom_migrations
 python manage.py graphql_schema
 python manage.py exampleDB
-python manage.py runserver
