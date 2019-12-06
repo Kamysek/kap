@@ -3,11 +3,12 @@ from django.core.management import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from appointments.models import Appointment
 from boards.models import Board, Post, Topic
-from account.models import CustomUser
+from account.models import CustomUser, Checkup, Study
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.models import Session
+from django_cron.models import CronJobLog
 from survey.models import Survey, Question, Choice, Answer, TextAnswer, ChoiceAnswer, NumberAnswer
 
 GROUPS_PERMISSIONS = {
@@ -19,6 +20,9 @@ GROUPS_PERMISSIONS = {
         LogEntry: ['add', 'change', 'delete', 'view'],
 
         CustomUser: ['add', 'change', 'delete', 'view'],
+        Checkup: ['add', 'change', 'delete', 'view'],
+        Study: ['add', 'change', 'delete', 'view'],
+        CronJobLog: ['add', 'change', 'delete', 'view'],
 
         Board: ['add', 'change', 'delete', 'view'],
         Post: ['add', 'change', 'delete', 'view'],
@@ -37,6 +41,9 @@ GROUPS_PERMISSIONS = {
     },
     'Doctor': {
         CustomUser: ['add', 'change', 'delete', 'view'],
+        Checkup: ['add', 'change', 'delete', 'view'],
+        Study: ['add', 'change', 'delete', 'view'],
+        CronJobLog: ['add', 'change', 'delete', 'view'],
 
         Board: ['add', 'change', 'delete', 'view'],
         Post: ['add', 'change', 'delete', 'view'],
@@ -54,6 +61,9 @@ GROUPS_PERMISSIONS = {
     },
     'Labor': {
         CustomUser: ['view'],
+        Checkup: ['view'],
+        Study: ['view'],
+        CronJobLog: ['view'],
 
         Board: ['view'],
         Post: ['view'],
@@ -70,6 +80,10 @@ GROUPS_PERMISSIONS = {
         NumberAnswer: ['view'],
     },
     'Patient': {
+        Checkup: ['view'],
+        Study: ['view'],
+        CronJobLog: ['view'],
+
         Board: ['view'],
         Post: ['view'],
         Topic: ['view'],
