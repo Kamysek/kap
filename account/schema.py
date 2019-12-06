@@ -6,8 +6,10 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from account.models import CustomUser,Checkup,Study
+from account.models import CustomUser, Checkup, Study
 from graphql_jwt.decorators import login_required
+from appointments.models import Appointment
+from django.utils import timezone
 
 
 def hasGroup(groups, info):
@@ -15,6 +17,24 @@ def hasGroup(groups, info):
         if info.context.user.groups.filter(name=role).exists():
             return True
     return False
+
+
+def checkUserOverdue(user):
+    appointments = Appointment.objects.filter(patient=user).order_by('-appointment_start')
+    days_since_joined = (timezone.now() - user.date_joined).days
+    checkups = user.study_participation.checkup_set.all().order_by("order")
+    totalDaysNextCheckup = 0
+    for i in range(appointments.count() + 1):
+        totalDaysNextCheckup += checkups[i].interval
+    if (days_since_joined > totalDaysNextCheckup):
+        user.checkup_overdue = True
+        if(days_since_joined - totalDaysNextCheckup) > 3 and not user.overdue_notified:
+            print("TODO SEND EMAIL")
+            user.overdue_notified = True
+    else:
+        user.checkup_overdue = False
+        user.overdue_notified = False
+    user.save()
 
 
 class UnauthorisedAccessError(GraphQLError):
@@ -25,12 +45,14 @@ class UnauthorisedAccessError(GraphQLError):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined','password_changed']
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed']
+
 
 class CheckupFilter(django_filters.FilterSet):
     class Meta:
         model = Checkup
-        fields = ['name','order','interval','study']
+        fields = ['name', 'order', 'interval', 'study']
+
 
 class StudyFilter(django_filters.FilterSet):
     class Meta:
@@ -42,17 +64,19 @@ class StudyType(DjangoObjectType):
     class Meta:
         model = Study
         interfaces = (graphene.relay.Node,)
-        fields = ('name','customuser_set','checkup_set')
+        fields = ('name', 'customuser_set', 'checkup_set')
 
     @login_required
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor"], info):
             return self.id
-        return []
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
 
     @login_required
-    def resolve_name(self,info):
-        if hasGroup(["Admin","Doctor"],info):
+    def resolve_name(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
             return self.name
         return None
 
@@ -68,11 +92,12 @@ class StudyType(DjangoObjectType):
             return self.checkup_set
         return []
 
+
 class CheckupType(DjangoObjectType):
     class Meta:
         model = Checkup
         interfaces = (graphene.relay.Node,)
-        fields = ('name','order','interval','study')
+        fields = ('name', 'order', 'interval', 'study')
 
     @login_required
     def resolve_id(self, info):
@@ -80,6 +105,7 @@ class CheckupType(DjangoObjectType):
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')
+            return None
 
     @login_required
     def resolve_name(self, info):
@@ -110,8 +136,15 @@ class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
-        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','study_participation')
+        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'study_participation')
 
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor"], info):
+            return self.id
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
 
     @login_required
     def resolve_username(self, info):
@@ -330,7 +363,7 @@ class Query(graphene.AbstractType):
     get_me = graphene.Field(UserType)
 
     get_checkup = graphene.relay.Node.Field(CheckupType)
-    get_studies = DjangoFilterConnectionField(StudyType,filterset_class=StudyFilter)
+    get_studies = DjangoFilterConnectionField(StudyType, filterset_class=StudyFilter)
 
     get_group = graphene.relay.Node.Field(GroupType)
     get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)

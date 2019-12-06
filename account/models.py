@@ -32,6 +32,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     password_changed = models.BooleanField(default=False, null=True, blank=False)
     called = models.IntegerField(default=0, null=True, blank=False)
     study_participation = models.ForeignKey(Study,on_delete=models.SET_NULL,null=True)
+    checkup_overdue = models.BooleanField(default=False, null=True, blank=False)
+    overdue_notified = models.BooleanField(default=False, null=True, blank=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
