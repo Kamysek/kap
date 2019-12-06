@@ -10,7 +10,7 @@ from account.models import CustomUser, Checkup, Study
 from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
 from django.utils import timezone
-from klinischesanwendungsprojekt.utils import sendReminderMail,sendTestMail
+from klinischesanwendungsprojekt.mailUtils import sendReminderMail,sendTestMail
 
 
 def hasGroup(groups, info):
