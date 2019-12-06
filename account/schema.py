@@ -57,7 +57,7 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')

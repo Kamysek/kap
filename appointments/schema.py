@@ -65,7 +65,7 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_comment_doctor(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info)or self.patient == info.context.user:
             return self.comment_doctor
         return None
 
