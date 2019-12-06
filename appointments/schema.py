@@ -83,7 +83,7 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor"], 'Labor', info):
+        if hasGroup(["Admin", "Doctor","Labor"], info):
             return self.created_at
         return None
 
