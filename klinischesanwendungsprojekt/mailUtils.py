@@ -19,7 +19,19 @@ def sendTestMail(recipient):
     s.quit()
 
 
-def sendReminderMail(recipient):
+def sendWeekReminderMail(recipient):
+    msg = EmailMessage()
+    msg.set_content("Sie haben demnächst einen Termin bei uns!")
+    msg['Subject'] = "Termin Erinnerung"
+    msg['From'] = "kapTest@web.de"
+    msg['To'] = recipient.email
+    s = smtplib.SMTP(SMTP_SERVER)
+    s.starttls()
+    s.login(MY_ADDRESS, PASSWORD)
+    s.send_message(msg)
+    s.quit()
+
+def sendDayReminderMail(recipient):
     msg = EmailMessage()
     msg.set_content("Sie haben demnächst einen Termin bei uns!")
     msg['Subject'] = "Termin Erinnerung"

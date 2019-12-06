@@ -11,6 +11,8 @@ class Appointment(models.Model):
     appointment_start = models.DateTimeField(null=True, blank=False)
     appointment_end = models.DateTimeField(null=True, blank=False)
     taken = models.BooleanField(null=True, blank=False, default=False)
+    weekReminder = models.BooleanField(null=True, blank=False, default=False)
+    dayReminder = models.BooleanField(null=True, blank=False, default=False)
 
     def __str__(self):
         return self.title

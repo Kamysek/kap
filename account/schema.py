@@ -8,9 +8,6 @@ from graphql import GraphQLError
 from graphql_relay import from_global_id
 from account.models import CustomUser, Checkup, Study
 from graphql_jwt.decorators import login_required
-from appointments.models import Appointment
-from django.utils import timezone
-from klinischesanwendungsprojekt.mailUtils import sendOverdueMail
 
 
 def hasGroup(groups, info):
@@ -18,24 +15,6 @@ def hasGroup(groups, info):
         if info.context.user.groups.filter(name=role).exists():
             return True
     return False
-
-
-def checkUserOverdue(user):
-    appointments = Appointment.objects.filter(patient=user).order_by('-appointment_start')
-    days_since_joined = (timezone.now() - user.date_joined).days
-    checkups = user.study_participation.checkup_set.all().order_by("order")
-    totalDaysNextCheckup = 0
-    for i in range(appointments.count() + 1):
-        totalDaysNextCheckup += checkups[i].interval
-    if (days_since_joined > totalDaysNextCheckup):
-        user.checkup_overdue = True
-        if(days_since_joined - totalDaysNextCheckup) > 3 and not user.overdue_notified:
-            sendOverdueMail(user)
-            user.overdue_notified = True
-    else:
-        user.checkup_overdue = False
-        user.overdue_notified = False
-    user.save()
 
 
 class UnauthorisedAccessError(GraphQLError):
