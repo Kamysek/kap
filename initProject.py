@@ -1,0 +1,11 @@
+import os
+os.system("rm account\migrations\0001_initial.py")
+os.system("rm boards\migrations\0001_initial.py")
+os.system("rm survey\migrations\0001_initial.py")
+os.system("rm db.sqlite3")
+os.system("python manage.py makemigrations")
+os.system("python manage.py migrate")
+os.system("python manage.py custom_migrations")
+os.system("python manage.py graphql_schema")
+os.system("python manage.py exampleDB")
+os.system("python manage.py runserver")
