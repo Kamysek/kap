@@ -6,11 +6,13 @@ from django.utils import timezone
 from datetime import timedelta
 from account.managers import CustomUserManager
 
+
 class Study(models.Model):
     name = models.CharField(max_length=200, blank=False, null=True)
 
     def __str__(self):
         return self.name
+
 
 class Checkup(models.Model):
     name = models.CharField(max_length=150,blank=False,null=True)
@@ -42,11 +44,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-
-    class Meta:
-        permissions = (
-            ("edit_user", "Edit user"),
-        )
 
     def set_password(self, password):
         super(CustomUser, self).set_password(password)

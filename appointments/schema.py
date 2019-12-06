@@ -52,55 +52,55 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_title(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.title
         return None
 
     @login_required
     def resolve_comment_doctor(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
             return self.comment_doctor
         return None
 
     @login_required
     def resolve_comment_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_patient
         return None
 
     @login_required
     def resolve_patient(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.patient == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.patient
         return None
 
     @login_required
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor"], 'Labor', info):
             return self.created_at
         return None
 
     @login_required
     def resolve_appointment_start(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.appointment_start
         return None
 
     @login_required
     def resolve_appointment_end(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.appointment_end
         return None
 
     @login_required
     def resolve_taken(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.taken
         return None
 

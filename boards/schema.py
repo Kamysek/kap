@@ -35,25 +35,25 @@ class BoardType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.name
         return None
 
     @login_required
     def resolve_description(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.description
         return None
 
     @login_required
     def resolve_creator(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.creator
         return None
 
@@ -135,25 +135,25 @@ class TopicType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_subject(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.subject
         return None
 
     @login_required
     def resolve_last_updated(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.last_updated
         return None
 
     @login_required
     def resolve_creator(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.creator
         return None
 
@@ -245,43 +245,43 @@ class PostType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_message(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.message
         return None
 
     @login_required
     def resolve_topic(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.topic
         return None
 
     @login_required
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_at
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_at(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_at
         return None
 
     @login_required
     def resolve_updated_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_by
         return None
 

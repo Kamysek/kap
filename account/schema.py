@@ -49,90 +49,6 @@ class UserFilter(django_filters.FilterSet):
         fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed']
 
 
-class CheckupFilter(django_filters.FilterSet):
-    class Meta:
-        model = Checkup
-        fields = ['name', 'order', 'interval', 'study']
-
-
-class StudyFilter(django_filters.FilterSet):
-    class Meta:
-        model = Study
-        fields = ['name']
-
-
-class StudyType(DjangoObjectType):
-    class Meta:
-        model = Study
-        interfaces = (graphene.relay.Node,)
-        fields = ('name', 'customuser_set', 'checkup_set')
-
-    @login_required
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
-
-    @login_required
-    def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.name
-        return None
-
-    @login_required
-    def resolve_customuser_set(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.customuser_set
-        return []
-
-    @login_required
-    def resolve_checkup_set(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.checkup_set
-        return []
-
-
-class CheckupType(DjangoObjectType):
-    class Meta:
-        model = Checkup
-        interfaces = (graphene.relay.Node,)
-        fields = ('name', 'order', 'interval', 'study')
-
-    @login_required
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
-
-    @login_required
-    def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.name
-        return None
-
-    @login_required
-    def resolve_order(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.order
-        return None
-
-    @login_required
-    def resolve_interval(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.interval
-        return None
-
-    @login_required
-    def resolve_study(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
-            return self.study
-        return None
-
-
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
@@ -141,7 +57,7 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')
@@ -149,7 +65,7 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_username(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.username
         return None
 
@@ -161,25 +77,25 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_email(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.email
         return None
 
     @login_required
     def resolve_email_notification(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.email_notification
         return None
 
     @login_required
     def resolve_is_staff(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.is_staff
         return None
 
     @login_required
     def resolve_is_active(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.is_active
         return None
 
@@ -197,7 +113,7 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_called(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self == info.context.user:
             return self.called
         return None
 
@@ -358,6 +274,90 @@ class UpdateGroup(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
 
+class StudyFilter(django_filters.FilterSet):
+    class Meta:
+        model = Study
+        fields = ['name']
+
+
+class StudyType(DjangoObjectType):
+    class Meta:
+        model = Study
+        interfaces = (graphene.relay.Node,)
+        fields = ('name', 'customuser_set', 'checkup_set')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.id
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
+
+    @login_required
+    def resolve_name(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.name
+        return None
+
+    @login_required
+    def resolve_customuser_set(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.customuser_set
+        return []
+
+    @login_required
+    def resolve_checkup_set(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.checkup_set
+        return []
+
+
+class CheckupFilter(django_filters.FilterSet):
+    class Meta:
+        model = Checkup
+        fields = ['name', 'order', 'interval', 'study']
+
+
+class CheckupType(DjangoObjectType):
+    class Meta:
+        model = Checkup
+        interfaces = (graphene.relay.Node,)
+        fields = ('name', 'order', 'interval', 'study')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.id
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
+
+    @login_required
+    def resolve_name(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.name
+        return None
+
+    @login_required
+    def resolve_order(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.order
+        return None
+
+    @login_required
+    def resolve_interval(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.interval
+        return None
+
+    @login_required
+    def resolve_study(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.study
+        return None
+
+
 class Query(graphene.AbstractType):
     get_user = graphene.relay.Node.Field(UserType)
     get_users = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
@@ -373,11 +373,13 @@ class Query(graphene.AbstractType):
 
     @login_required
     def resolve_get_user_group(self, info, **kwargs):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             if info.context.user.groups.filter(name="Admin").exists():
                 return "Admin"
             if info.context.user.groups.filter(name="Doctor").exists():
                 return "Doctor"
+            if info.context.user.groups.filter(name="Labor").exists():
+                return "Labor"
             if info.context.user.groups.filter(name="Patient").exists():
                 return "Patient"
         else:
@@ -385,7 +387,7 @@ class Query(graphene.AbstractType):
 
     @login_required
     def resolve_get_me(self, info, **kwargs):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return info.context.user
         else:
             raise UnauthorisedAccessError(message='No permissions to view the user group!')

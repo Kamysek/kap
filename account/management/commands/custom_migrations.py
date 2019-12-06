@@ -52,6 +52,23 @@ GROUPS_PERMISSIONS = {
         ChoiceAnswer: ['add', 'change', 'delete', 'view'],
         NumberAnswer: ['add', 'change', 'delete', 'view'],
     },
+    'Labor': {
+        CustomUser: ['view'],
+
+        Board: ['view'],
+        Post: ['view'],
+        Topic: ['view'],
+
+        Appointment: ['view'],
+
+        Survey: ['view'],
+        Question: ['view'],
+        Choice: ['view'],
+        Answer: ['view'],
+        TextAnswer: ['view'],
+        ChoiceAnswer: ['view'],
+        NumberAnswer: ['view'],
+    },
     'Patient': {
         Board: ['view'],
         Post: ['view'],
