@@ -7,7 +7,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from .models import Appointment
 from account.models import CustomUser
-from klinischesanwendungsprojekt.mailUtils import sendReminderMail,VIPreminder
+from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
 
 """
 def isAppointmentFree(newAppointment, allAppointments):
@@ -122,6 +122,8 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
             if input.get('patient'):
                 try:
                     patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
+                    if patient.email_notification:
+                        VIPreminder(patient)
                 except Appointment.DoesNotExist:
                     raise GraphQLError('Patient does not exist!')
             appointment_instance = Appointment(title=input.get('title'),
@@ -168,6 +170,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         if input.get('patient'):
                             appointment_instance.patient = input.get('patient')
                             appointment_instance.taken = True
+                            if patient.email_notification:
+                                VIPreminder(patient)
 
                         # if not isAppointmentFree(appointment_instance,
                         #                         Appointment.objects.all().exclude(calendar__appointment__id=1)):
@@ -181,6 +185,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             'comment_patient') is None else input.get('comment_patient'),
                         appointment_instance.taken = True
                         appointment_instance.save()
+                        if info.context.user.email_notification:
+                            VIPreminder(info.context.user)
                     return CreateAppointment(appointment=appointment_instance)
             except Appointment.DoesNotExist:
                 raise GraphQLError('Appointment does not exist!')
@@ -216,6 +222,8 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.comment_patient = ""
                             appointment_instance.taken = False
                             appointment_instance.save()
+                            if info.context.user.email_notification:
+                                VIPcancel(info.context.user)
                     return DeleteAppointment(ok=True)
             except Appointment.DoesNotExist:
                 raise GraphQLError('Appointment does not exist!')

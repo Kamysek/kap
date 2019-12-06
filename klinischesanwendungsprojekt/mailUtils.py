@@ -43,12 +43,24 @@ def sendOverdueMail(recipient):
     s.send_message(msg)
     s.quit()
 
-def VIPreminder(vip,recipient):
+def VIPreminder(vip):
     msg = EmailMessage()
     msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat sich für einen Termin angemeldet!")
     msg['Subject'] = "VIP Terminanmeldung"
     msg['From'] = "kapTest@web.de"
-    msg['To'] = recipient.email
+    msg['To'] = "recipient.email"
+    s = smtplib.SMTP(SMTP_SERVER)
+    s.starttls()
+    s.login(MY_ADDRESS, PASSWORD)
+    s.send_message(msg)
+    s.quit()
+
+def VIPcancel(vip):
+    msg = EmailMessage()
+    msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat einen Termin abgebrochen!")
+    msg['Subject'] = "VIP Termin ABGEBROCHEN"
+    msg['From'] = "kapTest@web.de"
+    msg['To'] = "recipient.email"
     s = smtplib.SMTP(SMTP_SERVER)
     s.starttls()
     s.login(MY_ADDRESS, PASSWORD)
