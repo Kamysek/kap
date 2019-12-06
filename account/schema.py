@@ -10,7 +10,7 @@ from account.models import CustomUser, Checkup, Study
 from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
 from django.utils import timezone
-from klinischesanwendungsprojekt.mailUtils import sendReminderMail,sendTestMail
+from klinischesanwendungsprojekt.mailUtils import sendOverdueMail
 
 
 def hasGroup(groups, info):
@@ -30,7 +30,7 @@ def checkUserOverdue(user):
     if (days_since_joined > totalDaysNextCheckup):
         user.checkup_overdue = True
         if(days_since_joined - totalDaysNextCheckup) > 3 and not user.overdue_notified:
-            print("TODO SEND EMAIL")
+            sendOverdueMail(user)
             user.overdue_notified = True
     else:
         user.checkup_overdue = False

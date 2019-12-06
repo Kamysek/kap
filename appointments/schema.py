@@ -7,6 +7,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from .models import Appointment
 from account.models import CustomUser
+from klinischesanwendungsprojekt.mailUtils import sendReminderMail,VIPreminder
 
 """
 def isAppointmentFree(newAppointment, allAppointments):
@@ -174,7 +175,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
 
                         appointment_instance.save()
                         return CreateAppointment(appointment=appointment_instance)
-                    elif hasGroup(["Patient"], info):
+                    elif hasGroup(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                         appointment_instance.patient = info.context.user
                         appointment_instance.comment_patient = "" if input.get(
                             'comment_patient') is None else input.get('comment_patient'),
