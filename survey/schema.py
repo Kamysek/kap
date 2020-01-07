@@ -55,49 +55,49 @@ class SurveyType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_survey_name(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.survey_name
         return None
 
     @login_required
     def resolve_description(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.description
         return None
 
     @login_required
     def resolve_created_on(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_on
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_on(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_on
         return None
 
     @login_required
     def resolve_updated_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_by
         return None
 
     @login_required
     def resolve_pub_date(self, info):
-        if hasGroup(["Admin", "Doctor"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
             return self.pub_date
         return None
 
@@ -188,49 +188,49 @@ class QuestionType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_question_text(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.question_text
         return None
 
     @login_required
     def resolve_created_on(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_on
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_on(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_on
         return None
 
     @login_required
     def resolve_updated_by(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.updated_by
         return None
 
     @login_required
     def resolve_question_type(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.question_type
         return None
 
     @login_required
     def resolve_survey(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.survey
         return None
 
@@ -327,19 +327,19 @@ class ChoiceType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return -1
 
     @login_required
     def resolve_choice_text(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.choice_text
         return None
 
     @login_required
     def resolve_question(self, info):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.question
         return None
 
@@ -432,37 +432,37 @@ class TextAnswerType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.id
         return -1
 
     @login_required
     def resolve_created_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_on
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.updated_on
         return None
 
     @login_required
     def resolve_text_answer(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.text_answer
         return None
 
     @login_required
     def resolve_question(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.question
         return None
 
@@ -558,37 +558,37 @@ class NumberAnswerType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.id
         return -1
 
     @login_required
     def resolve_created_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_on
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.updated_on
         return None
 
     @login_required
     def resolve_number_answer(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.number_answer
         return None
 
     @login_required
     def resolve_question(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.question
         return None
 
@@ -684,37 +684,37 @@ class ChoiceAnswerType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.id
         return -1
 
     @login_required
     def resolve_created_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_on
         return None
 
     @login_required
     def resolve_created_by(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.created_by
         return None
 
     @login_required
     def resolve_updated_on(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.updated_on
         return None
 
     @login_required
     def resolve_choice_answer(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.choice_answer
         return None
 
     @login_required
     def resolve_question(self, info):
-        if hasGroup(["Admin", "Doctor"], info) or self.created_by == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.created_by == info.context.user:
             return self.question
         return None
 

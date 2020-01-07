@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'appointments.apps.AppointmentsConfig',
     'survey.apps.SurveyConfig',
+    'django_cron'
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CRON_CLASSES = [
+    "klinischesanwendungsprojekt.crons.MyCronJob",
+    # ...
 ]
 
 ROOT_URLCONF = 'klinischesanwendungsprojekt.urls'
