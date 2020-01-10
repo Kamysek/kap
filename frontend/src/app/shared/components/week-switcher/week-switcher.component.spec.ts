@@ -1,19 +1,19 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AppointmentInfoComponent } from './appointment-info.component';
+import { WeekSwitcherComponent } from './week-switcher.component';
 
-describe('AppointmentInfoComponent', () => {
-  let component: AppointmentInfoComponent;
-  let fixture: ComponentFixture<AppointmentInfoComponent>;
+describe('WeekSwitcherComponent', () => {
+  let component: WeekSwitcherComponent;
+  let fixture: ComponentFixture<WeekSwitcherComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [AppointmentInfoComponent]
+      declarations: [WeekSwitcherComponent]
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AppointmentInfoComponent);
+    fixture = TestBed.createComponent(WeekSwitcherComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

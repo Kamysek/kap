@@ -1,0 +1,29 @@
+<div
+  gdAuto
+  gdColumns="auto repeat(5, 1fr)"
+  gdRows="auto repeat({{ times.length }}, 25px)"
+>
+  <b *ngFor="let fill of filler" class="lines"></b>
+  <strong
+    *ngFor="let day of days | async; let i = index"
+    gdColumn="{{ i + 2 }}"
+    gdRow="1"
+    >{{ day }}</strong
+  >
+  <span
+    *ngFor="let time of times; let i = index"
+    gdColumn="1"
+    gdGridAlign="start center"
+    gdRow="{{ i + 2 }}"
+    >{{ time }}</span
+  >
+  <div
+    *ngFor="let appointment of appointments"
+    [ngClass]="{ taken: appointment.taken }"
+    class="appointment"
+    gdColumn="{{ appointment.day + 1 }}"
+    gdRow="{{ appointment.startMinute + 2 }}/{{ appointment.endMinute + 2 }}"
+  >
+    {{ appointment.taken }}
+  </div>
+</div>

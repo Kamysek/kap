@@ -1,0 +1,11 @@
+<h3>Showing appointments: {{ selectedRage | async }}</h3>
+<button (click)="goLower()" [disabled]="!(canGoLower | async)">
+  Previous week
+</button>
+<button (click)="goHigher()" [disabled]="!(canGoHigher | async)">
+  Next week
+</button>
+<kap-appointment-week
+  [appointments]="selectedAppointments | async"
+  [week]="selectedWeek | async"
+></kap-appointment-week>

@@ -1,9 +1,0 @@
-<h3>{{ appointment.title }}</h3>
-<p>
-  {{ appointment.appointmentStart | date: 'medium' }} -
-  {{ appointment.appointmentEnd | date: 'medium' }}
-</p>
-<p>Appointment is {{ appointment.taken ? 'taken' : 'free' }}</p>
-<p *ngIf="appointment.taken">Taken by: {{ appointment.patient.username }}</p>
-<p *ngIf="appointment.commentDoctor">{{ appointment.commentDoctor }}</p>
-<p *ngIf="appointment.commentPatient">{{ appointment.commentPatient }}</p>

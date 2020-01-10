@@ -14,22 +14,16 @@ import {
   MatSelectModule,
   MatTableModule
 } from '@angular/material';
-import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { EditCalendarComponent } from './appointments/edit-calendar/edit-calendar.component';
-import { CalendarResolver } from './resolvers/calendar.resolver';
-import { AppointmentListComponent } from './appointments/edit-calendar/appointment-list/appointment-list.component';
-import { NewAppointmentComponent } from './appointments/edit-calendar/new-appointment/new-appointment.component';
-import { AppointmentFormComponent } from './appointments/edit-calendar/appointment-form/appointment-form.component';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { ViewAppointmentComponent } from './appointments/edit-calendar/appointment-list/view-appointment/view-appointment.component';
-import { AppointmentResolver } from './resolvers/appointment.resolver';
-import { AppointmentInfoComponent } from './appointments/edit-calendar/appointment-list/view-appointment/appointment-info/appointment-info.component';
 import { UsersComponent } from './users/users.component';
 import { AdminComponent } from './admin.component';
 import { UsersResolver } from './resolvers/users.resolver';
 import { NewUserDialogComponent } from './users/new-user-dialog/new-user-dialog.component';
 import { AuthGuard } from '../guards/auth.guard';
+import { AppointmentResolver } from './resolvers/appointment.resolver';
+import { SharedModule } from '../shared/shared.module';
+import { AddAppointmentsDialogComponent } from './appointments/add-appointments-dialog/add-appointments-dialog.component';
 
 const routes: Routes = [
   {
@@ -38,22 +32,23 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       {
-        path: 'calendars',
+        path: 'appointments',
         component: AppointmentsComponent,
-        children: [
-          {
-            path: ':id',
-            component: EditCalendarComponent,
-            resolve: { calendar: CalendarResolver },
-            children: [
-              {
-                path: 'view/:appointmentId',
-                component: ViewAppointmentComponent,
-                resolve: { appointment: AppointmentResolver }
-              }
-            ]
-          }
-        ]
+        resolve: { appointments: AppointmentResolver }
+        // children: [
+        //   {
+        //     path: ':id',
+        //     component: EditCalendarComponent,
+        //     resolve: { calendar: CalendarResolver },
+        //     children: [
+        //       {
+        //         path: 'view/:appointmentId',
+        //         component: ViewAppointmentComponent,
+        //         resolve: { appointment: AppointmentResolver }
+        //       }
+        //     ]
+        //   }
+        // ]
       },
       {
         path: 'users',
@@ -69,21 +64,16 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppointmentsComponent,
-    NewCalendarDialogComponent,
-    EditCalendarComponent,
-    AppointmentListComponent,
-    NewAppointmentComponent,
-    AppointmentFormComponent,
-    ViewAppointmentComponent,
-    AppointmentInfoComponent,
     UsersComponent,
     AdminComponent,
-    NewUserDialogComponent
+    NewUserDialogComponent,
+    AddAppointmentsDialogComponent
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
     FlexLayoutModule,
+    SharedModule,
     MatListModule,
     MatButtonModule,
     MatDialogModule,
@@ -96,6 +86,6 @@ const routes: Routes = [
     MatTableModule,
     MatSelectModule
   ],
-  entryComponents: [NewCalendarDialogComponent, NewUserDialogComponent]
+  entryComponents: [NewUserDialogComponent, AddAppointmentsDialogComponent]
 })
 export class AdminModule {}

@@ -45,7 +45,7 @@ export class AuthService {
                 localStorage.setItem('kap-group', this.group);
                 switch (this.group) {
                   case 'Admin': {
-                    this.router.navigate(['/admin/calendars']);
+                    this.router.navigate(['/admin/appointments']);
                     break;
                   }
                   default: {

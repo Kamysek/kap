@@ -33,15 +33,6 @@ export class UserService {
         id
         username
         dateJoined
-        appointmentSet {
-          edges {
-            node {
-              appointmentStart
-              appointmentEnd
-              title
-            }
-          }
-        }
       }
     }
   `;
@@ -70,12 +61,12 @@ export class UserService {
     return this.apollo
       .watchQuery<getUserDetails>({ query: UserService.LOAD_USER_DETAILS })
       .valueChanges.pipe(
-        map(res => res.data.getMe),
-        map(me =>
+        map(res => res.data.getMe)
+        /*map(me =>
           Object.assign({}, me, {
             appointments: me.appointmentSet.edges.map(edge => edge.node)
           })
-        )
+        )*/
       );
   }
 

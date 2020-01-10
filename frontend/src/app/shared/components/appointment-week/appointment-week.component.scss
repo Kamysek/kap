@@ -1,0 +1,13 @@
+.appointment {
+  background: green;
+
+  &.taken {
+    background: red;
+  }
+
+  border-bottom: 1px grey solid;
+}
+
+.lines:not(:first-of-type) {
+  border-bottom: 1px grey solid;
+}

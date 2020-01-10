@@ -1,23 +1,3 @@
-<main class="mat-app-background mat-typography" fxLayout="column">
-  <h1>Manage Appointments</h1>
-  <div fxLayout="row" fxLayoutGap="2rem">
-    <section fxLayout="column">
-      <h2>Calendars</h2>
-      <mat-nav-list>
-        <a
-          *ngFor="let calendar of calendars$ | async"
-          [routerLink]="calendar.id"
-          mat-list-item
-          routerLinkActive="active"
-          >{{ calendar.name }}</a
-        >
-      </mat-nav-list>
-      <button (click)="createCalendar()" mat-stroked-button>
-        Create a new Calendar
-      </button>
-    </section>
-    <section>
-      <router-outlet></router-outlet>
-    </section>
-  </div>
-</main>
+<h1>Appointments</h1>
+<button (click)="openAppointmentsDialog()">Add new Appointments</button>
+<kap-week-switcher [weeks]="appointments | async"></kap-week-switcher>

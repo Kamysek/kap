@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material';
-import { NewCalendarDialogComponent } from './new-calendar-dialog/new-calendar-dialog.component';
-import { CalendarService } from '../../services/calendar.service';
+import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
 
 @Component({
   selector: 'kap-appointments',
@@ -9,26 +11,15 @@ import { CalendarService } from '../../services/calendar.service';
   styleUrls: ['./appointments.component.scss']
 })
 export class AppointmentsComponent implements OnInit {
-  calendars$;
+  appointments: Observable<any>;
 
-  constructor(
-    private dialog: MatDialog,
-    private calendarService: CalendarService
-  ) {}
+  constructor(private route: ActivatedRoute, private dialog: MatDialog) {}
 
   ngOnInit() {
-    this.calendars$ = this.calendarService.getCalendars();
+    this.appointments = this.route.data.pipe(map(data => data.appointments));
   }
 
-  createCalendar() {
-    this.dialog
-      .open(NewCalendarDialogComponent)
-      .afterClosed()
-      .subscribe(res => {
-        if (!res) {
-          return;
-        }
-        this.calendarService.createNew(res);
-      });
+  openAppointmentsDialog() {
+    this.dialog.open(AddAppointmentsDialogComponent);
   }
 }
