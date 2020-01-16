@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import * as moment from 'moment';
 import 'moment-recur-ts';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { MatDialogRef } from '@angular/material';
 import { AppointmentsService } from '../../../services/appointments.service';
 
@@ -38,9 +38,11 @@ export class AddAppointmentsDialogComponent implements OnInit {
       const maxDay = Math.max(...appointments.map(appt => appt.day));
     });
     this.appointmentNum = this.appointmentsForm.valueChanges.pipe(
+      startWith(this.appointmentsForm.value),
       map(({ appointments, repeat }) => appointments.length * repeat)
     );
     this.lastAppointment = this.appointmentsForm.valueChanges.pipe(
+      startWith(this.appointmentsForm.value),
       map(({ appointments, repeat }) =>
         moment(this.currentWeekMoment)
           .isoWeekday(Math.max(...appointments.map(appt => appt.day)))
