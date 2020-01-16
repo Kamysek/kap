@@ -1,6 +1,8 @@
 <main class="mat-typography mat-app-background">
   <h1>Appointments</h1>
-  <button (click)="openAppointmentsDialog()">Add new Appointments</button>
+  <button (click)="openAppointmentsDialog()" mat-stroked-button>
+    Add new Appointments
+  </button>
   <kap-week-switcher
     (open)="editAppointment($event)"
     [weeks]="appointments | async"
