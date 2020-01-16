@@ -10,9 +10,9 @@
   <div fxLayout="row" fxLayoutGap="4rem">
     <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
     <kap-appointment-overview
+      [appointments]="appointments$ | async"
       (takeAppointment)="takeAppointment($event)"
-      [calendars]="calendars$ | async"
     ></kap-appointment-overview>
   </div>
-  <kap-survey-overview></kap-survey-overview>
+  <!--  <kap-survey-overview></kap-survey-overview>-->
 </main>

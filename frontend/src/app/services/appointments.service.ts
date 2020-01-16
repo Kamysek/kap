@@ -16,6 +16,7 @@ import {
   createAppointment,
   createAppointmentVariables
 } from '../../../__generated__/createAppointment';
+import { getFreeAppointments } from '../../../__generated__/getFreeAppointments';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,24 @@ export class AppointmentsService {
   private static GET_APPOINTMENTS_QUERY = gql`
     query getAppointments {
       getAppointments {
+        edges {
+          node {
+            id
+            title
+            taken
+            appointmentStart
+            appointmentEnd
+            commentDoctor
+            commentPatient
+          }
+        }
+      }
+    }
+  `;
+
+  private static GET_FREE_APPOINTMENTS = gql`
+    query getFreeAppointments {
+      getAppointments(taken: false, after: "${new Date()}") {
         edges {
           node {
             id
@@ -82,6 +101,40 @@ export class AppointmentsService {
           )
         )
       );
+  }
+
+  public getFreeAppointments() {
+    return this.apollo
+      .watchQuery<getFreeAppointments>({
+        query: AppointmentsService.GET_FREE_APPOINTMENTS
+      })
+      .valueChanges.pipe(
+        map(appts =>
+          appts.data.getAppointments.edges.map(item =>
+            Object.assign({}, item.node, {
+              startMoment: moment(item.node.appointmentStart),
+              endMoment: moment(item.node.appointmentEnd)
+            })
+          )
+        )
+      );
+  }
+
+  public getDays() {
+    return this.getFreeAppointments().pipe(
+      map(appts => {
+        const days = {};
+        appts.forEach(appt => {
+          const day =
+            appt.startMoment.year() * 1000 + appt.startMoment.dayOfYear();
+          if (!days[day]) {
+            days[day] = [];
+          }
+          days[day].push({ ...appt, day });
+        });
+        return days;
+      })
+    );
   }
 
   public getWeeks() {

@@ -1,35 +1,22 @@
 <h2>Make a new Appointment</h2>
 <h3>Currently available</h3>
-<div fxLayout="row" fxLayoutGap="1rem">
-  <div
-    *ngFor="let calendar of calendars"
-    class="calendar"
-    fxLayout="column"
-    fxLayoutGap="0.5rem"
-  >
-    <h3>{{ calendar.name }} ({{ calendar.doctor.username }})</h3>
-    <div
-      *ngFor="let appointment of calendar.appointments"
-      [ngClass]="{ taken: appointment.taken }"
-      class="appointment"
-    >
-      <strong
-        >{{ appointment.title }}
-        {{ appointment.taken ? '(taken)' : '' }}</strong
+<div gdAuto gdColumns="repeat(4, 1fr)" gdGap="1rem">
+  <ng-container *ngFor="let day of days | async">
+    <strong gdColumn="span 4">{{ day.dayMoment | date }}</strong>
+    <mat-card *ngFor="let appointment of day.appointments">
+      <mat-card-title
+        >{{ appointment.appointmentStart | date: 'shortTime' }} -
+        {{ appointment.appointmentEnd | date: 'shortTime' }}</mat-card-title
       >
-      <p>
-        {{ appointment.appointmentStart | date: 'medium' }} -
-        {{ appointment.appointmentEnd | date: 'medium' }}
-      </p>
-      <ng-container *ngIf="!appointment.taken">
+      <mat-card-actions>
         <button
+          mat-stroked-button
           (click)="takeAppointment.emit(appointment.id)"
           color="primary"
-          mat-stroked-button
         >
-          Take Appointment
+          Book Appointment
         </button>
-      </ng-container>
-    </div>
-  </div>
+      </mat-card-actions>
+    </mat-card>
+  </ng-container>
 </div>

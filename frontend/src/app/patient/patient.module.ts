@@ -4,10 +4,10 @@ import { PatientComponent } from './patient.component';
 import { RouterModule, Routes } from '@angular/router';
 import { AppointmentOverviewComponent } from './appointment-overview/appointment-overview.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatButtonModule } from '@angular/material';
 import { PatientDataComponent } from './patient-data/patient-data.component';
 import { AuthGuard } from '../guards/auth.guard';
 import { SurveyOverviewComponent } from './survey-overview/survey-overview.component';
+import { SharedModule } from '../shared/shared.module';
 
 const routes: Routes = [
   { path: 'patient', component: PatientComponent, canActivate: [AuthGuard] }
@@ -24,7 +24,7 @@ const routes: Routes = [
     CommonModule,
     RouterModule.forChild(routes),
     FlexLayoutModule,
-    MatButtonModule
+    SharedModule
   ]
 })
 export class PatientModule {}
