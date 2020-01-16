@@ -25,6 +25,9 @@ import { AuthGuard } from '../guards/auth.guard';
 import { AppointmentResolver } from './resolvers/appointment.resolver';
 import { SharedModule } from '../shared/shared.module';
 import { AddAppointmentsDialogComponent } from './appointments/add-appointments-dialog/add-appointments-dialog.component';
+import { StudyPlanComponent } from './study-plan/study-plan.component';
+import { PlanResolver } from './resolvers/plan.resolver';
+import { DisplayStudyPlanComponent } from './study-plan/display-study-plan/display-study-plan.component';
 
 const routes: Routes = [
   {
@@ -36,26 +39,19 @@ const routes: Routes = [
         path: 'appointments',
         component: AppointmentsComponent,
         resolve: { appointments: AppointmentResolver }
-        // children: [
-        //   {
-        //     path: ':id',
-        //     component: EditCalendarComponent,
-        //     resolve: { calendar: CalendarResolver },
-        //     children: [
-        //       {
-        //         path: 'view/:appointmentId',
-        //         component: ViewAppointmentComponent,
-        //         resolve: { appointment: AppointmentResolver }
-        //       }
-        //     ]
-        //   }
-        // ]
       },
       {
         path: 'users',
         component: UsersComponent,
         resolve: {
           users: UsersResolver
+        }
+      },
+      {
+        path: 'plan',
+        component: StudyPlanComponent,
+        resolve: {
+          plans: PlanResolver
         }
       }
     ]
@@ -68,7 +64,9 @@ const routes: Routes = [
     UsersComponent,
     AdminComponent,
     NewUserDialogComponent,
-    AddAppointmentsDialogComponent
+    AddAppointmentsDialogComponent,
+    StudyPlanComponent,
+    DisplayStudyPlanComponent
   ],
   imports: [
     CommonModule,

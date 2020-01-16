@@ -1,3 +1,5 @@
-<h1>Appointments</h1>
-<button (click)="openAppointmentsDialog()">Add new Appointments</button>
-<kap-week-switcher [weeks]="appointments | async"></kap-week-switcher>
+<main class="mat-typography mat-app-background">
+  <h1>Appointments</h1>
+  <button (click)="openAppointmentsDialog()">Add new Appointments</button>
+  <kap-week-switcher [weeks]="appointments | async"></kap-week-switcher>
+</main>

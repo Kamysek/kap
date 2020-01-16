@@ -1,0 +1,6 @@
+<div gdAuto gdColumns="100px auto" gdGap=".5rem">
+  <ng-container *ngFor="let item of items | async">
+    <span>Month {{ item.order }}</span>
+    <p>{{ item.name }}</p>
+  </ng-container>
+</div>
