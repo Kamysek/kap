@@ -28,6 +28,7 @@ import { AddAppointmentsDialogComponent } from './appointments/add-appointments-
 import { StudyPlanComponent } from './study-plan/study-plan.component';
 import { PlanResolver } from './resolvers/plan.resolver';
 import { DisplayStudyPlanComponent } from './study-plan/display-study-plan/display-study-plan.component';
+import { OverduePatientsComponent } from './overdue-patients/overdue-patients.component';
 
 const routes: Routes = [
   {
@@ -53,6 +54,13 @@ const routes: Routes = [
         resolve: {
           plans: PlanResolver
         }
+      },
+      {
+        path: 'overdue',
+        component: OverduePatientsComponent
+        /*resolve: {
+          plans: PlanResolver
+        }*/
       }
     ]
   }
@@ -66,7 +74,8 @@ const routes: Routes = [
     NewUserDialogComponent,
     AddAppointmentsDialogComponent,
     StudyPlanComponent,
-    DisplayStudyPlanComponent
+    DisplayStudyPlanComponent,
+    OverduePatientsComponent
   ],
   imports: [
     CommonModule,
