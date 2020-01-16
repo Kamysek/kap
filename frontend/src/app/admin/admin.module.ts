@@ -2,21 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentsComponent } from './appointments/appointments.component';
 import { RouterModule, Routes } from '@angular/router';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import {
-  MatButtonModule,
-  MatCheckboxModule,
-  MatDatepickerModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatListModule,
-  MatSelectModule,
-  MatTableModule
-} from '@angular/material';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { UsersComponent } from './users/users.component';
 import { AdminComponent } from './admin.component';
 import { UsersResolver } from './resolvers/users.resolver';
@@ -29,6 +14,7 @@ import { StudyPlanComponent } from './study-plan/study-plan.component';
 import { PlanResolver } from './resolvers/plan.resolver';
 import { DisplayStudyPlanComponent } from './study-plan/display-study-plan/display-study-plan.component';
 import { OverduePatientsComponent } from './overdue-patients/overdue-patients.component';
+import { EditAppointmentDialogComponent } from './appointments/edit-appointment-dialog/edit-appointment-dialog.component';
 
 const routes: Routes = [
   {
@@ -75,26 +61,14 @@ const routes: Routes = [
     AddAppointmentsDialogComponent,
     StudyPlanComponent,
     DisplayStudyPlanComponent,
-    OverduePatientsComponent
+    OverduePatientsComponent,
+    EditAppointmentDialogComponent
   ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes),
-    FlexLayoutModule,
-    SharedModule,
-    MatListModule,
-    MatButtonModule,
-    MatDialogModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDatepickerModule,
-    MatMomentDateModule,
-    MatIconModule,
-    MatTableModule,
-    MatSelectModule,
-    MatCheckboxModule
-  ],
-  entryComponents: [NewUserDialogComponent, AddAppointmentsDialogComponent]
+  imports: [CommonModule, RouterModule.forChild(routes), SharedModule],
+  entryComponents: [
+    NewUserDialogComponent,
+    AddAppointmentsDialogComponent,
+    EditAppointmentDialogComponent
+  ]
 })
 export class AdminModule {}

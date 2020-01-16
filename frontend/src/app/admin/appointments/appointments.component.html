@@ -1,5 +1,8 @@
 <main class="mat-typography mat-app-background">
   <h1>Appointments</h1>
   <button (click)="openAppointmentsDialog()">Add new Appointments</button>
-  <kap-week-switcher [weeks]="appointments | async"></kap-week-switcher>
+  <kap-week-switcher
+    (open)="editAppointment($event)"
+    [weeks]="appointments | async"
+  ></kap-week-switcher>
 </main>

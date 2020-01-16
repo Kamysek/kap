@@ -1,0 +1,48 @@
+<h1 mat-dialog-title>Edit appointment</h1>
+<mat-dialog-content>
+  <form [formGroup]="appointmentForm" fxLayout="column" fxLayoutGap="1rem">
+    <mat-form-field>
+      <input formControlName="title" matInput placeholder="Appointment Title" />
+    </mat-form-field>
+    <mat-slide-toggle formControlName="taken"
+      >Appointment taken</mat-slide-toggle
+    >
+    <div fxLayout="column" fxLayout.gt-md="row" fxLayoutGap="1rem">
+      <mat-form-field>
+        <input
+          [matDatepicker]="picker"
+          formControlName="startDate"
+          matInput
+          placeholder="Appointment date"
+        />
+        <mat-datepicker-toggle [for]="picker" matSuffix></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field>
+        <input
+          formControlName="startTime"
+          matInput
+          placeholder="Appointment Start time"
+        />
+      </mat-form-field>
+    </div>
+    <mat-form-field>
+      <textarea
+        formControlName="commentDoctor"
+        matInput
+        placeholder="Doctor comment"
+      ></textarea>
+    </mat-form-field>
+    <mat-form-field>
+      <textarea
+        formControlName="commentPatient"
+        matInput
+        placeholder="Patient comment"
+      ></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-dialog-close>Cancel</button>
+  <button (click)="submit()" [disabled]="appointmentForm.invalid">Save</button>
+</mat-dialog-actions>

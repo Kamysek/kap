@@ -4,7 +4,18 @@ import { Apollo } from 'apollo-angular';
 import { getAppointments } from '../../../__generated__/getAppointments';
 import { map } from 'rxjs/operators';
 import * as moment from 'moment';
-import { CreateAppointmentInput } from '../../../__generated__/globalTypes';
+import {
+  CreateAppointmentInput,
+  UpdateAppointmentInput
+} from '../../../__generated__/globalTypes';
+import {
+  updateAppointment,
+  updateAppointmentVariables
+} from '../../../__generated__/updateAppointment';
+import {
+  createAppointment,
+  createAppointmentVariables
+} from '../../../__generated__/createAppointment';
 
 @Injectable({
   providedIn: 'root'
@@ -16,9 +27,12 @@ export class AppointmentsService {
         edges {
           node {
             id
+            title
             taken
             appointmentStart
             appointmentEnd
+            commentDoctor
+            commentPatient
           }
         }
       }
@@ -28,6 +42,22 @@ export class AppointmentsService {
   private static CREATE_APPOINTMENT_MUTATION = gql`
     mutation createAppointment($appointment: CreateAppointmentInput!) {
       createAppointment(input: $appointment) {
+        appointment {
+          id
+          title
+          taken
+          appointmentStart
+          appointmentEnd
+          commentDoctor
+          commentPatient
+        }
+      }
+    }
+  `;
+
+  private static UPDATE_APPOINTMENT_MUTATION = gql`
+    mutation updateAppointment($appointment: UpdateAppointmentInput!) {
+      updateAppointment(input: $appointment) {
         appointment {
           id
         }
@@ -81,9 +111,37 @@ export class AppointmentsService {
   }
 
   public createAppointment(input: CreateAppointmentInput) {
-    return this.apollo.mutate({
+    return this.apollo.mutate<createAppointment, createAppointmentVariables>({
       mutation: AppointmentsService.CREATE_APPOINTMENT_MUTATION,
-      variables: { appointment: input }
+      variables: { appointment: input },
+      update: (
+        store,
+        {
+          data: {
+            createAppointment: { appointment }
+          }
+        }
+      ) => {
+        const data = store.readQuery<getAppointments>({
+          query: AppointmentsService.GET_APPOINTMENTS_QUERY
+        });
+        data.getAppointments.edges = [
+          ...data.getAppointments.edges,
+          { node: appointment, __typename: 'AppointmentTypeEdge' }
+        ];
+        store.writeQuery({
+          query: AppointmentsService.GET_APPOINTMENTS_QUERY,
+          data
+        });
+      }
+    });
+  }
+
+  public updateAppointment(input: UpdateAppointmentInput) {
+    return this.apollo.mutate<updateAppointment, updateAppointmentVariables>({
+      mutation: AppointmentsService.UPDATE_APPOINTMENT_MUTATION,
+      variables: { appointment: input },
+      refetchQueries: [{ query: AppointmentsService.GET_APPOINTMENTS_QUERY }]
     });
   }
 

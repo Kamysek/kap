@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs/operators';
+import { first, startWith } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
+import { EditAppointmentDialogComponent } from './edit-appointment-dialog/edit-appointment-dialog.component';
+import { AppointmentsService } from '../../services/appointments.service';
 
 @Component({
   selector: 'kap-appointments',
@@ -13,13 +15,31 @@ import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-ap
 export class AppointmentsComponent implements OnInit {
   appointments: Observable<any>;
 
-  constructor(private route: ActivatedRoute, private dialog: MatDialog) {}
+  constructor(
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private appointmentsService: AppointmentsService
+  ) {}
 
   ngOnInit() {
-    this.appointments = this.route.data.pipe(map(data => data.appointments));
+    this.appointments = this.appointmentsService
+      .getWeeks()
+      .pipe(startWith(this.route.snapshot.data.appointments));
   }
 
   openAppointmentsDialog() {
     this.dialog.open(AddAppointmentsDialogComponent);
+  }
+
+  editAppointment(appointment) {
+    this.dialog
+      .open(EditAppointmentDialogComponent, { data: appointment })
+      .afterClosed()
+      .pipe(first())
+      .subscribe(async patch => {
+        if (!!patch) {
+          await this.appointmentsService.updateAppointment(patch).toPromise();
+        }
+      });
   }
 }

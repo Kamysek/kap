@@ -1,4 +1,11 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import * as moment from 'moment';
 import { BehaviorSubject } from 'rxjs';
 
@@ -10,6 +17,7 @@ import { BehaviorSubject } from 'rxjs';
 export class AppointmentWeekComponent implements OnChanges {
   @Input() appointments;
   @Input() week;
+  @Output() open = new EventEmitter();
   days = new BehaviorSubject([]);
   times = [];
   filler = [];

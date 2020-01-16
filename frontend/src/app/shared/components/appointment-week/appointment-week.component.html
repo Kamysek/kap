@@ -22,6 +22,7 @@
   >
   <div
     *ngFor="let appointment of appointments"
+    (click)="open.emit(appointment)"
     [ngClass]="{ taken: appointment.taken }"
     class="appointment"
     gdColumn="{{ appointment.day + 1 }}"

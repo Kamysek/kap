@@ -1,8 +1,10 @@
 import {
   Component,
+  EventEmitter,
   Input,
   OnChanges,
   OnInit,
+  Output,
   SimpleChanges
 } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -16,6 +18,7 @@ import * as moment from 'moment';
 })
 export class WeekSwitcherComponent implements OnInit, OnChanges {
   @Input() weeks;
+  @Output() open = new EventEmitter();
   weekNums = new BehaviorSubject([]);
   selectedIndex = new BehaviorSubject(0);
   selectedWeek: Observable<number>;
@@ -58,6 +61,8 @@ export class WeekSwitcherComponent implements OnInit, OnChanges {
       this.weekNums.next(Object.keys(changes.weeks.currentValue));
       if (this.selectedIndex.value >= this.weekNums.value.length) {
         this.selectedIndex.next(0);
+      } else {
+        this.selectedIndex.next(this.selectedIndex.value);
       }
     }
   }

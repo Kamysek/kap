@@ -8,4 +8,5 @@
 <kap-appointment-week
   [appointments]="selectedAppointments | async"
   [week]="selectedWeek | async"
+  (open)="open.emit($event)"
 ></kap-appointment-week>
