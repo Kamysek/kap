@@ -48,6 +48,10 @@ export class AuthService {
                     this.router.navigate(['/admin/appointments']);
                     break;
                   }
+                  case 'Labor': {
+                    this.router.navigate(['/lab']);
+                    break;
+                  }
                   default: {
                     this.router.navigate(['/patient']);
                     break;

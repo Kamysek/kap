@@ -16,7 +16,14 @@ import {
   createAppointment,
   createAppointmentVariables
 } from '../../../__generated__/createAppointment';
-import { getFreeAppointments } from '../../../__generated__/getFreeAppointments';
+import {
+  getFreeAppointments,
+  getFreeAppointmentsVariables
+} from '../../../__generated__/getFreeAppointments';
+import {
+  getWeekAppointments,
+  getWeekAppointmentsVariables
+} from '../../../__generated__/getWeekAppointments';
 
 @Injectable({
   providedIn: 'root'
@@ -41,8 +48,26 @@ export class AppointmentsService {
   `;
 
   private static GET_FREE_APPOINTMENTS = gql`
-    query getFreeAppointments {
-      getAppointments(taken: false, after: "${new Date()}") {
+    query getFreeAppointments($after: String!) {
+      getAppointments(taken: false, after: $after) {
+        edges {
+          node {
+            id
+            title
+            taken
+            appointmentStart
+            appointmentEnd
+            commentDoctor
+            commentPatient
+          }
+        }
+      }
+    }
+  `;
+
+  private static GET_WEEK_APPOINTMENTS = gql`
+    query getWeekAppointments($after: String!, $before: String!) {
+      getAppointments(taken: true, after: $after, before: $before) {
         edges {
           node {
             id
@@ -105,8 +130,40 @@ export class AppointmentsService {
 
   public getFreeAppointments() {
     return this.apollo
-      .watchQuery<getFreeAppointments>({
-        query: AppointmentsService.GET_FREE_APPOINTMENTS
+      .watchQuery<getFreeAppointments, getFreeAppointmentsVariables>({
+        query: AppointmentsService.GET_FREE_APPOINTMENTS,
+        variables: {
+          after: moment()
+            .toDate()
+            .toString()
+        }
+      })
+      .valueChanges.pipe(
+        map(appts =>
+          appts.data.getAppointments.edges.map(item =>
+            Object.assign({}, item.node, {
+              startMoment: moment(item.node.appointmentStart),
+              endMoment: moment(item.node.appointmentEnd)
+            })
+          )
+        )
+      );
+  }
+
+  public getCurrentWeekTakenAppointments() {
+    return this.apollo
+      .watchQuery<getWeekAppointments, getWeekAppointmentsVariables>({
+        query: AppointmentsService.GET_WEEK_APPOINTMENTS,
+        variables: {
+          after: moment()
+            .startOf('week')
+            .toDate()
+            .toString(),
+          before: moment()
+            .endOf('week')
+            .toDate()
+            .toString()
+        }
       })
       .valueChanges.pipe(
         map(appts =>
@@ -122,6 +179,23 @@ export class AppointmentsService {
 
   public getDays() {
     return this.getFreeAppointments().pipe(
+      map(appts => {
+        const days = {};
+        appts.forEach(appt => {
+          const day =
+            appt.startMoment.year() * 1000 + appt.startMoment.dayOfYear();
+          if (!days[day]) {
+            days[day] = [];
+          }
+          days[day].push({ ...appt, day });
+        });
+        return days;
+      })
+    );
+  }
+
+  public getCurrentWeek() {
+    return this.getCurrentWeekTakenAppointments().pipe(
       map(appts => {
         const days = {};
         appts.forEach(appt => {

@@ -15,6 +15,7 @@ import { MAT_DATE_LOCALE } from '@angular/material';
 import { registerLocaleData } from '@angular/common';
 import { PatientModule } from './patient/patient.module';
 import { SharedModule } from './shared/shared.module';
+import { LabModule } from './lab/lab.module';
 
 registerLocaleData(localeEn, 'en-DE', localeEnExtra);
 
@@ -28,6 +29,7 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
     SharedModule,
     AdminModule,
     PatientModule,
+    LabModule,
     GraphQLModule
   ],
   providers: [

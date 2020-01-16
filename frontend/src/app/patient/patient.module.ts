@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { PatientComponent } from './patient.component';
 import { RouterModule, Routes } from '@angular/router';
 import { AppointmentOverviewComponent } from './appointment-overview/appointment-overview.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { PatientDataComponent } from './patient-data/patient-data.component';
 import { AuthGuard } from '../guards/auth.guard';
 import { SurveyOverviewComponent } from './survey-overview/survey-overview.component';
@@ -20,11 +19,6 @@ const routes: Routes = [
     PatientDataComponent,
     SurveyOverviewComponent
   ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes),
-    FlexLayoutModule,
-    SharedModule
-  ]
+  imports: [CommonModule, RouterModule.forChild(routes), SharedModule]
 })
 export class PatientModule {}

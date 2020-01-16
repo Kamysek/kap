@@ -1,0 +1,13 @@
+<main
+  class="mat-app-background mat-typography"
+  fxLayout="column"
+  fxLayoutGap="4rem"
+>
+  <div fxLayout="row" fxLayoutAlign="space-between">
+    <h1 style="margin: 0;">KAP Lab overview</h1>
+    <button (click)="logout()" mat-flat-button>LOGOUT</button>
+  </div>
+  <kap-appointment-overview
+    [appointments]="appointments$ | async"
+  ></kap-appointment-overview>
+</main>
