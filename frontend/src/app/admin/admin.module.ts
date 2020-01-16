@@ -5,6 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import {
   MatButtonModule,
+  MatCheckboxModule,
   MatDatepickerModule,
   MatDialogModule,
   MatFormFieldModule,
@@ -84,7 +85,8 @@ const routes: Routes = [
     MatMomentDateModule,
     MatIconModule,
     MatTableModule,
-    MatSelectModule
+    MatSelectModule,
+    MatCheckboxModule
   ],
   entryComponents: [NewUserDialogComponent, AddAppointmentsDialogComponent]
 })

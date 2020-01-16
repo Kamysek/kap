@@ -15,6 +15,11 @@
       <td *matCellDef="let element" mat-cell>{{ element.username }}</td>
     </ng-container>
 
+    <ng-container matColumnDef="email">
+      <th *matHeaderCellDef mat-header-cell>E-Mail</th>
+      <td *matCellDef="let element" mat-cell>{{ element.email }}</td>
+    </ng-container>
+
     <ng-container matColumnDef="actions">
       <th *matHeaderCellDef mat-header-cell></th>
       <td *matCellDef="let element" mat-cell><a mat-button>VIEW</a></td>

@@ -12,8 +12,11 @@ export class NewUserDialogComponent {
   constructor(fb: FormBuilder) {
     this.userForm = fb.group({
       username: ['', Validators.required],
+      email: ['', Validators.required],
+      slots: [1, Validators.required],
+      emailNotification: [false, Validators.required],
       password: ['', Validators.required],
-      group: ['', Validators.required]
+      group: ['Patient', Validators.required]
     });
   }
 }

@@ -20,6 +20,7 @@ export class UserService {
         edges {
           node {
             username
+            email
             id
           }
         }
