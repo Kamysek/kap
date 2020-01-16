@@ -27,7 +27,6 @@ export class WeekSwitcherComponent implements OnInit, OnChanges {
   constructor() {}
 
   ngOnInit(): void {
-    console.log(this.weeks);
     this.selectedWeek = this.selectedIndex.pipe(
       withLatestFrom(this.weekNums),
       map(([index, weeks]) => weeks[index])
@@ -48,6 +47,10 @@ export class WeekSwitcherComponent implements OnInit, OnChanges {
             .format('D.M.')}`
       )
     );
+    const currentWeek = (moment().year() * 100 + moment().week()).toString(10);
+    if (this.weekNums.value.includes(currentWeek)) {
+      this.selectedIndex.next(this.weekNums.value.indexOf(currentWeek));
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
