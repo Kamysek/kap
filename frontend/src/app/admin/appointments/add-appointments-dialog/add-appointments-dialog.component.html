@@ -1,9 +1,14 @@
 <h1 mat-dialog-title>Add Appointments</h1>
 <mat-dialog-content>
   <p>Define the appointments you want to add below</p>
-  <form [formGroup]="appointmentsForm">
-    <div formArrayName="appointments">
-      <div
+  <form [formGroup]="appointmentsForm" fxLayout="column" fxLayoutGap="1rem">
+    <div
+      formArrayName="appointments"
+      gdAuto
+      gdColumns="1fr 1fr auto"
+      gdGap="1rem"
+    >
+      <ng-container
         *ngFor="let appointment of appointments.controls; let i = index"
         [formGroupName]="i.toString()"
       >
@@ -31,21 +36,28 @@
           <input formControlName="time" matInput placeholder="Time" />
         </mat-form-field>
         <button
+          mat-icon-button
           (click)="deleteAppointment(i)"
           [disabled]="appointment.disabled"
         >
           <mat-icon>delete</mat-icon>
         </button>
-      </div>
+      </ng-container>
     </div>
-    <button (click)="addAppointment()">Add Appointment</button>
-    <mat-form-field>
+    <button (click)="addAppointment()" color="primary" mat-flat-button>
+      <mat-icon>add</mat-icon>
+      <span>Add Appointment</span>
+    </button>
+    <mat-form-field appearance="standard">
       <input
         formControlName="repeat"
         matInput
         placeholder="Repeat for "
         type="number"
       />
+      <mat-hint
+        >Set for how many weeks these appointments should be repeated</mat-hint
+      >
     </mat-form-field>
   </form>
   <p>
@@ -60,6 +72,8 @@
   </p>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button (click)="saveAppointments()">Confirm</button>
-  <button>Cancel</button>
+  <button (click)="saveAppointments()" color="primary" mat-stroked-button>
+    Confirm
+  </button>
+  <button color="warn" mat-dialog-close mat-stroked-button>Cancel</button>
 </mat-dialog-actions>
