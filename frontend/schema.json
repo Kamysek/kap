@@ -7718,6 +7718,16 @@
             {
               "defaultValue": null,
               "description": null,
+              "name": "taken",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
               "name": "clientMutationId",
               "type": {
                 "kind": "SCALAR",

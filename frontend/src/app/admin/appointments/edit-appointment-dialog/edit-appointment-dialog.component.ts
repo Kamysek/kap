@@ -66,8 +66,8 @@ export class EditAppointmentDialogComponent implements OnInit {
       appointmentStart: moment(startMoment).toDate(),
       appointmentEnd: moment(startMoment)
         .add(45, 'minutes')
-        .toDate()
-      // taken: takenEnabled ? formValue.taken : true
+        .toDate(),
+      taken: takenEnabled ? formValue.taken : true
     };
     this.dialog.close(patch);
   }

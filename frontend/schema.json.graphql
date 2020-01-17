@@ -977,6 +977,7 @@ input UpdateAppointmentInput {
   commentPatient: String
   id: ID!
   patient: ID
+  taken: Boolean
   title: String
 }
 
