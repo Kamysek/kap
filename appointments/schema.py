@@ -151,6 +151,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
         appointment_start = graphene.DateTime()
         appointment_end = graphene.DateTime()
         patient = graphene.ID()
+        taken = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -170,12 +171,17 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         if input.get('patient'):
                             appointment_instance.patient = input.get('patient')
                             appointment_instance.taken = True
-                            if patient.email_notification:
-                                VIPreminder(patient)
+                            if appointment_instance.patient.email_notification:
+                                VIPreminder(appointment_instance.patient)
 
                         # if not isAppointmentFree(appointment_instance,
                         #                         Appointment.objects.all().exclude(calendar__appointment__id=1)):
                         #    raise GraphQLError("Invalid Time selected")
+
+                        if input.get('taken'):
+                            appointment_instance.taken = input.get('taken')
+                            if not input.get('taken'):
+                                appointment_instance.patient = None
 
                         appointment_instance.save()
                         return CreateAppointment(appointment=appointment_instance)
