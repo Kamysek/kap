@@ -14,15 +14,16 @@ interface Node {
 type AppointmentType implements Node {
   appointmentEnd: DateTime
   appointmentStart: DateTime
-  calendar: CalendarType
   commentDoctor: String
   commentPatient: String
   createdAt: DateTime
+  dayReminder: Boolean!
   "The ID of the object."
   id: ID!
   patient: UserType
   taken: Boolean!
   title: String
+  weekReminder: Boolean!
 }
 
 type AppointmentTypeConnection {
@@ -69,32 +70,28 @@ type BoardTypeEdge {
   node: BoardType
 }
 
-type CalendarType implements Node {
-  appointmentSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): AppointmentTypeConnection!
-  doctor: UserType
+type CheckupType implements Node {
   "The ID of the object."
   id: ID!
+  interval: Int
   name: String
+  order: Int
+  study: StudyType
 }
 
-type CalendarTypeConnection {
+type CheckupTypeConnection {
   "Contains the nodes in this connection."
-  edges: [CalendarTypeEdge]!
+  edges: [CheckupTypeEdge]!
   "Pagination data for this connection."
   pageInfo: PageInfo!
 }
 
-"A Relay edge containing a `CalendarType` and its cursor."
-type CalendarTypeEdge {
+"A Relay edge containing a `CheckupType` and its cursor."
+type CheckupTypeEdge {
   "A cursor for use in pagination"
   cursor: String!
   "The item at the end of the edge"
-  node: CalendarType
+  node: CheckupType
 }
 
 type ChoiceAnswerType implements Node {
@@ -160,11 +157,6 @@ type CreateBoardPayload {
   clientMutationId: String
 }
 
-type CreateCalendarPayload {
-  calendar: CalendarType
-  clientMutationId: String
-}
-
 type CreateChoiceAnswerPayload {
   choiceAnswer: ChoiceAnswerType
   clientMutationId: String
@@ -227,12 +219,6 @@ type DeleteBoardPayload {
   ok: Boolean
 }
 
-type DeleteCalendarPayload {
-  calendar: CalendarType
-  clientMutationId: String
-  ok: Boolean
-}
-
 type DeleteChoiceAnswerPayload {
   choiceAnswer: ChoiceAnswerType
   clientMutationId: String
@@ -267,12 +253,6 @@ type DeleteSurveyPayload {
   clientMutationId: String
   ok: Boolean
   survey: SurveyType
-}
-
-type DeleteTakenAppointmentPayload {
-  appointment: AppointmentType
-  clientMutationId: String
-  ok: Boolean
 }
 
 type DeleteTextAnswerPayload {
@@ -324,7 +304,6 @@ type GroupTypeEdge {
 type Mutation {
   createAppointment(input: CreateAppointmentInput!): CreateAppointmentPayload
   createBoard(input: CreateBoardInput!): CreateBoardPayload
-  createCalendar(input: CreateCalendarInput!): CreateCalendarPayload
   createChoice(input: CreateChoiceInput!): CreateChoicePayload
   createChoiceAnswer(input: CreateChoiceAnswerInput!): CreateChoiceAnswerPayload
   createGroup(input: CreateGroupInput!): CreateGroupPayload
@@ -337,26 +316,20 @@ type Mutation {
   createUser(input: CreateUserInput!): CreateUserPayload
   deleteAppointment(input: DeleteAppointmentInput!): DeleteAppointmentPayload
   deleteBoard(input: DeleteBoardInput!): DeleteBoardPayload
-  deleteCalendar(input: DeleteCalendarInput!): DeleteCalendarPayload
   deleteChoice(input: DeleteChoiceInput!): DeleteChoicePayload
   deleteChoiceAnswer(input: DeleteChoiceAnswerInput!): DeleteChoiceAnswerPayload
   deleteNumberAnswer(input: DeleteNumberAnswerInput!): DeleteNumberAnswerPayload
   deletePost(input: DeletePostInput!): DeletePostPayload
   deleteQuestion(input: DeleteQuestionInput!): DeleteQuestionPayload
   deleteSurvey(input: DeleteSurveyInput!): DeleteSurveyPayload
-  deleteTakenAppointment(
-    input: DeleteTakenAppointmentInput!
-  ): DeleteTakenAppointmentPayload
   deleteTextAnswer(input: DeleteTextAnswerInput!): DeleteTextAnswerPayload
   deleteTopic(input: DeleteTopicInput!): DeleteTopicPayload
   deleteUser(input: DeleteUserInput!): DeleteUserPayload
   refreshToken(token: String!): Refresh
-  takeAppointment(input: TakeAppointmentInput!): TakeAppointmentPayload
   "Obtain JSON Web Token mutation"
   tokenAuth(password: String!, username: String!): ObtainJSONWebToken
   updateAppointment(input: UpdateAppointmentInput!): UpdateAppointmentPayload
   updateBoard(input: UpdateBoardInput!): UpdateBoardPayload
-  updateCalendar(input: UpdateCalendarInput!): UpdateCalendarPayload
   updateChoice(input: UpdateChoiceInput!): UpdateChoicePayload
   updateChoiceAnswer(input: UpdateChoiceAnswerInput!): UpdateChoiceAnswerPayload
   updateGroup(input: UpdateGroupInput!): UpdateGroupPayload
@@ -364,9 +337,6 @@ type Mutation {
   updatePost(input: UpdatePostInput!): UpdatePostPayload
   updateQuestion(input: UpdateQuestionInput!): UpdateQuestionPayload
   updateSurvey(input: UpdateSurveyInput!): UpdateSurveyPayload
-  updateTakenAppointment(
-    input: UpdateTakenAppointmentInput!
-  ): UpdateTakenAppointmentPayload
   updateTextAnswer(input: UpdateTextAnswerInput!): UpdateTextAnswerPayload
   updateTopic(input: UpdateTopicInput!): UpdateTopicPayload
   updateUser(input: UpdateUserInput!): UpdateUserPayload
@@ -449,7 +419,6 @@ type Query {
     appointmentEnd: DateTime
     appointmentStart: DateTime
     before: String
-    calendar: ID
     first: Int
     last: Int
     taken: Boolean
@@ -467,15 +436,7 @@ type Query {
     name: String
   ): BoardTypeConnection
   "The ID of the object"
-  getCalendar(id: ID!): CalendarType
-  getCalendars(
-    after: String
-    before: String
-    doctor: ID
-    first: Int
-    last: Int
-    name: String
-  ): CalendarTypeConnection
+  getCheckup(id: ID!): CheckupType
   "The ID of the object"
   getChoice(id: ID!): ChoiceType
   "The ID of the object"
@@ -508,6 +469,7 @@ type Query {
     id: ID
     last: Int
   ): GroupTypeConnection
+  getMe: UserType
   "The ID of the object"
   getNumberAnswer(id: ID!): NumberAnswerType
   getNumberAnswers(
@@ -549,6 +511,13 @@ type Query {
     updatedBy: ID
     updatedOn: DateTime
   ): QuestionTypeConnection
+  getStudies(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    name: String
+  ): StudyTypeConnection
   "The ID of the object"
   getSurvey(id: ID!): SurveyType
   getSurveys(
@@ -596,6 +565,7 @@ type Query {
     after: String
     before: String
     dateJoined: DateTime
+    email: String
     first: Int
     id: ID
     isActive: Boolean
@@ -644,6 +614,39 @@ type Refresh {
   token: String
 }
 
+type StudyType implements Node {
+  checkupSet(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): CheckupTypeConnection!
+  customuserSet(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): UserTypeConnection!
+  "The ID of the object."
+  id: ID!
+  name: String
+}
+
+type StudyTypeConnection {
+  "Contains the nodes in this connection."
+  edges: [StudyTypeEdge]!
+  "Pagination data for this connection."
+  pageInfo: PageInfo!
+}
+
+"A Relay edge containing a `StudyType` and its cursor."
+type StudyTypeEdge {
+  "A cursor for use in pagination"
+  cursor: String!
+  "The item at the end of the edge"
+  node: StudyType
+}
+
 type SurveyType implements Node {
   createdBy: UserType
   createdOn: DateTime
@@ -675,11 +678,6 @@ type SurveyTypeEdge {
   cursor: String!
   "The item at the end of the edge"
   node: SurveyType
-}
-
-type TakeAppointmentPayload {
-  appointment: AppointmentType
-  clientMutationId: String
 }
 
 type TextAnswerType implements Node {
@@ -747,11 +745,6 @@ type UpdateBoardPayload {
   clientMutationId: String
 }
 
-type UpdateCalendarPayload {
-  calendar: CalendarType
-  clientMutationId: String
-}
-
 type UpdateChoiceAnswerPayload {
   choiceAnswer: ChoiceAnswerType
   clientMutationId: String
@@ -786,11 +779,6 @@ type UpdateSurveyPayload {
   survey: SurveyType
 }
 
-type UpdateTakenAppointmentPayload {
-  appointment: AppointmentType
-  clientMutationId: String
-}
-
 type UpdateTextAnswerPayload {
   clientMutationId: String
   textAnswer: TextAnswerType
@@ -807,84 +795,15 @@ type UpdateUserPayload {
 }
 
 type UserType implements Node {
-  appointmentSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): AppointmentTypeConnection!
-  boardSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): BoardTypeConnection!
-  calendarSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): CalendarTypeConnection!
-  dateJoined: DateTime!
-  "The groups this user belongs to. A user will get all permissions granted to each of their groups."
-  groups(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): GroupTypeConnection!
+  dateJoined: DateTime
+  email: String
   "The ID of the object."
   id: ID!
   isActive: Boolean!
   isStaff: Boolean!
-  "Designates that this user has all permissions without explicitly assigning them."
-  isSuperuser: Boolean!
-  lastLogin: DateTime
-  password: String!
   passwordChanged: Boolean!
-  postsCreatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): PostTypeConnection!
-  postsUpdatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): PostTypeConnection!
-  questionCreatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): QuestionTypeConnection!
-  questionUpdatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): QuestionTypeConnection!
-  surveyCreatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): SurveyTypeConnection!
-  surveyUpdatedBy(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): SurveyTypeConnection!
-  topicSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): TopicTypeConnection!
-  username: String!
+  studyParticipation: StudyType
+  username: String
 }
 
 type UserTypeConnection {
@@ -919,20 +838,15 @@ enum QuestionQuestionType {
 input CreateAppointmentInput {
   appointmentEnd: DateTime!
   appointmentStart: DateTime!
-  calendar: ID!
   clientMutationId: String
   commentDoctor: String
+  patient: ID
   title: String!
 }
 
 input CreateBoardInput {
   clientMutationId: String
   description: String!
-  name: String!
-}
-
-input CreateCalendarInput {
-  clientMutationId: String
   name: String!
 }
 
@@ -993,6 +907,8 @@ input CreateTopicInput {
 
 input CreateUserInput {
   clientMutationId: String
+  email: String!
+  emailNotification: Boolean
   group: String
   isActive: Boolean!
   isStaff: Boolean!
@@ -1003,14 +919,10 @@ input CreateUserInput {
 input DeleteAppointmentInput {
   clientMutationId: String
   id: ID!
+  removePatient: Boolean
 }
 
 input DeleteBoardInput {
-  clientMutationId: String
-  id: ID!
-}
-
-input DeleteCalendarInput {
   clientMutationId: String
   id: ID!
 }
@@ -1043,11 +955,6 @@ input DeleteSurveyInput {
   id: ID!
 }
 
-input DeleteTakenAppointmentInput {
-  clientMutationId: String
-  id: ID!
-}
-
 input DeleteTextAnswerInput {
   clientMutationId: String
 }
@@ -1062,31 +969,20 @@ input DeleteUserInput {
   id: ID!
 }
 
-input TakeAppointmentInput {
-  clientMutationId: String
-  commentPatient: String
-  id: ID!
-}
-
 input UpdateAppointmentInput {
   appointmentEnd: DateTime
   appointmentStart: DateTime
-  calendar: ID
   clientMutationId: String
   commentDoctor: String
+  commentPatient: String
   id: ID!
+  patient: ID
   title: String
 }
 
 input UpdateBoardInput {
   clientMutationId: String
   description: String
-  id: ID!
-  name: String
-}
-
-input UpdateCalendarInput {
-  clientMutationId: String
   id: ID!
   name: String
 }
@@ -1141,12 +1037,6 @@ input UpdateSurveyInput {
   surveyName: String
 }
 
-input UpdateTakenAppointmentInput {
-  clientMutationId: String
-  commentPatient: String
-  id: ID!
-}
-
 input UpdateTextAnswerInput {
   clientMutationId: String
   id: ID!
@@ -1162,13 +1052,16 @@ input UpdateTopicInput {
 }
 
 input UpdateUserInput {
-  addgroup: String
+  addGroup: String
+  called: Boolean
   clientMutationId: String
+  email: String
+  emailNotification: Boolean
   id: ID!
   isActive: Boolean
   isStaff: Boolean
   password: String
-  removegroup: String
+  removeGroup: String
 }
 
 """

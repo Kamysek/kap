@@ -4,10 +4,12 @@
 
 .calendar {
   padding: 8px;
+
   .appointment {
     padding: 8px;
     border: grey 2px solid;
     border-radius: 4px;
+
     &.taken {
       opacity: 0.5;
     }

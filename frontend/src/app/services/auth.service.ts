@@ -45,7 +45,11 @@ export class AuthService {
                 localStorage.setItem('kap-group', this.group);
                 switch (this.group) {
                   case 'Admin': {
-                    this.router.navigate(['/admin/calendars']);
+                    this.router.navigate(['/admin/appointments']);
+                    break;
+                  }
+                  case 'Labor': {
+                    this.router.navigate(['/lab']);
                     break;
                   }
                   default: {
@@ -61,8 +65,9 @@ export class AuthService {
 
   logout() {
     this.authToken = null;
-    localStorage.setItem('kap-token', this.authToken);
+    localStorage.removeItem('kap-token');
     this.group = null;
-    localStorage.setItem('kap-group', this.group);
+    localStorage.removeItem('kap-group');
+    this.router.navigate(['login']);
   }
 }

@@ -1,0 +1,65 @@
+<h1 mat-dialog-title>Add Appointments</h1>
+<mat-dialog-content>
+  <p>Define the appointments you want to add below</p>
+  <form [formGroup]="appointmentsForm">
+    <div formArrayName="appointments">
+      <div
+        *ngFor="let appointment of appointments.controls; let i = index"
+        [formGroupName]="i.toString()"
+      >
+        <mat-form-field>
+          <mat-label>Day of the Week</mat-label>
+          <mat-select formControlName="day">
+            <mat-option [value]="1">
+              Monday
+            </mat-option>
+            <mat-option [value]="2">
+              Tuesday
+            </mat-option>
+            <mat-option [value]="3">
+              Wednesday
+            </mat-option>
+            <mat-option [value]="4">
+              Thursday
+            </mat-option>
+            <mat-option [value]="5">
+              Friday
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <input formControlName="time" matInput placeholder="Time" />
+        </mat-form-field>
+        <button
+          (click)="deleteAppointment(i)"
+          [disabled]="appointment.disabled"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    <button (click)="addAppointment()">Add Appointment</button>
+    <mat-form-field>
+      <input
+        formControlName="repeat"
+        matInput
+        placeholder="Repeat for "
+        type="number"
+      />
+    </mat-form-field>
+  </form>
+  <p>
+    Appointments will be generated starting from this week and last 45 minutes
+    each
+  </p>
+  <p>
+    This will generate
+    <strong>{{ appointmentNum | async }}</strong> appointments, with the last
+    one being on
+    <strong>{{ lastAppointment | async | date: 'fullDate' }}</strong>
+  </p>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button (click)="saveAppointments()">Confirm</button>
+  <button>Cancel</button>
+</mat-dialog-actions>

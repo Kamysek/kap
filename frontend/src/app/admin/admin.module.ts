@@ -2,56 +2,30 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentsComponent } from './appointments/appointments.component';
 import { RouterModule, Routes } from '@angular/router';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import {
-  MatButtonModule,
-  MatDatepickerModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatListModule,
-  MatSelectModule,
-  MatTableModule
-} from '@angular/material';
-import { NewCalendarDialogComponent } from './appointments/new-calendar-dialog/new-calendar-dialog.component';
-import { ReactiveFormsModule } from '@angular/forms';
-import { EditCalendarComponent } from './appointments/edit-calendar/edit-calendar.component';
-import { CalendarResolver } from './resolvers/calendar.resolver';
-import { AppointmentListComponent } from './appointments/edit-calendar/appointment-list/appointment-list.component';
-import { NewAppointmentComponent } from './appointments/edit-calendar/new-appointment/new-appointment.component';
-import { AppointmentFormComponent } from './appointments/edit-calendar/appointment-form/appointment-form.component';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { ViewAppointmentComponent } from './appointments/edit-calendar/appointment-list/view-appointment/view-appointment.component';
-import { AppointmentResolver } from './resolvers/appointment.resolver';
-import { AppointmentInfoComponent } from './appointments/edit-calendar/appointment-list/view-appointment/appointment-info/appointment-info.component';
 import { UsersComponent } from './users/users.component';
 import { AdminComponent } from './admin.component';
 import { UsersResolver } from './resolvers/users.resolver';
 import { NewUserDialogComponent } from './users/new-user-dialog/new-user-dialog.component';
+import { AuthGuard } from '../guards/auth.guard';
+import { AppointmentResolver } from './resolvers/appointment.resolver';
+import { SharedModule } from '../shared/shared.module';
+import { AddAppointmentsDialogComponent } from './appointments/add-appointments-dialog/add-appointments-dialog.component';
+import { StudyPlanComponent } from './study-plan/study-plan.component';
+import { PlanResolver } from './resolvers/plan.resolver';
+import { DisplayStudyPlanComponent } from './study-plan/display-study-plan/display-study-plan.component';
+import { OverduePatientsComponent } from './overdue-patients/overdue-patients.component';
+import { EditAppointmentDialogComponent } from './appointments/edit-appointment-dialog/edit-appointment-dialog.component';
 
 const routes: Routes = [
   {
     path: 'admin',
     component: AdminComponent,
+    canActivate: [AuthGuard],
     children: [
       {
-        path: 'calendars',
+        path: 'appointments',
         component: AppointmentsComponent,
-        children: [
-          {
-            path: ':id',
-            component: EditCalendarComponent,
-            resolve: { calendar: CalendarResolver },
-            children: [
-              {
-                path: 'view/:appointmentId',
-                component: ViewAppointmentComponent,
-                resolve: { appointment: AppointmentResolver }
-              }
-            ]
-          }
-        ]
+        resolve: { appointments: AppointmentResolver }
       },
       {
         path: 'users',
@@ -59,6 +33,20 @@ const routes: Routes = [
         resolve: {
           users: UsersResolver
         }
+      },
+      {
+        path: 'plan',
+        component: StudyPlanComponent,
+        resolve: {
+          plans: PlanResolver
+        }
+      },
+      {
+        path: 'overdue',
+        component: OverduePatientsComponent
+        /*resolve: {
+          plans: PlanResolver
+        }*/
       }
     ]
   }
@@ -67,33 +55,20 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppointmentsComponent,
-    NewCalendarDialogComponent,
-    EditCalendarComponent,
-    AppointmentListComponent,
-    NewAppointmentComponent,
-    AppointmentFormComponent,
-    ViewAppointmentComponent,
-    AppointmentInfoComponent,
     UsersComponent,
     AdminComponent,
-    NewUserDialogComponent
+    NewUserDialogComponent,
+    AddAppointmentsDialogComponent,
+    StudyPlanComponent,
+    DisplayStudyPlanComponent,
+    OverduePatientsComponent,
+    EditAppointmentDialogComponent
   ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes),
-    FlexLayoutModule,
-    MatListModule,
-    MatButtonModule,
-    MatDialogModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDatepickerModule,
-    MatMomentDateModule,
-    MatIconModule,
-    MatTableModule,
-    MatSelectModule
-  ],
-  entryComponents: [NewCalendarDialogComponent, NewUserDialogComponent]
+  imports: [CommonModule, RouterModule.forChild(routes), SharedModule],
+  entryComponents: [
+    NewUserDialogComponent,
+    AddAppointmentsDialogComponent,
+    EditAppointmentDialogComponent
+  ]
 })
 export class AdminModule {}

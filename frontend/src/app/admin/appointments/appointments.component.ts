@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { first, startWith } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material';
-import { NewCalendarDialogComponent } from './new-calendar-dialog/new-calendar-dialog.component';
-import { CalendarService } from '../../services/calendar.service';
+import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
+import { EditAppointmentDialogComponent } from './edit-appointment-dialog/edit-appointment-dialog.component';
+import { AppointmentsService } from '../../services/appointments.service';
 
 @Component({
   selector: 'kap-appointments',
@@ -9,26 +13,33 @@ import { CalendarService } from '../../services/calendar.service';
   styleUrls: ['./appointments.component.scss']
 })
 export class AppointmentsComponent implements OnInit {
-  calendars$;
+  appointments: Observable<any>;
 
   constructor(
+    private route: ActivatedRoute,
     private dialog: MatDialog,
-    private calendarService: CalendarService
+    private appointmentsService: AppointmentsService
   ) {}
 
   ngOnInit() {
-    this.calendars$ = this.calendarService.getCalendars();
+    this.appointments = this.appointmentsService
+      .getWeeks()
+      .pipe(startWith(this.route.snapshot.data.appointments));
   }
 
-  createCalendar() {
+  openAppointmentsDialog() {
+    this.dialog.open(AddAppointmentsDialogComponent);
+  }
+
+  editAppointment(appointment) {
     this.dialog
-      .open(NewCalendarDialogComponent)
+      .open(EditAppointmentDialogComponent, { data: appointment })
       .afterClosed()
-      .subscribe(res => {
-        if (!res) {
-          return;
+      .pipe(first())
+      .subscribe(async patch => {
+        if (!!patch) {
+          await this.appointmentsService.updateAppointment(patch).toPromise();
         }
-        this.calendarService.createNew(res);
       });
   }
 }

@@ -6,11 +6,11 @@ import {
   RouterStateSnapshot
 } from '@angular/router';
 import { Injectable } from '@angular/core';
-import { UsersService } from '../../services/users.service';
+import { UserService } from '../../services/user.service';
 
 @Injectable({ providedIn: 'root' })
 export class UsersResolver implements Resolve<any> {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UserService) {}
 
   resolve(
     route: ActivatedRouteSnapshot,

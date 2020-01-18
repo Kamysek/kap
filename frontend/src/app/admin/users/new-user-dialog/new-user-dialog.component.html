@@ -10,6 +10,17 @@
       />
     </mat-form-field>
     <mat-form-field>
+      <input formControlName="email" matInput placeholder="Mail" type="email" />
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        formControlName="slots"
+        matInput
+        placeholder="Appointment Slots"
+        type="number"
+      />
+    </mat-form-field>
+    <mat-form-field>
       <input
         formControlName="password"
         matInput
@@ -21,9 +32,13 @@
       <mat-select placeholder="Permission group">
         <mat-option value="Patient">Patient</mat-option>
         <mat-option value="Doctor">Doctor</mat-option>
+        <mat-option value="Labor">Lab Tech</mat-option>
         <mat-option value="Admin">Admin</mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-checkbox formControlName="emailNotification"
+      >Notify if this User makes an Appointment</mat-checkbox
+    >
   </form>
 </mat-dialog-content>
 <mat-dialog-actions>

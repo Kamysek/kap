@@ -5,7 +5,7 @@ import { MatDialog, MatTableDataSource } from '@angular/material';
 import { FormControl } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.component';
-import { UsersService } from '../../services/users.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'kap-users',
@@ -16,7 +16,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   users$;
   dataSource;
   filterControl = new FormControl();
-  displayedColumns: string[] = ['id', 'username', 'actions'];
+  displayedColumns: string[] = ['id', 'email', 'username', 'actions'];
   private destroyed$ = new Subject();
 
   // @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -24,7 +24,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private usersService: UsersService
+    private usersService: UserService
   ) {}
 
   async ngOnInit() {

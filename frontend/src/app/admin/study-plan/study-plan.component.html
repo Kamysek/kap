@@ -1,0 +1,14 @@
+<main class="mat-typography mat-app-background">
+  <h1>Study Plan</h1>
+  <mat-form-field>
+    <mat-label>Select a plan</mat-label>
+    <mat-select [formControl]="planControl">
+      <mat-option *ngFor="let plan of studyPlans | async" [value]="plan.id">
+        {{ plan.name }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <kap-display-study-plan
+    [plan]="selectedPlan | async"
+  ></kap-display-study-plan>
+</main>

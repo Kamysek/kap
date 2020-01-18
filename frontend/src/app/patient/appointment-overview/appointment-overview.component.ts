@@ -3,8 +3,12 @@ import {
   Component,
   EventEmitter,
   Input,
-  Output
+  OnChanges,
+  Output,
+  SimpleChanges
 } from '@angular/core';
+import * as moment from 'moment';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'kap-appointment-overview',
@@ -12,8 +16,26 @@ import {
   styleUrls: ['./appointment-overview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppointmentOverviewComponent {
-  @Input() calendars;
+export class AppointmentOverviewComponent implements OnChanges {
+  @Input() appointments;
   @Output() takeAppointment = new EventEmitter();
+  days = new BehaviorSubject([]);
+
   constructor() {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.hasOwnProperty('appointments')) {
+      this.days.next(
+        Object.keys(changes.appointments.currentValue).map(day =>
+          Object.assign(
+            {},
+            {
+              appointments: changes.appointments.currentValue[day],
+              dayMoment: moment(day, 'YYYYDDDD')
+            }
+          )
+        )
+      );
+    }
+  }
 }

@@ -1,7 +1,11 @@
 <div fxLayout="column">
   <div fxLayout="row">
-    <a mat-flat-button routerLink="calendars">Manage Appointments</a>
+    <a mat-flat-button routerLink="appointments">Manage Appointments</a>
     <a mat-flat-button routerLink="users">Manage Users</a>
+    <a mat-flat-button routerLink="plan">Edit Study-Plans</a>
+    <a mat-flat-button routerLink="overdue">See overdue Patients</a>
+    <span fxFlex></span>
+    <button (click)="logout()" mat-flat-button>LOGOUT</button>
   </div>
   <router-outlet></router-outlet>
 </div>

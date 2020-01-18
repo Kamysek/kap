@@ -1,0 +1,18 @@
+:root {
+  display: block;
+}
+
+.messages {
+  margin-top: 1rem;
+}
+
+.message {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 3px solid orangered;
+  background: rgba(255, 69, 0, 0.1);
+
+  p {
+    margin: 0;
+  }
+}

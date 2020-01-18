@@ -1,7 +1,18 @@
-<main class="mat-app-background mat-typography">
-  <h2>Welcome</h2>
-  <kap-appointment-overview
-    [calendars]="calendars$ | async"
-    (takeAppointment)="takeAppointment($event)"
-  ></kap-appointment-overview>
+<main
+  class="mat-app-background mat-typography"
+  fxLayout="column"
+  fxLayoutGap="4rem"
+>
+  <div fxLayout="row" fxLayoutAlign="space-between">
+    <h1 style="margin: 0;">Welcome to KAP</h1>
+    <button (click)="logout()" mat-flat-button>LOGOUT</button>
+  </div>
+  <div fxLayout="row" fxLayoutGap="4rem">
+    <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
+    <kap-appointment-overview
+      [appointments]="appointments$ | async"
+      (takeAppointment)="takeAppointment($event)"
+    ></kap-appointment-overview>
+  </div>
+  <!--  <kap-survey-overview></kap-survey-overview>-->
 </main>

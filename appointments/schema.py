@@ -162,6 +162,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
         appointment_start = graphene.DateTime()
         appointment_end = graphene.DateTime()
         patient = graphene.ID()
+        taken = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -181,8 +182,14 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         if input.get('patient'):
                             appointment_instance.patient = input.get('patient')
                             appointment_instance.taken = True
-                            if patient.email_notification:
-                                VIPreminder(patient)
+                            if appointment_instance.patient.email_notification:
+                                VIPreminder(appointment_instance.patient)
+                        if input.get('taken'):
+                            appointment_instance.taken = input.get('taken')
+                            if not input.get('taken'):
+                                appointment_instance.patient = None
+                            if appointment_instance.patient.email_notification:
+                                VIPreminder(appointment_instance.patient)
                         checkAppointmentFormat(appointment_instance)
                         if not isAppointmentFree(appointment_instance):
                             raise GraphQLError("Selected time slot overlaps with existing appointment")
