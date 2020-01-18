@@ -9,17 +9,19 @@ from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
 
-"""
-def isAppointmentFree(newAppointment, allAppointments):
+
+def isAppointmentFree(newAppointment):
+    allAppointments = Appointment.objects.all()
     for existingAppointment in allAppointments:
-        #if newAppointment.calendar_id == existingAppointment.calendar_id and ((
-                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+        if newAppointment == existingAppointment:
+            continue
+        if ((   newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_end > existingAppointment.appointment_start   and newAppointment.appointment_start < existingAppointment.appointment_end) or (
                 newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
     return True
-"""
+
 
 
 def hasGroup(groups, info):
@@ -105,6 +107,12 @@ class AppointmentType(DjangoObjectType):
             return self.taken
         return None
 
+    @login_required
+    def resolve_noshow(self, info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+            return self.noshow
+        return None
+
 
 class CreateAppointment(graphene.relay.ClientIDMutation):
     appointment = graphene.Field(AppointmentType)
@@ -134,6 +142,9 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
                                                appointment_end=input.get('appointment_end'),
                                                taken=False)
             checkAppointmentFormat(appointment_instance)
+            if not isAppointmentFree(appointment_instance):
+                raise GraphQLError("Selected time slot overlaps with existing appointment")
+
             appointment_instance.save()
             return CreateAppointment(appointment=appointment_instance)
         else:
@@ -173,16 +184,15 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
-
-                        # if not isAppointmentFree(appointment_instance,
-                        #                         Appointment.objects.all().exclude(calendar__appointment__id=1)):
-                        #    raise GraphQLError("Invalid Time selected")
-
                         if input.get('taken'):
                             appointment_instance.taken = input.get('taken')
                             if not input.get('taken'):
                                 appointment_instance.patient = None
-
+                            if appointment_instance.patient.email_notification:
+                                VIPreminder(appointment_instance.patient)
+                        checkAppointmentFormat(appointment_instance)
+                        if not isAppointmentFree(appointment_instance):
+                            raise GraphQLError("Selected time slot overlaps with existing appointment")
                         appointment_instance.save()
                         return CreateAppointment(appointment=appointment_instance)
                     elif hasGroup(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):

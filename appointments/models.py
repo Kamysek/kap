@@ -13,6 +13,7 @@ class Appointment(models.Model):
     taken = models.BooleanField(null=True, blank=False, default=False)
     weekReminder = models.BooleanField(null=True, blank=False, default=False)
     dayReminder = models.BooleanField(null=True, blank=False, default=False)
+    noshow = models.BooleanField(null=True,blank=False,default=False)
 
     def __str__(self):
         return self.title
