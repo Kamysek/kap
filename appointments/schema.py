@@ -1,16 +1,16 @@
 from datetime import timedelta
-
 import django_filters
 import graphene
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
-from graphql_relay import from_global_id
+from graphql_relay import from_global_id, to_global_id
 from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
-from django.db.models import Q
+from django.db.models import F, Q
+import datetime
 
 
 def isAppointmentFree(newAppointment):
@@ -45,13 +45,13 @@ class UnauthorisedAccessError(GraphQLError):
 
 
 class AppointmentFilter(django_filters.FilterSet):
-
     class Meta:
         model = Appointment
         fields = ['title', 'appointment_start', 'appointment_end', 'taken']
 
 
 class AppointmentType(DjangoObjectType):
+
     class Meta:
         model = Appointment
         interfaces = (graphene.relay.Node,)
@@ -298,17 +298,53 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
     get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
+    get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True), minusdays=graphene.Int(), plusdays=graphene.Int())
 
-    get_appointments_filter = graphene.List(AppointmentType, date=graphene.DateTime(), minusdays=graphene.Int(), plusdays=graphene.Int())
-
-    def resolve_get_appointments_filter(self, info, date=None, minusdays=None, plusdays=None):
+    def resolve_get_slot_lists(self, info, **kwargs):
         qs = Appointment.objects.all()
+
+        date = kwargs.get('date')
+        minusdays = kwargs.get('minusdays')
+        plusdays = kwargs.get('plusdays')
 
         if date:
             startdate = date - timedelta(days=minusdays)
             enddate = date + timedelta(days=plusdays)
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
+        slot_list = []
+        if info.context.user.timeslots_needed > 1:
+
+            if minusdays is None:
+                minusdays = 0
+            if plusdays is None:
+                plusdays = 0
+
+            if minusdays is 0:
+                start_date = date.strftime("%Y-%m-%d")
+            else:
+                start_date = (date - timedelta(days=minusdays)).strftime("%Y-%m-%d")
+
+            for i in range(0, plusdays + minusdays):
+
+                start_datetime = datetime.datetime.strptime(start_date + " 00:00:00", '%Y-%m-%d %H:%M:%S') + timedelta(days=i)
+                end_datetime = datetime.datetime.strptime(start_date + " 23:59:59", '%Y-%m-%d %H:%M:%S') + timedelta(days=i)
+
+                qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
+
+                if qs_tmp:
+                    for a in qs_tmp:
+                        for b in qs_tmp:
+                            if a.appointment_end == b.appointment_start:
+                                slot_list.append([a, b])
+
+        else:
+            for e in qs:
+                slot_list.append([e])
+
+        qs = slot_list
+        print("qs")
+        print(qs)
         return qs
 
 
