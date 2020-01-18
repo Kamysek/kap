@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import django_filters
 import graphene
 from graphene_django import DjangoObjectType
@@ -8,6 +10,7 @@ from graphql_relay import from_global_id
 from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
+from django.db.models import Q
 
 
 def isAppointmentFree(newAppointment):
@@ -21,7 +24,6 @@ def isAppointmentFree(newAppointment):
             # Invalid Appointment time
             return False
     return True
-
 
 
 def hasGroup(groups, info):
@@ -43,6 +45,7 @@ class UnauthorisedAccessError(GraphQLError):
 
 
 class AppointmentFilter(django_filters.FilterSet):
+
     class Meta:
         model = Appointment
         fields = ['title', 'appointment_start', 'appointment_end', 'taken']
@@ -151,6 +154,51 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
 
+class AppointmentInput(graphene.InputObjectType):
+    title = graphene.String(required=True)
+    comment_doctor = graphene.String()
+    appointment_start = graphene.DateTime(required=True)
+    appointment_end = graphene.DateTime(required=True)
+    patient = graphene.ID()
+
+
+class CreateAppointments(graphene.relay.ClientIDMutation):
+    class Input:
+        appointments = graphene.List(AppointmentInput)
+
+    appointments = graphene.List(AppointmentType)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            failed_appointments = []
+            for app in input.get('appointments'):
+                if app.get('patient'):
+                    try:
+                        patient = CustomUser.objects.get(pk=from_global_id(app.get('patient'))[1])
+                        if patient.email_notification:
+                            VIPreminder(patient)
+                    except Appointment.DoesNotExist:
+                        raise GraphQLError('Patient does not exist!')
+                appointment_instance = Appointment(title=app.get('title'),
+                                                   comment_doctor="" if app.get('comment_doctor') is None else app.get(
+                                                       'comment_doctor'),
+                                                   patient=None if app.get('patient') is None else patient,
+                                                   appointment_start=app.get('appointment_start'),
+                                                   appointment_end=app.get('appointment_end'),
+                                                   taken=False)
+                checkAppointmentFormat(appointment_instance)
+                if not isAppointmentFree(appointment_instance):
+                    failed_appointments.append(appointment_instance)
+                    continue
+
+                appointment_instance.save()
+
+            return CreateAppointments(appointments=failed_appointments)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+
 class UpdateAppointment(graphene.relay.ClientIDMutation):
     appointment = graphene.Field(AppointmentType)
 
@@ -179,7 +227,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.appointment_start = input.get('appointment_start')
                         if input.get('appointment_end'):
                             appointment_instance.appointment_end = input.get('appointment_end')
-                        if input.get('patient'):
+                        if input.get('patient'):#Todo: doesn't work
                             appointment_instance.patient = input.get('patient')
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
@@ -251,8 +299,21 @@ class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
     get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
 
+    get_appointments_filter = graphene.List(AppointmentType, date=graphene.DateTime(), minusdays=graphene.Int(), plusdays=graphene.Int())
+
+    def resolve_get_appointments_filter(self, info, date=None, minusdays=None, plusdays=None):
+        qs = Appointment.objects.all()
+
+        if date:
+            startdate = date - timedelta(days=minusdays)
+            enddate = date + timedelta(days=plusdays)
+            qs = qs.filter(appointment_start__range=[startdate, enddate])
+
+        return qs
+
 
 class Mutation(graphene.ObjectType):
     create_appointment = CreateAppointment.Field()
+    create_appointments = CreateAppointments.Field()
     update_appointment = UpdateAppointment.Field()
     delete_appointment = DeleteAppointment.Field()

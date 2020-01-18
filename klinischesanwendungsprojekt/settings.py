@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
-    'boards.apps.BoardsConfig',
     'account.apps.AccountConfig',
     'appointments.apps.AppointmentsConfig',
     'survey.apps.SurveyConfig',
