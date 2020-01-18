@@ -16,8 +16,7 @@ class Study(models.Model):
 
 class Checkup(models.Model):
     name = models.CharField(max_length=150,blank=False,null=True)
-    order = models.IntegerField(null=True,blank=False)
-    interval = models.IntegerField(null=True,blank=False)
+    daysUntil = models.IntegerField(null=True,blank=False)
     study = models.ForeignKey(Study, on_delete=models.CASCADE,null=True)
 
     def __str__(self):
@@ -35,7 +34,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     called = models.IntegerField(default=0, null=True, blank=False)
     study_participation = models.ForeignKey(Study,on_delete=models.SET_NULL,null=True)
     checkup_overdue = models.BooleanField(default=False, null=True, blank=False)
-    overdue_notified = models.BooleanField(default=False, null=True, blank=False)
+    overdue_notified = models.DateTimeField(default = timezone.now() - timedelta(days=100),null=True, blank=False)
+    timeslots_needed = models.IntegerField(default = 1, null=False, blank=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

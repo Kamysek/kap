@@ -48,9 +48,9 @@ def sendDayReminderMail(recipient):
     s.send_message(msg)
     s.quit()
 
-def sendOverdueMail(recipient):
+def sendOverdueMail(recipient,checkupName):
     msg = EmailMessage()
-    msg.set_content("Sie nehmen bei einer Studie an unserem Institut teil und sind für eine Untersuchung überfällig!")
+    msg.set_content("Sie nehmen bei einer Studie an unserem Institut teil und sind für ihre Untersuchung \"" + str(checkupName) + "\" überfällig!")
     msg['Subject'] = "Termin überfällig"
     msg['From'] = "kapTest@web.de"
     msg['To'] = recipient.email
