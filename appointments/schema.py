@@ -9,17 +9,16 @@ from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
 
-"""
+
 def isAppointmentFree(newAppointment, allAppointments):
     for existingAppointment in allAppointments:
-        #if newAppointment.calendar_id == existingAppointment.calendar_id and ((
-                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+        if ((   newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
                 newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
                 newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
     return True
-"""
+
 
 
 def hasGroup(groups, info):

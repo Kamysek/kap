@@ -7,19 +7,32 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-#TODO: Doesn't work if patient always books 2 time slots for whatever reason. TODO: Handle active Checkup
+#return number of appointments that take place on seperate days to ignore double slots
+#Input HAS TO BE appointment list sorted by date
+def countSeperateAppointments(appointments):
+    if appointments.count() <= 1:
+        return appointents.count()
+    tmp = appointments[0]
+    count = 1
+    for app in appointments:
+        if app.appointment_start.date() != tmp.appointment_start.date():
+            count += 1
+        tmp = app
+    return count
+
 def checkUserOverdue(user):
     appointments = Appointment.objects.filter(patient=user).order_by('-appointment_start')
     days_since_joined = (timezone.now() - user.date_joined).days
     checkups = user.study_participation.checkup_set.all().order_by("daysUntil")
     #appointmentsFinished = Appointment.objects.all().filter(patient=user).filter(appointment_start__lte=timezone.now()).filter(noshow= False).count() #get number of PAST appointments that were actually attended
-    appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).count() #get number of  attended appointments
-    print("attended apps: " + str(appointmentsAttended))
-    if appointmentsAttended == checkups.count():#Finished study
+    appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).order_by('appointment_start')#get number of  attended appointments
+    appointmentCount= countSeperateAppointments(appointmentsAttended)
+    if appointmentCount == checkups.count() or Appointment.objects.all().filter(patient=user).filter(appointment_start__gte=timezone.now()).count() > 0:#Finished study or already has upcoming appointment
+        user.checkup_overdue = False
+        user.overdue_notified = timezone.now()
+        user.save()
         return
-    nextCheckup = checkups[appointmentsAttended]
-    print("days till next Checkup: " + str(nextCheckup))
-    print("days since joined: " + str(days_since_joined))
+    nextCheckup = checkups[appointmentCount]
     if (nextCheckup.daysUntil < days_since_joined):
         print("USER OVERDUE!")
         user.checkup_overdue = True
