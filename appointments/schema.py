@@ -199,6 +199,56 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
 
+class BookSlots(graphene.relay.ClientIDMutation):
+    class Input:
+        appointmentList = graphene.List(graphene.ID)
+
+    appointmentList = graphene.List(graphene.ID)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor", "Patient"], info):
+
+            for app in input.get('appointmentList'):
+                appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
+
+                if appointment_instance.taken:
+                    raise GraphQLError('Appointment already taken')
+
+            max_date = datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+            min_date = datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+
+            for app in input.get('appointmentList'):
+                appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
+                app_start = datetime.datetime.strptime(appointment_instance.appointment_start.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+                app_end = datetime.datetime.strptime(appointment_instance.appointment_end.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+
+                if app_start < min_date:
+                    min_date = app_start
+                if app_end > max_date:
+                    max_date = app_end
+
+            tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
+            appointment = Appointment(title= tmp_app.title,
+                                               comment_doctor= tmp_app.comment_doctor,
+                                               patient= tmp_app.patient,
+                                               appointment_start= min_date,
+                                               appointment_end= max_date,
+                                               taken=True)
+            checkAppointmentFormat(appointment)
+            appointment.save()
+
+            print(appointment)
+
+            for app in input.get('appointmentList'):
+                appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
+                appointment_instance.delete()
+
+            return CreateAppointments(appointments=appointment)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+
 class UpdateAppointment(graphene.relay.ClientIDMutation):
     appointment = graphene.Field(AppointmentType)
 
@@ -353,3 +403,4 @@ class Mutation(graphene.ObjectType):
     create_appointments = CreateAppointments.Field()
     update_appointment = UpdateAppointment.Field()
     delete_appointment = DeleteAppointment.Field()
+    book_slots = BookSlots.Field()
