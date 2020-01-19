@@ -11,7 +11,7 @@ User = get_user_model()
 #Input HAS TO BE appointment list sorted by date
 def countSeperateAppointments(appointments):
     if appointments.count() <= 1:
-        return appointents.count()
+        return appointments.count()
     tmp = appointments[0]
     count = 1
     for app in appointments:
@@ -66,8 +66,10 @@ def doAppointmentReminders():
 
 class MyCronJob(CronJobBase):
     RUN_EVERY_MINS = 360 # every 6 hours
+    RUN_AT_TIMES = ['1:00', '12:30']
 
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    #schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'my_app.my_cron_job'    # a unique code
 
     def do(self):
