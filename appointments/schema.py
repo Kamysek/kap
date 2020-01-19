@@ -5,12 +5,12 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
-from graphql_relay import from_global_id, to_global_id
+from graphql_relay import from_global_id
 from .models import Appointment
 from account.models import CustomUser
-from klinischesanwendungsprojekt.mailUtils import VIPreminder,VIPcancel
-from django.db.models import F, Q
+from klinischesanwendungsprojekt.mailUtils import VIPreminder, VIPcancel
 import datetime
+from django.utils.timezone import make_aware
 
 
 def isAppointmentFree(newAppointment):
@@ -18,8 +18,9 @@ def isAppointmentFree(newAppointment):
     for existingAppointment in allAppointments:
         if newAppointment == existingAppointment:
             continue
-        if ((   newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
-                newAppointment.appointment_end > existingAppointment.appointment_start   and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+        if ((
+                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
                 newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
             # Invalid Appointment time
             return False
@@ -51,7 +52,6 @@ class AppointmentFilter(django_filters.FilterSet):
 
 
 class AppointmentType(DjangoObjectType):
-
     class Meta:
         model = Appointment
         interfaces = (graphene.relay.Node,)
@@ -70,7 +70,7 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_comment_doctor(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info)or self.patient == info.context.user:
+        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_doctor
         return None
 
@@ -88,7 +88,7 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor","Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.created_at
         return None
 
@@ -215,13 +215,15 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 if appointment_instance.taken:
                     raise GraphQLError('Appointment already taken')
 
-            max_date = datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')
-            min_date = datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+            max_date = make_aware(datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))
+            min_date = make_aware(datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))
 
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
-                app_start = datetime.datetime.strptime(appointment_instance.appointment_start.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
-                app_end = datetime.datetime.strptime(appointment_instance.appointment_end.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+                app_start = datetime.datetime.strptime(
+                    appointment_instance.appointment_start.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+                app_end = datetime.datetime.strptime(appointment_instance.appointment_end.strftime('%Y-%m-%d %H:%M:%S'),
+                                                     '%Y-%m-%d %H:%M:%S')
 
                 if app_start < min_date:
                     min_date = app_start
@@ -229,12 +231,12 @@ class BookSlots(graphene.relay.ClientIDMutation):
                     max_date = app_end
 
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
-            appointment = Appointment(title= tmp_app.title,
-                                               comment_doctor= tmp_app.comment_doctor,
-                                               patient= tmp_app.patient,
-                                               appointment_start= min_date,
-                                               appointment_end= max_date,
-                                               taken=True)
+            appointment = Appointment(title=tmp_app.title,
+                                      comment_doctor=tmp_app.comment_doctor,
+                                      patient=tmp_app.patient,
+                                      appointment_start=min_date,
+                                      appointment_end=max_date,
+                                      taken=True)
             checkAppointmentFormat(appointment)
             appointment.save()
 
@@ -277,7 +279,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.appointment_start = input.get('appointment_start')
                         if input.get('appointment_end'):
                             appointment_instance.appointment_end = input.get('appointment_end')
-                        if input.get('patient'):#Todo: doesn't work
+                        if input.get('patient'):  # Todo: doesn't work
                             appointment_instance.patient = input.get('patient')
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
@@ -293,7 +295,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             raise GraphQLError("Selected time slot overlaps with existing appointment")
                         appointment_instance.save()
                         return CreateAppointment(appointment=appointment_instance)
-                    elif hasGroup(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
+                    elif hasGroup(["Patient"], info) and (
+                            appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                         appointment_instance.patient = info.context.user
                         appointment_instance.comment_patient = "" if input.get(
                             'comment_patient') is None else input.get('comment_patient'),
@@ -348,10 +351,11 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
     get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
-    get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True), minusdays=graphene.Int(), plusdays=graphene.Int())
+    get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True),
+                                   minusdays=graphene.Int(), plusdays=graphene.Int())
 
     def resolve_get_slot_lists(self, info, **kwargs):
-        qs = Appointment.objects.all()
+        qs = Appointment.objects.all().filter(taken=False)
 
         date = kwargs.get('date')
         minusdays = kwargs.get('minusdays')
@@ -363,6 +367,9 @@ class Query(graphene.ObjectType):
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
         slot_list = []
+        for q in qs:
+            slot_list.append([q])
+
         if info.context.user.timeslots_needed > 1:
 
             if minusdays is None:
@@ -375,10 +382,12 @@ class Query(graphene.ObjectType):
             else:
                 start_date = (date - timedelta(days=minusdays)).strftime("%Y-%m-%d")
 
-            for i in range(0, plusdays + minusdays):
+            for i in range(0, plusdays + minusdays + 1):
 
-                start_datetime = datetime.datetime.strptime(start_date + " 00:00:00", '%Y-%m-%d %H:%M:%S') + timedelta(days=i)
-                end_datetime = datetime.datetime.strptime(start_date + " 23:59:59", '%Y-%m-%d %H:%M:%S') + timedelta(days=i)
+                start_datetime = make_aware(
+                    datetime.datetime.strptime(start_date + " 00:00:00", '%Y-%m-%d %H:%M:%S') + timedelta(days=i))
+                end_datetime = make_aware(
+                    datetime.datetime.strptime(start_date + " 23:59:59", '%Y-%m-%d %H:%M:%S') + timedelta(days=i))
 
                 qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
 
@@ -388,13 +397,7 @@ class Query(graphene.ObjectType):
                             if a.appointment_end == b.appointment_start:
                                 slot_list.append([a, b])
 
-        else:
-            for e in qs:
-                slot_list.append([e])
-
         qs = slot_list
-        print("qs")
-        print(qs)
         return qs
 
 
