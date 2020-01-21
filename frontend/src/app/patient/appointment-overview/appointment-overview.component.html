@@ -1,17 +1,17 @@
 <h2>Make a new Appointment</h2>
 <h3>Currently available</h3>
-<div gdAuto gdColumns="repeat(4, 1fr)" gdGap="1rem">
+<div gdAuto gdColumns="repeat(auto-fit, minmax(175px, 1fr))" gdGap="1rem">
   <ng-container *ngFor="let day of days | async">
-    <strong gdColumn="span 4">{{ day.dayMoment | date }}</strong>
-    <mat-card *ngFor="let appointment of day.appointments">
+    <strong gdColumn="1 / -1">{{ day.dayMoment | date }}</strong>
+    <mat-card *ngFor="let slot of day.slots">
       <mat-card-title
-        >{{ appointment.appointmentStart | date: 'shortTime' }} -
-        {{ appointment.appointmentEnd | date: 'shortTime' }}</mat-card-title
+        >{{ slot.start | date: 'shortTime' }} -
+        {{ slot.end | date: 'shortTime' }}</mat-card-title
       >
       <mat-card-actions>
         <button
           mat-stroked-button
-          (click)="takeAppointment.emit(appointment.id)"
+          (click)="takeAppointment.emit(slot.appointments)"
           color="primary"
         >
           Book Appointment

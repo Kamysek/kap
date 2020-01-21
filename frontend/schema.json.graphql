@@ -20,6 +20,7 @@ type AppointmentType implements Node {
   dayReminder: Boolean!
   "The ID of the object."
   id: ID!
+  noshow: Boolean!
   patient: UserType
   taken: Boolean!
   title: String
@@ -41,41 +42,16 @@ type AppointmentTypeEdge {
   node: AppointmentType
 }
 
-type BoardType implements Node {
-  creator: UserType
-  description: String
-  "The ID of the object."
-  id: ID!
-  name: String
-  topicSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): TopicTypeConnection!
-}
-
-type BoardTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [BoardTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `BoardType` and its cursor."
-type BoardTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: BoardType
+type BookSlotsPayload {
+  appointmentList: [ID]
+  clientMutationId: String
 }
 
 type CheckupType implements Node {
+  daysUntil: Int
   "The ID of the object."
   id: ID!
-  interval: Int
   name: String
-  order: Int
   study: StudyType
 }
 
@@ -152,8 +128,8 @@ type CreateAppointmentPayload {
   clientMutationId: String
 }
 
-type CreateBoardPayload {
-  board: BoardType
+type CreateAppointmentsPayload {
+  appointments: [AppointmentType]
   clientMutationId: String
 }
 
@@ -177,11 +153,6 @@ type CreateNumberAnswerPayload {
   numberAnswer: NumberAnswerType
 }
 
-type CreatePostPayload {
-  clientMutationId: String
-  post: PostType
-}
-
 type CreateQuestionPayload {
   clientMutationId: String
   question: QuestionType
@@ -197,11 +168,6 @@ type CreateTextAnswerPayload {
   textAnswer: TextAnswerType
 }
 
-type CreateTopicPayload {
-  clientMutationId: String
-  topic: TopicType
-}
-
 type CreateUserPayload {
   clientMutationId: String
   user: UserType
@@ -209,12 +175,6 @@ type CreateUserPayload {
 
 type DeleteAppointmentPayload {
   appointment: AppointmentType
-  clientMutationId: String
-  ok: Boolean
-}
-
-type DeleteBoardPayload {
-  board: BoardType
   clientMutationId: String
   ok: Boolean
 }
@@ -237,12 +197,6 @@ type DeleteNumberAnswerPayload {
   ok: Boolean
 }
 
-type DeletePostPayload {
-  clientMutationId: String
-  ok: Boolean
-  post: TopicType
-}
-
 type DeleteQuestionPayload {
   clientMutationId: String
   ok: Boolean
@@ -259,12 +213,6 @@ type DeleteTextAnswerPayload {
   clientMutationId: String
   ok: Boolean
   textAnswer: TextAnswerType
-}
-
-type DeleteTopicPayload {
-  clientMutationId: String
-  ok: Boolean
-  topic: TopicType
 }
 
 type DeleteUserPayload {
@@ -302,43 +250,36 @@ type GroupTypeEdge {
 }
 
 type Mutation {
+  bookSlots(input: BookSlotsInput!): BookSlotsPayload
   createAppointment(input: CreateAppointmentInput!): CreateAppointmentPayload
-  createBoard(input: CreateBoardInput!): CreateBoardPayload
+  createAppointments(input: CreateAppointmentsInput!): CreateAppointmentsPayload
   createChoice(input: CreateChoiceInput!): CreateChoicePayload
   createChoiceAnswer(input: CreateChoiceAnswerInput!): CreateChoiceAnswerPayload
   createGroup(input: CreateGroupInput!): CreateGroupPayload
   createNumberAnswer(input: CreateNumberAnswerInput!): CreateNumberAnswerPayload
-  createPost(input: CreatePostInput!): CreatePostPayload
   createQuestion(input: CreateQuestionInput!): CreateQuestionPayload
   createSurvey(input: CreateSurveyInput!): CreateSurveyPayload
   createTextAnswer(input: CreateTextAnswerInput!): CreateTextAnswerPayload
-  createTopic(input: CreateTopicInput!): CreateTopicPayload
   createUser(input: CreateUserInput!): CreateUserPayload
   deleteAppointment(input: DeleteAppointmentInput!): DeleteAppointmentPayload
-  deleteBoard(input: DeleteBoardInput!): DeleteBoardPayload
   deleteChoice(input: DeleteChoiceInput!): DeleteChoicePayload
   deleteChoiceAnswer(input: DeleteChoiceAnswerInput!): DeleteChoiceAnswerPayload
   deleteNumberAnswer(input: DeleteNumberAnswerInput!): DeleteNumberAnswerPayload
-  deletePost(input: DeletePostInput!): DeletePostPayload
   deleteQuestion(input: DeleteQuestionInput!): DeleteQuestionPayload
   deleteSurvey(input: DeleteSurveyInput!): DeleteSurveyPayload
   deleteTextAnswer(input: DeleteTextAnswerInput!): DeleteTextAnswerPayload
-  deleteTopic(input: DeleteTopicInput!): DeleteTopicPayload
   deleteUser(input: DeleteUserInput!): DeleteUserPayload
   refreshToken(token: String!): Refresh
   "Obtain JSON Web Token mutation"
   tokenAuth(password: String!, username: String!): ObtainJSONWebToken
   updateAppointment(input: UpdateAppointmentInput!): UpdateAppointmentPayload
-  updateBoard(input: UpdateBoardInput!): UpdateBoardPayload
   updateChoice(input: UpdateChoiceInput!): UpdateChoicePayload
   updateChoiceAnswer(input: UpdateChoiceAnswerInput!): UpdateChoiceAnswerPayload
   updateGroup(input: UpdateGroupInput!): UpdateGroupPayload
   updateNumberAnswer(input: UpdateNumberAnswerInput!): UpdateNumberAnswerPayload
-  updatePost(input: UpdatePostInput!): UpdatePostPayload
   updateQuestion(input: UpdateQuestionInput!): UpdateQuestionPayload
   updateSurvey(input: UpdateSurveyInput!): UpdateSurveyPayload
   updateTextAnswer(input: UpdateTextAnswerInput!): UpdateTextAnswerPayload
-  updateTopic(input: UpdateTopicInput!): UpdateTopicPayload
   updateUser(input: UpdateUserInput!): UpdateUserPayload
   verifyToken(token: String!): Verify
 }
@@ -385,32 +326,6 @@ type PageInfo {
   startCursor: String
 }
 
-type PostType implements Node {
-  createdAt: DateTime
-  createdBy: UserType
-  "The ID of the object."
-  id: ID!
-  message: String
-  topic: TopicType
-  updatedAt: DateTime
-  updatedBy: UserType
-}
-
-type PostTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [PostTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `PostType` and its cursor."
-type PostTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: PostType
-}
-
 type Query {
   "The ID of the object"
   getAppointment(id: ID!): AppointmentType
@@ -424,17 +339,6 @@ type Query {
     taken: Boolean
     title: String
   ): AppointmentTypeConnection
-  "The ID of the object"
-  getBoard(id: ID!): BoardType
-  getBoards(
-    after: String
-    before: String
-    creator: ID
-    description: String
-    first: Int
-    last: Int
-    name: String
-  ): BoardTypeConnection
   "The ID of the object"
   getCheckup(id: ID!): CheckupType
   "The ID of the object"
@@ -484,19 +388,6 @@ type Query {
     updatedOn: DateTime
   ): NumberAnswerTypeConnection
   "The ID of the object"
-  getPost(id: ID!): PostType
-  getPosts(
-    after: String
-    before: String
-    createdAt: DateTime
-    createdBy: ID
-    first: Int
-    last: Int
-    message: String
-    topic: ID
-    updatedAt: DateTime
-  ): PostTypeConnection
-  "The ID of the object"
   getQuestion(id: ID!): QuestionType
   getQuestions(
     after: String
@@ -511,6 +402,11 @@ type Query {
     updatedBy: ID
     updatedOn: DateTime
   ): QuestionTypeConnection
+  getSlotLists(
+    date: DateTime!
+    minusdays: Int
+    plusdays: Int
+  ): [[AppointmentType]]
   getStudies(
     after: String
     before: String
@@ -546,18 +442,6 @@ type Query {
     textAnswer: String
     updatedOn: DateTime
   ): TextAnswerTypeConnection
-  "The ID of the object"
-  getTopic(id: ID!): TopicType
-  getTopics(
-    after: String
-    before: String
-    board: ID
-    creator: ID
-    first: Int
-    last: Int
-    lastUpdated: DateTime
-    subject: String
-  ): TopicTypeConnection
   "The ID of the object"
   getUser(id: ID!): UserType
   getUserGroup: String
@@ -705,43 +589,8 @@ type TextAnswerTypeEdge {
   node: TextAnswerType
 }
 
-type TopicType implements Node {
-  board: BoardType
-  creator: UserType
-  "The ID of the object."
-  id: ID!
-  lastUpdated: DateTime
-  postSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): PostTypeConnection!
-  subject: String
-}
-
-type TopicTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [TopicTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `TopicType` and its cursor."
-type TopicTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: TopicType
-}
-
 type UpdateAppointmentPayload {
   appointment: AppointmentType
-  clientMutationId: String
-}
-
-type UpdateBoardPayload {
-  board: BoardType
   clientMutationId: String
 }
 
@@ -764,11 +613,6 @@ type UpdateNumberAnswerPayload {
   numberAnswer: NumberAnswerType
 }
 
-type UpdatePostPayload {
-  clientMutationId: String
-  post: PostType
-}
-
 type UpdateQuestionPayload {
   clientMutationId: String
   question: QuestionType
@@ -782,11 +626,6 @@ type UpdateSurveyPayload {
 type UpdateTextAnswerPayload {
   clientMutationId: String
   textAnswer: TextAnswerType
-}
-
-type UpdateTopicPayload {
-  clientMutationId: String
-  topic: TopicType
 }
 
 type UpdateUserPayload {
@@ -835,6 +674,19 @@ enum QuestionQuestionType {
   TEXT
 }
 
+input AppointmentInput {
+  appointmentEnd: DateTime!
+  appointmentStart: DateTime!
+  commentDoctor: String
+  patient: ID
+  title: String!
+}
+
+input BookSlotsInput {
+  appointmentList: [ID]
+  clientMutationId: String
+}
+
 input CreateAppointmentInput {
   appointmentEnd: DateTime!
   appointmentStart: DateTime!
@@ -844,10 +696,9 @@ input CreateAppointmentInput {
   title: String!
 }
 
-input CreateBoardInput {
+input CreateAppointmentsInput {
+  appointments: [AppointmentInput]
   clientMutationId: String
-  description: String!
-  name: String!
 }
 
 input CreateChoiceAnswerInput {
@@ -873,12 +724,6 @@ input CreateNumberAnswerInput {
   question: ID!
 }
 
-input CreatePostInput {
-  clientMutationId: String
-  message: String!
-  topic: ID!
-}
-
 input CreateQuestionInput {
   clientMutationId: String
   questionText: String!
@@ -899,12 +744,6 @@ input CreateTextAnswerInput {
   textAnswer: String!
 }
 
-input CreateTopicInput {
-  board: ID!
-  clientMutationId: String
-  subject: String!
-}
-
 input CreateUserInput {
   clientMutationId: String
   email: String!
@@ -922,11 +761,6 @@ input DeleteAppointmentInput {
   removePatient: Boolean
 }
 
-input DeleteBoardInput {
-  clientMutationId: String
-  id: ID!
-}
-
 input DeleteChoiceAnswerInput {
   clientMutationId: String
   id: ID!
@@ -941,11 +775,6 @@ input DeleteNumberAnswerInput {
   clientMutationId: String
 }
 
-input DeletePostInput {
-  clientMutationId: String
-  id: ID!
-}
-
 input DeleteQuestionInput {
   clientMutationId: String
 }
@@ -957,11 +786,6 @@ input DeleteSurveyInput {
 
 input DeleteTextAnswerInput {
   clientMutationId: String
-}
-
-input DeleteTopicInput {
-  clientMutationId: String
-  id: ID!
 }
 
 input DeleteUserInput {
@@ -979,13 +803,6 @@ input UpdateAppointmentInput {
   patient: ID
   taken: Boolean
   title: String
-}
-
-input UpdateBoardInput {
-  clientMutationId: String
-  description: String
-  id: ID!
-  name: String
 }
 
 input UpdateChoiceAnswerInput {
@@ -1015,13 +832,6 @@ input UpdateNumberAnswerInput {
   question: ID
 }
 
-input UpdatePostInput {
-  clientMutationId: String
-  id: ID!
-  message: String
-  topic: ID
-}
-
 input UpdateQuestionInput {
   clientMutationId: String
   id: ID!
@@ -1043,13 +853,6 @@ input UpdateTextAnswerInput {
   id: ID!
   question: ID
   textAnswer: String
-}
-
-input UpdateTopicInput {
-  board: ID
-  clientMutationId: String
-  id: ID!
-  subject: String
 }
 
 input UpdateUserInput {

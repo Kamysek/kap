@@ -9,7 +9,7 @@ import { AppointmentsService } from '../services/appointments.service';
   styleUrls: ['./patient.component.scss']
 })
 export class PatientComponent implements OnInit {
-  appointments$;
+  slots$;
   patient$;
 
   constructor(
@@ -20,13 +20,12 @@ export class PatientComponent implements OnInit {
 
   ngOnInit() {
     // this.calendars$ = this.calendarService.getAppointments();
-    this.appointments$ = this.appointmentsService.getDays();
+    this.slots$ = this.appointmentsService.getDays();
     this.patient$ = this.userService.getOwnDetails();
   }
 
-  takeAppointment(id) {
-    console.log(id);
-    // this.calendarService.takeAppointment({ id });
+  async takeAppointment(list) {
+    await this.appointmentsService.bookSlot({ list }).toPromise();
   }
 
   logout() {
