@@ -1,6 +1,5 @@
 import graphene
 import graphql_jwt
-import boards.schema
 import account.schema
 import appointments.schema
 import survey.schema
@@ -8,7 +7,6 @@ import survey.schema
 
 class Query(
     account.schema.Query,
-    boards.schema.Query,
 	appointments.schema.Query,
     survey.schema.Query,
     graphene.ObjectType,
@@ -18,7 +16,6 @@ class Query(
 
 class Mutation(
     account.schema.Mutation,
-    boards.schema.Mutation,
 	appointments.schema.Mutation,
     survey.schema.Mutation,
     graphene.ObjectType,

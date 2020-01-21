@@ -1,6 +1,5 @@
 import os
 os.system("rm account\migrations\0001_initial.py")
-os.system("rm boards\migrations\0001_initial.py")
 os.system("rm survey\migrations\0001_initial.py")
 os.system("rm db.sqlite3")
 os.system("python manage.py makemigrations")

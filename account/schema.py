@@ -295,14 +295,14 @@ class StudyType(DjangoObjectType):
 class CheckupFilter(django_filters.FilterSet):
     class Meta:
         model = Checkup
-        fields = ['name', 'order', 'interval', 'study']
+        fields = ['name', 'daysUntil', 'study']
 
 
 class CheckupType(DjangoObjectType):
     class Meta:
         model = Checkup
         interfaces = (graphene.relay.Node,)
-        fields = ('name', 'order', 'interval', 'study')
+        fields = ('name', 'daysUntil', 'study')
 
     @login_required
     def resolve_id(self, info):
