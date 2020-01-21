@@ -220,10 +220,10 @@ class BookSlots(graphene.relay.ClientIDMutation):
 
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
-                app_start = datetime.datetime.strptime(
-                    appointment_instance.appointment_start.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
-                app_end = datetime.datetime.strptime(appointment_instance.appointment_end.strftime('%Y-%m-%d %H:%M:%S'),
-                                                     '%Y-%m-%d %H:%M:%S')
+                app_start = make_aware(datetime.datetime.strptime(
+                    appointment_instance.appointment_start.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S'))
+                app_end = make_aware(datetime.datetime.strptime(appointment_instance.appointment_end.strftime('%Y-%m-%d %H:%M:%S'),
+                                                     '%Y-%m-%d %H:%M:%S'))
 
                 if app_start < min_date:
                     min_date = app_start
@@ -239,8 +239,6 @@ class BookSlots(graphene.relay.ClientIDMutation):
                                       taken=True)
             checkAppointmentFormat(appointment)
             appointment.save()
-
-            print(appointment)
 
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
@@ -352,7 +350,7 @@ class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
     get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True),
-                                   minusdays=graphene.Int(), plusdays=graphene.Int())
+                                   minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
 
     def resolve_get_slot_lists(self, info, **kwargs):
         qs = Appointment.objects.all().filter(taken=False)
@@ -361,14 +359,14 @@ class Query(graphene.ObjectType):
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
 
+
+
         if date:
             startdate = date - timedelta(days=minusdays)
             enddate = date + timedelta(days=plusdays)
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
         slot_list = []
-        for q in qs:
-            slot_list.append([q])
 
         if info.context.user.timeslots_needed > 1:
 
