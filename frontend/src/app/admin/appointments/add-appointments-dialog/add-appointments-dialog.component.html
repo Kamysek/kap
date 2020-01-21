@@ -38,7 +38,7 @@
         <button
           mat-icon-button
           (click)="deleteAppointment(i)"
-          [disabled]="appointment.disabled"
+          [disabled]="appointmentsForm.disabled"
         >
           <mat-icon>delete</mat-icon>
         </button>
@@ -70,6 +70,7 @@
     one being on
     <strong>{{ lastAppointment | async | date: 'fullDate' }}</strong>
   </p>
+  <p *ngIf="appointmentsForm.disabled">Generating Appointments, please wait</p>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button (click)="saveAppointments()" color="primary" mat-stroked-button>

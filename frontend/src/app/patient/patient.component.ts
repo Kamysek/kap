@@ -19,7 +19,6 @@ export class PatientComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // this.calendars$ = this.calendarService.getAppointments();
     this.slots$ = this.appointmentsService.getDays();
     this.patient$ = this.userService.getOwnDetails();
   }

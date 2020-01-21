@@ -16,7 +16,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   users$;
   dataSource;
   filterControl = new FormControl();
-  displayedColumns: string[] = ['id', 'email', 'username', 'actions'];
+  displayedColumns: string[] = ['email', 'username', 'actions'];
   private destroyed$ = new Subject();
 
   // @ViewChild(MatSort, { static: true }) sort: MatSort;

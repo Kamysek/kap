@@ -4,6 +4,7 @@ import { Apollo } from 'apollo-angular';
 import { getAppointments } from '../../../__generated__/getAppointments';
 import { map } from 'rxjs/operators';
 import * as moment from 'moment';
+import 'moment-timezone';
 import {
   CreateAppointmentInput,
   UpdateAppointmentInput
@@ -127,6 +128,7 @@ export class AppointmentsService {
             })
           )
         )
+        // tap(a => console.log(JSON.stringify(a[240])))
       );
   }
 
@@ -234,7 +236,7 @@ export class AppointmentsService {
           const week = appt.startMoment.year() * 100 + appt.startMoment.week();
           const day = appt.startMoment.day();
           const morningMoment = moment(appt.startMoment);
-          morningMoment.startOf('day');
+          morningMoment.hour(0).minute(0);
           morningMoment.add(8, 'hours');
           const startMinute = Math.round(
             appt.startMoment.diff(morningMoment, 'minutes') / 15
