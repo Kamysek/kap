@@ -202,6 +202,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
 class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
+        patient_comment = graphene.String()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -233,7 +234,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
-                                      patient=tmp_app.patient,
+                                      patient=input.get('patient_comment'),
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
@@ -366,9 +367,8 @@ class Query(graphene.ObjectType):
             enddate = date + timedelta(days=plusdays)
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
-        slot_list = []
-
         if info.context.user.timeslots_needed > 1:
+            slot_list = []
 
             if minusdays is None:
                 minusdays = 0
@@ -389,13 +389,28 @@ class Query(graphene.ObjectType):
 
                 qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
 
-                if qs_tmp:
+                if qs_tmp and info.context.user.timeslots_needed is 2:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             if a.appointment_end == b.appointment_start:
                                 slot_list.append([a, b])
 
-        qs = slot_list
+                if qs_tmp and info.context.user.timeslots_needed is 3:
+                    for a in qs_tmp:
+                        for b in qs_tmp:
+                            for c in qs_tmp:
+                                if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start:
+                                    slot_list.append([a, b, c])
+
+                if qs_tmp and info.context.user.timeslots_needed is 4:
+                    for a in qs_tmp:
+                        for b in qs_tmp:
+                            for c in qs_tmp:
+                                for d in qs_tmp:
+                                    if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start and c.appointment_end == d.appointment_start:
+                                        slot_list.append([a, b, c, d])
+
+            qs = slot_list
         return qs
 
 
