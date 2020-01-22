@@ -25,14 +25,14 @@ class UnauthorisedAccessError(GraphQLError):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed']
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'called']
 
 
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
-        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'study_participation')
+        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'called')
 
     @login_required
     def resolve_id(self, info):
