@@ -30,7 +30,7 @@ export class AppointmentOverviewComponent implements OnChanges {
           Object.assign(
             {},
             {
-              appointments: changes.appointments.currentValue[day],
+              slots: changes.appointments.currentValue[day],
               dayMoment: moment(day, 'YYYYDDDD')
             }
           )

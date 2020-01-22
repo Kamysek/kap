@@ -1,18 +1,28 @@
-<h3>Showing appointments: {{ selectedRage | async }}</h3>
-<button (click)="goLower()" [disabled]="!(canGoLower | async)" mat-flat-button>
-  <mat-icon>arrow_back</mat-icon>
-  Previous week
-</button>
-<button
-  (click)="goHigher()"
-  [disabled]="!(canGoHigher | async)"
-  mat-flat-button
->
-  Next week
-  <mat-icon>arrow_forward</mat-icon>
-</button>
-<kap-appointment-week
-  [appointments]="selectedAppointments | async"
-  [week]="selectedWeek | async"
-  (open)="open.emit($event)"
-></kap-appointment-week>
+<div fxLayout="column" fxLayoutGap="1rem">
+  <div fxLayout="row" fxLayoutAlign="center">
+    <h3>Showing appointments: {{ selectedRage | async }}</h3>
+  </div>
+  <div fxLayout="row" fxLayoutAlign="space-between">
+    <button
+      (click)="goLower()"
+      [disabled]="!(canGoLower | async)"
+      mat-flat-button
+    >
+      <mat-icon>arrow_back</mat-icon>
+      Previous week
+    </button>
+    <button
+      (click)="goHigher()"
+      [disabled]="!(canGoHigher | async)"
+      mat-flat-button
+    >
+      Next week
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </div>
+  <kap-appointment-week
+    (open)="open.emit($event)"
+    [appointments]="selectedAppointments | async"
+    [week]="selectedWeek | async"
+  ></kap-appointment-week>
+</div>

@@ -22,6 +22,7 @@ export class UserService {
             username
             email
             id
+            dateJoined
           }
         }
       }

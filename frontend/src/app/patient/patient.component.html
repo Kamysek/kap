@@ -7,10 +7,11 @@
     <h1 style="margin: 0;">Welcome to KAP</h1>
     <button (click)="logout()" mat-flat-button>LOGOUT</button>
   </div>
-  <div fxLayout="row" fxLayoutGap="4rem">
+  <div fxLayout="column" fxLayout.gt-md="row" fxLayoutGap="4rem">
     <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
     <kap-appointment-overview
-      [appointments]="appointments$ | async"
+      [appointments]="slots$ | async"
+      fxFlex
       (takeAppointment)="takeAppointment($event)"
     ></kap-appointment-overview>
   </div>

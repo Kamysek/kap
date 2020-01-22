@@ -52,6 +52,8 @@ export class EditAppointmentDialogComponent implements OnInit {
   }
 
   submit() {
+    this.appointmentForm.get('startDate').enable();
+    this.appointmentForm.get('startTime').enable();
     const formValue = this.appointmentForm.value;
     const startMoment = formValue.startDate
       .hour(parseInt(formValue.startTime.split(':')[0], 10))
@@ -66,8 +68,8 @@ export class EditAppointmentDialogComponent implements OnInit {
       appointmentStart: moment(startMoment).toDate(),
       appointmentEnd: moment(startMoment)
         .add(45, 'minutes')
-        .toDate()
-      // taken: takenEnabled ? formValue.taken : true
+        .toDate(),
+      taken: takenEnabled ? formValue.taken : true
     };
     this.dialog.close(patch);
   }
