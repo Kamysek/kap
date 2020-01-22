@@ -202,6 +202,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
 class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
+        patient_comment = graphene.String()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -233,7 +234,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
-                                      patient=tmp_app.patient,
+                                      patient=input.get('patient_comment'),
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
