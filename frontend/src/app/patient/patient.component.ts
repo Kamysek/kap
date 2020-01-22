@@ -5,6 +5,8 @@ import { AppointmentsService } from '../services/appointments.service';
 import { BehaviorSubject } from 'rxjs';
 import * as moment from 'moment';
 import { map, switchMap } from 'rxjs/operators';
+import { MatDialog } from '@angular/material';
+import { CollectCommentDialogComponent } from './collect-comment-dialog/collect-comment-dialog.component';
 
 @Component({
   selector: 'kap-patient',
@@ -26,7 +28,8 @@ export class PatientComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private userService: UserService,
-    private appointmentsService: AppointmentsService
+    private appointmentsService: AppointmentsService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -36,9 +39,16 @@ export class PatientComponent implements OnInit {
     this.patient$ = this.userService.getOwnDetails();
   }
 
-  async takeAppointment(list) {
+  async takeAppointment(slot) {
+    const patientComment = await this.dialog
+      .open(CollectCommentDialogComponent, { data: slot })
+      .afterClosed()
+      .toPromise();
     await this.appointmentsService
-      .bookSlot({ list }, this.appointmentConfig.value)
+      .bookSlot(
+        { input: { patientComment, appointmentList: slot.appointments } },
+        this.appointmentConfig.value
+      )
       .toPromise();
   }
 

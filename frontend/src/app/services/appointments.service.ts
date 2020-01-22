@@ -105,8 +105,8 @@ export class AppointmentsService {
   `;
 
   private static TAKE_SLOT_MUTATION = gql`
-    mutation takeSlot($list: [ID]!) {
-      bookSlots(input: { appointmentList: $list }) {
+    mutation takeSlot($input: BookSlotsInput!) {
+      bookSlots(input: $input) {
         appointmentList
       }
     }
