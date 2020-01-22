@@ -253,6 +253,27 @@ class UpdateGroup(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
 
+class UserCalled(graphene.relay.ClientIDMutation):
+    user = graphene.Field(UserType)
+
+    class Input:
+        user_id = graphene.ID()
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin","Doctor"], info):
+            try:
+                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
+
+            user_instance.called += 1
+            user_instance.save()
+
+            return UserCalled(user=user_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to update a group!')
+
 class StudyFilter(django_filters.FilterSet):
     class Meta:
         model = Study
@@ -387,5 +408,7 @@ class Mutation(graphene.ObjectType):
 
     update_user = UpdateUser.Field()
     update_group = UpdateGroup.Field()
+
+    user_called = UserCalled.Field()
 
     delete_user = DeleteUser.Field()
