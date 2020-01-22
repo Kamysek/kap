@@ -253,6 +253,27 @@ class UpdateGroup(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
 
+class UserCalled(graphene.relay.ClientIDMutation):
+    user = graphene.Field(UserType)
+
+    class Input:
+        user_id = graphene.ID()
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin","Doctor"], info):
+            try:
+                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
+            except CustomUser.DoesNotExist:
+                raise GraphQLError('User does not exist!')
+
+            user_instance.called += 1
+            user_instance.save()
+
+            return UserCalled(user=user_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to update a group!')
+
 class StudyFilter(django_filters.FilterSet):
     class Meta:
         model = Study
@@ -348,7 +369,16 @@ class Query(graphene.AbstractType):
     get_group = graphene.relay.Node.Field(GroupType)
     get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)
 
+    get_overdue_patients = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
     get_user_group = graphene.String()
+
+    @login_required
+    def resolve_get_overdue_patients(self, info, **kwargs):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return CustomUser.objects.filter(groups__name="Patient",).filter(checkup_overdue__isnull=False)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+
 
     @login_required
     def resolve_get_user_group(self, info, **kwargs):
@@ -378,5 +408,7 @@ class Mutation(graphene.ObjectType):
 
     update_user = UpdateUser.Field()
     update_group = UpdateGroup.Field()
+
+    user_called = UserCalled.Field()
 
     delete_user = DeleteUser.Field()
