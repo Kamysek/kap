@@ -6,6 +6,8 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+
+from klinischesanwendungsprojekt.crons import countSeperateAppointments
 from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder, VIPcancel
@@ -351,8 +353,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
     get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None), before=graphene.DateTime(default_value=None), filterset_class=AppointmentFilter)
-    get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True),
-                                   minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
+    get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
 
     def resolve_get_appointments(self, info, **kwargs):
         qs = Appointment.objects.all().filter()
@@ -369,7 +370,16 @@ class Query(graphene.ObjectType):
     def resolve_get_slot_lists(self, info, **kwargs):
         qs = Appointment.objects.all().filter(taken=False)
 
-        date = kwargs.get('date')
+        try:
+            checkups = info.context.user.study_participation.checkup_set.all().order_by("daysUntil")
+            appointmentsAttended = Appointment.objects.all().filter(patient=info.context.user).filter(noshow=False).order_by(
+            'appointment_start')  # get number of  attended appointments
+            appointmentCount = countSeperateAppointments(appointmentsAttended)
+            nextCheckup = checkups[appointmentCount]
+            date = info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil)
+        except:
+            raise GraphQLError(message="User does not have study participation!")
+
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
 
