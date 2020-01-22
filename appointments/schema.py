@@ -361,6 +361,9 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
+        if not hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
         qs = Appointment.objects.all().filter()
 
         if kwargs.get('after'):
@@ -374,6 +377,9 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
+        if not hasGroup(["Admin", "Doctor", "Labor","Patient"], info):
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
         qs = Appointment.objects.all().filter(taken=False)
 
         try:

@@ -22,7 +22,6 @@ class Checkup(models.Model):
     def __str__(self):
         return self.name
 
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(unique=True, max_length=150, null=True, blank=False)
     email = models.EmailField(_('email address'), unique=True, null=True, blank=False)
@@ -31,7 +30,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True, null=True, blank=False)
     date_joined = models.DateTimeField(default=timezone.now, null=True, blank=False)
     password_changed = models.BooleanField(default=False, null=True, blank=False)
-    called = models.IntegerField(default=0, null=True, blank=False)
     study_participation = models.ForeignKey(Study,on_delete=models.SET_NULL,null=True)
     checkup_overdue = models.DateTimeField(null=True, blank=False)
     overdue_notified = models.DateTimeField(default = timezone.now() - timedelta(days=100),null=True, blank=False)
@@ -50,3 +48,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.date_joined < (timezone.now() - timedelta(seconds=3)):
             # So the password initialization doesnt automatically set this flag
             self.password_changed = True
+
+
+class Call(models.Model):
+    date = models.DateTimeField(default = timezone.now,null=True, blank=False)
+    comment = models.CharField(max_length=500, blank=False, null=True)
+    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=False)

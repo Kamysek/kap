@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+from django.utils import timezone
 import django_filters
 import graphene
 from django.contrib.auth import get_user_model
@@ -8,7 +8,7 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from account.models import CustomUser, Checkup, Study
+from account.models import CustomUser, Checkup, Study,Call
 from graphql_jwt.decorators import login_required
 
 from appointments.models import Appointment
@@ -27,17 +27,53 @@ class UnauthorisedAccessError(GraphQLError):
         super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
 
 
+class CallFilter(django_filters.FilterSet):
+    class Meta:
+        model = Call
+        fields = ['date','comment','user']
+
+class CallType(DjangoObjectType):
+    class Meta:
+        model = Call
+        interfaces = (graphene.relay.Node,)
+        fields = ('date','comment','user')
+
+    @login_required
+    def resolve_date(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
+            return self.date
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
+
+    @login_required
+    def resolve_comment(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
+            return self.comment
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
+
+    @login_required
+    def resolve_user(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
+            return self.user
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+            return None
+
+
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'called']
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation']
 
 
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
-        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'called')
+        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
 
     @login_required
     def resolve_id(self, info):
@@ -100,6 +136,13 @@ class UserType(DjangoObjectType):
         if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
             return self.called
         return None
+
+    @login_required
+    def resolve_call_set(self, info):
+        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+            return self.call_set
+        return []
+
 
 
 class CreateUser(graphene.relay.ClientIDMutation):
@@ -263,18 +306,16 @@ class UserCalled(graphene.relay.ClientIDMutation):
 
     class Input:
         user_id = graphene.ID()
-
+        comment = graphene.String()
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin","Doctor"], info):
+        if hasGroup(["Admin","Doctor","Labor"], info):
             try:
                 user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
+                comment = input.get('comment')
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
-
-            user_instance.called += 1
-            user_instance.save()
-
+            Call(date=timezone.now(), comment=comment,user=user_instance).save()
             return UserCalled(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to update a group!')
