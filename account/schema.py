@@ -348,7 +348,16 @@ class Query(graphene.AbstractType):
     get_group = graphene.relay.Node.Field(GroupType)
     get_groups = DjangoFilterConnectionField(GroupType, filterset_class=GroupFilter)
 
+    get_overdue_patients = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
     get_user_group = graphene.String()
+
+    @login_required
+    def resolve_get_overdue_patients(self, info, **kwargs):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return CustomUser.objects.filter(groups__name="Patient",).filter(checkup_overdue__isnull=False)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+
 
     @login_required
     def resolve_get_user_group(self, info, **kwargs):
