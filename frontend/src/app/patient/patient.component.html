@@ -10,8 +10,10 @@
   <div fxLayout="column" fxLayout.gt-md="row" fxLayoutGap="4rem">
     <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
     <kap-appointment-overview
+      (loadMore)="loadMoreAppointments()"
       [appointments]="slots$ | async"
       fxFlex
+      [canLoadMore]="canLoadMore | async"
       (takeAppointment)="takeAppointment($event)"
     ></kap-appointment-overview>
   </div>

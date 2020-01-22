@@ -6,6 +6,8 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+
+from klinischesanwendungsprojekt.crons import countSeperateAppointments
 from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder, VIPcancel
@@ -202,7 +204,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
 class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
-        patient_comment = graphene.String()
+        comment_patient = graphene.String()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -234,7 +236,8 @@ class BookSlots(graphene.relay.ClientIDMutation):
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
-                                      patient=input.get('patient_comment'),
+                                      comment_patient=input.get('comment_patient'),
+                                      patient=info.context.user,
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
@@ -349,26 +352,44 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
-    get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
-    get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True),
-                                   minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
+    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None), before=graphene.DateTime(default_value=None), filterset_class=AppointmentFilter)
+    get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
+
+    def resolve_get_appointments(self, info, **kwargs):
+        qs = Appointment.objects.all().filter()
+
+        if kwargs.get('after'):
+            qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
+                datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+        if kwargs.get('before'):
+            qs = qs.filter(appointment_start__range=[make_aware(
+                datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+
+        return qs
 
     def resolve_get_slot_lists(self, info, **kwargs):
         qs = Appointment.objects.all().filter(taken=False)
 
-        date = kwargs.get('date')
+        try:
+            checkups = info.context.user.study_participation.checkup_set.all().order_by("daysUntil")
+            appointmentsAttended = Appointment.objects.all().filter(patient=info.context.user).filter(noshow=False).order_by(
+            'appointment_start')  # get number of  attended appointments
+            appointmentCount = countSeperateAppointments(appointmentsAttended)
+            nextCheckup = checkups[appointmentCount]
+            date = info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil)
+        except:
+            raise GraphQLError(message="User does not have study participation!")
+
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
-
-
 
         if date:
             startdate = date - timedelta(days=minusdays)
             enddate = date + timedelta(days=plusdays)
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
+        slot_list = []
         if info.context.user.timeslots_needed > 1:
-            slot_list = []
 
             if minusdays is None:
                 minusdays = 0
@@ -410,7 +431,11 @@ class Query(graphene.ObjectType):
                                     if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start and c.appointment_end == d.appointment_start:
                                         slot_list.append([a, b, c, d])
 
-            qs = slot_list
+        else:
+            for a in qs:
+                slot_list.append([a])
+
+        qs = slot_list
         return qs
 
 

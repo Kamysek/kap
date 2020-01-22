@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Provide a comment for your doctor</h2>
+<mat-dialog-content>
+  <p>
+    Booking appointment on
+    <strong>{{ slot.start | date: 'fullDate' }}</strong> from
+    <strong>{{ slot.start | date: 'mediumTime' }}</strong> to
+    <strong>{{ slot.end | date: 'mediumTime' }}</strong>
+  </p>
+  <mat-form-field style="width: 100%;">
+    <textarea
+      [formControl]="commentControl"
+      matInput
+      placeholder="Leave a comment for the doctor"
+    ></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button
+    color="warn"
+    mat-dialog-close="No comment provided."
+    mat-stroked-button
+  >
+    Continue without a comment
+  </button>
+  <button
+    [disabled]="commentControl.invalid"
+    [mat-dialog-close]="commentControl.value"
+    color="primary"
+    mat-stroked-button
+  >
+    Book with comment
+  </button>
+</mat-dialog-actions>

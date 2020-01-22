@@ -7,6 +7,7 @@ import { PatientDataComponent } from './patient-data/patient-data.component';
 import { AuthGuard } from '../guards/auth.guard';
 import { SurveyOverviewComponent } from './survey-overview/survey-overview.component';
 import { SharedModule } from '../shared/shared.module';
+import { CollectCommentDialogComponent } from './collect-comment-dialog/collect-comment-dialog.component';
 
 const routes: Routes = [
   { path: 'patient', component: PatientComponent, canActivate: [AuthGuard] }
@@ -17,8 +18,10 @@ const routes: Routes = [
     PatientComponent,
     AppointmentOverviewComponent,
     PatientDataComponent,
-    SurveyOverviewComponent
+    SurveyOverviewComponent,
+    CollectCommentDialogComponent
   ],
+  entryComponents: [CollectCommentDialogComponent],
   imports: [CommonModule, RouterModule.forChild(routes), SharedModule]
 })
 export class PatientModule {}

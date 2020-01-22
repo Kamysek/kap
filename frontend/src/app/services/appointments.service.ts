@@ -105,8 +105,8 @@ export class AppointmentsService {
   `;
 
   private static TAKE_SLOT_MUTATION = gql`
-    mutation takeSlot($list: [ID]!) {
-      bookSlots(input: { appointmentList: $list }) {
+    mutation takeSlot($input: BookSlotsInput!) {
+      bookSlots(input: $input) {
         appointmentList
       }
     }
@@ -132,7 +132,7 @@ export class AppointmentsService {
       );
   }
 
-  public getFreeSlots(date: Date, minus = 5, plus = 5) {
+  public getFreeSlots(date: Date, minus = 7, plus = 7) {
     return this.apollo
       .watchQuery<getOpenSlots, getOpenSlotsVariables>({
         query: AppointmentsService.GET_POSSIBLE_SLOTS,
@@ -191,12 +191,8 @@ export class AppointmentsService {
       );
   }
 
-  public getDays() {
-    return this.getFreeSlots(
-      moment()
-        .add(4, 'weeks')
-        .toDate()
-    ).pipe(
+  public getDays({ date, minus, plus }) {
+    return this.getFreeSlots(date, minus, plus).pipe(
       map(slots => {
         const days = {};
         slots.forEach(slot => {
@@ -297,10 +293,13 @@ export class AppointmentsService {
     );
   }
 
-  public bookSlot(variables: takeSlotVariables) {
+  public bookSlot(variables: takeSlotVariables, config: getOpenSlotsVariables) {
     return this.apollo.mutate<takeSlot, takeSlotVariables>({
       mutation: AppointmentsService.TAKE_SLOT_MUTATION,
-      variables
+      variables,
+      refetchQueries: [
+        { query: AppointmentsService.GET_POSSIBLE_SLOTS, variables: config }
+      ]
     });
   }
 }
