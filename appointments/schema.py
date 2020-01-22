@@ -350,9 +350,21 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
-    get_appointments = DjangoFilterConnectionField(AppointmentType, filterset_class=AppointmentFilter)
+    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None), before=graphene.DateTime(default_value=None), filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), date=graphene.DateTime(required=True),
                                    minusdays=graphene.Int(default_value=7), plusdays=graphene.Int(default_value=7))
+
+    def resolve_get_appointments(self, info, **kwargs):
+        qs = Appointment.objects.all().filter()
+
+        if kwargs.get('after'):
+            qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
+                datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+        if kwargs.get('before'):
+            qs = qs.filter(appointment_start__range=[make_aware(
+                datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+
+        return qs
 
     def resolve_get_slot_lists(self, info, **kwargs):
         qs = Appointment.objects.all().filter(taken=False)
@@ -360,8 +372,6 @@ class Query(graphene.ObjectType):
         date = kwargs.get('date')
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
-
-
 
         if date:
             startdate = date - timedelta(days=minusdays)
