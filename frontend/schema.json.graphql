@@ -404,8 +404,8 @@ type Query {
   ): QuestionTypeConnection
   getSlotLists(
     date: DateTime!
-    minusdays: Int
-    plusdays: Int
+    minusdays: Int = 7
+    plusdays: Int = 7
   ): [[AppointmentType]]
   getStudies(
     after: String
@@ -448,6 +448,8 @@ type Query {
   getUsers(
     after: String
     before: String
+    called: Int
+    checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
     first: Int
@@ -455,7 +457,10 @@ type Query {
     isActive: Boolean
     isStaff: Boolean
     last: Int
+    overdueNotified: DateTime
     passwordChanged: Boolean
+    studyParticipation: ID
+    timeslotsNeeded: Int
     username: String
   ): UserTypeConnection
 }
@@ -634,14 +639,18 @@ type UpdateUserPayload {
 }
 
 type UserType implements Node {
+  called: Int
+  checkupOverdue: DateTime
   dateJoined: DateTime
   email: String
   "The ID of the object."
   id: ID!
   isActive: Boolean!
   isStaff: Boolean!
+  overdueNotified: DateTime
   passwordChanged: Boolean!
   studyParticipation: StudyType
+  timeslotsNeeded: Int!
   username: String
 }
 
@@ -685,6 +694,7 @@ input AppointmentInput {
 input BookSlotsInput {
   appointmentList: [ID]
   clientMutationId: String
+  patientComment: String
 }
 
 input CreateAppointmentInput {

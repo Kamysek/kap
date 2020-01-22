@@ -23,6 +23,8 @@ export class UserService {
             email
             id
             dateJoined
+            checkupOverdue
+            timeslotsNeeded
           }
         }
       }
@@ -34,7 +36,9 @@ export class UserService {
       getMe {
         id
         username
+        email
         dateJoined
+        checkupOverdue
       }
     }
   `;
