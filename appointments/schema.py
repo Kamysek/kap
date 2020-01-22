@@ -366,9 +366,8 @@ class Query(graphene.ObjectType):
             enddate = date + timedelta(days=plusdays)
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
-        slot_list = []
-
         if info.context.user.timeslots_needed > 1:
+            slot_list = []
 
             if minusdays is None:
                 minusdays = 0
@@ -389,13 +388,28 @@ class Query(graphene.ObjectType):
 
                 qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
 
-                if qs_tmp:
+                if qs_tmp and info.context.user.timeslots_needed is 2:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             if a.appointment_end == b.appointment_start:
                                 slot_list.append([a, b])
 
-        qs = slot_list
+                if qs_tmp and info.context.user.timeslots_needed is 3:
+                    for a in qs_tmp:
+                        for b in qs_tmp:
+                            for c in qs_tmp:
+                                if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start:
+                                    slot_list.append([a, b, c])
+
+                if qs_tmp and info.context.user.timeslots_needed is 4:
+                    for a in qs_tmp:
+                        for b in qs_tmp:
+                            for c in qs_tmp:
+                                for d in qs_tmp:
+                                    if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start and c.appointment_end == d.appointment_start:
+                                        slot_list.append([a, b, c, d])
+
+            qs = slot_list
         return qs
 
 
