@@ -11,7 +11,7 @@ User = get_user_model()
 #Input HAS TO BE appointment list sorted by date
 def countSeperateAppointments(appointments):
     if appointments.count() <= 1:
-        return appointents.count()
+        return appointments.count()
     tmp = appointments[0]
     count = 1
     for app in appointments:
@@ -28,20 +28,18 @@ def checkUserOverdue(user):
     appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).order_by('appointment_start')#get number of  attended appointments
     appointmentCount= countSeperateAppointments(appointmentsAttended)
     if appointmentCount == checkups.count() or Appointment.objects.all().filter(patient=user).filter(appointment_start__gte=timezone.now()).count() > 0:#Finished study or already has upcoming appointment
-        user.checkup_overdue = False
+        user.checkup_overdue = None;
         user.overdue_notified = timezone.now()
         user.save()
         return
     nextCheckup = checkups[appointmentCount]
     if (nextCheckup.daysUntil < days_since_joined):
-        print("USER OVERDUE!")
-        user.checkup_overdue = True
+        user.checkup_overdue = user.date_joined + timedelta(days=nextCheckup.daysUntil)
         if(days_since_joined-nextCheckup.daysUntil) > 3 and ((timezone.now() - user.overdue_notified) > timedelta(days=7)): #Notify if patient is more than 3 days overdue or last Notification is 1 week overdue
             sendOverdueMail(user,nextCheckup.name)
             user.overdue_notified = timezone.now()
     else:
-        print("not overdue")
-        user.checkup_overdue = False
+        user.checkup_overdue = None;
         user.overdue_notified = timezone.now()
     user.save()
 
@@ -66,8 +64,10 @@ def doAppointmentReminders():
 
 class MyCronJob(CronJobBase):
     RUN_EVERY_MINS = 360 # every 6 hours
+    RUN_AT_TIMES = ['1:00', '12:30']
 
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    #schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'my_app.my_cron_job'    # a unique code
 
     def do(self):

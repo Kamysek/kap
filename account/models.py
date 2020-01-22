@@ -33,7 +33,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     password_changed = models.BooleanField(default=False, null=True, blank=False)
     called = models.IntegerField(default=0, null=True, blank=False)
     study_participation = models.ForeignKey(Study,on_delete=models.SET_NULL,null=True)
-    checkup_overdue = models.BooleanField(default=False, null=True, blank=False)
+    checkup_overdue = models.DateTimeField(null=True, blank=False)
     overdue_notified = models.DateTimeField(default = timezone.now() - timedelta(days=100),null=True, blank=False)
     timeslots_needed = models.IntegerField(default = 1, null=False, blank=False)
 
