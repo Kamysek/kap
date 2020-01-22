@@ -18,7 +18,9 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AppointmentOverviewComponent implements OnChanges {
   @Input() appointments;
+  @Input() canLoadMore;
   @Output() takeAppointment = new EventEmitter();
+  @Output() loadMore = new EventEmitter();
   days = new BehaviorSubject([]);
 
   constructor() {}

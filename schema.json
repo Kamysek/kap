@@ -984,7 +984,7 @@
                   }
                 },
                 {
-                  "defaultValue": null,
+                  "defaultValue": "7",
                   "description": null,
                   "name": "minusdays",
                   "type": {
@@ -994,7 +994,7 @@
                   }
                 },
                 {
-                  "defaultValue": null,
+                  "defaultValue": "7",
                   "description": null,
                   "name": "plusdays",
                   "type": {

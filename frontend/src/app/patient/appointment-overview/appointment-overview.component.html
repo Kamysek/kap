@@ -1,8 +1,17 @@
 <h2>Make a new Appointment</h2>
 <h3>Currently available</h3>
 <div gdAuto gdColumns="repeat(auto-fit, minmax(175px, 1fr))" gdGap="1rem">
+  <button
+    (click)="loadMore.emit()"
+    [disabled]="canLoadMore"
+    color="primary"
+    gdColumn="1 / -1"
+    mat-stroked-button
+  >
+    Load more appointments
+  </button>
   <ng-container *ngFor="let day of days | async">
-    <strong gdColumn="1 / -1">{{ day.dayMoment | date }}</strong>
+    <strong gdColumn="1 / -1">{{ day.dayMoment | date: 'fullDate' }}</strong>
     <mat-card *ngFor="let slot of day.slots">
       <mat-card-title
         >{{ slot.start | date: 'shortTime' }} -
