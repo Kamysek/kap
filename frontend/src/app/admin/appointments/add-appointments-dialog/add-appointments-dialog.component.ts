@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import * as moment from 'moment';
 import 'moment-recur-ts';
+import 'moment-timezone';
 import { map, startWith } from 'rxjs/operators';
 import { MatDialogRef } from '@angular/material';
 import { AppointmentsService } from '../../../services/appointments.service';
@@ -17,7 +18,9 @@ export class AddAppointmentsDialogComponent implements OnInit {
     repeat: [1, Validators.min(1)]
   });
 
-  currentWeekMoment = moment().startOf('week');
+  currentWeekMoment = moment()
+    .tz('Europe/Berlin')
+    .startOf('week');
   lastAppointment;
   appointmentNum;
 
@@ -55,7 +58,10 @@ export class AddAppointmentsDialogComponent implements OnInit {
     this.appointments.push(
       this.fb.group({
         day: [1, Validators.pattern('[1-5]')],
-        time: ['08:00', Validators.pattern('(0|1)[0-5]|9|8:(00|15|30|45)')]
+        time: [
+          '08:00',
+          Validators.pattern('(08|09|10|11|12|13|14|15):(00|15|30|45)')
+        ]
       })
     );
   }
@@ -67,34 +73,26 @@ export class AddAppointmentsDialogComponent implements OnInit {
   async saveAppointments() {
     const value = this.appointmentsForm.value;
     this.appointmentsForm.disable();
-    const appointments = value.appointments.reduce(
-      (acc, curr) =>
-        acc.concat(
-          ...moment(this.currentWeekMoment)
-            .isoWeekday(curr.day)
-            .recur()
-            .every(1)
-            .weeks()
-            .next(value.repeat)
-            .map(date =>
-              Object.assign(
-                {},
-                {
-                  title: 'Appointment',
-                  appointmentStart: moment(date)
-                    .hour(parseInt(curr.time.split(':')[0], 10))
-                    .minute(parseInt(curr.time.split(':')[1], 10)),
-                  appointmentEnd: moment(date)
-                    .hour(parseInt(curr.time.split(':')[0], 10))
-                    .minute(parseInt(curr.time.split(':')[1], 10))
-                    .add(45, 'minutes')
-                }
-              )
-            )
-        ),
-      []
-    );
-    console.log(JSON.stringify(appointments));
+    const appointments = value.appointments.reduce((acc, curr) => {
+      const firstMoment = moment(this.currentWeekMoment)
+        .isoWeekday(curr.day)
+        .hour(parseInt(curr.time.split(':')[0], 10))
+        .minute(parseInt(curr.time.split(':')[1], 10));
+      return acc.concat(
+        ...[...Array(value.repeat).keys()].map(week =>
+          Object.assign(
+            {},
+            {
+              title: 'Appointment',
+              appointmentStart: moment(firstMoment).add(week, 'weeks'),
+              appointmentEnd: moment(firstMoment)
+                .add(week, 'weeks')
+                .add(45, 'minutes')
+            }
+          )
+        )
+      );
+    }, []);
     await this.appointmentsService.createAppointments(appointments);
     this.dialog.close(true);
   }

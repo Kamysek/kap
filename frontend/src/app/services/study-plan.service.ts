@@ -20,7 +20,7 @@ export class StudyPlanService {
                 node {
                   id
                   name
-                  order
+                  daysUntil
                 }
               }
             }

@@ -4,6 +4,7 @@ import { Apollo } from 'apollo-angular';
 import { getAppointments } from '../../../__generated__/getAppointments';
 import { map } from 'rxjs/operators';
 import * as moment from 'moment';
+import 'moment-timezone';
 import {
   CreateAppointmentInput,
   UpdateAppointmentInput
@@ -17,13 +18,15 @@ import {
   createAppointmentVariables
 } from '../../../__generated__/createAppointment';
 import {
-  getFreeAppointments,
-  getFreeAppointmentsVariables
-} from '../../../__generated__/getFreeAppointments';
-import {
   getWeekAppointments,
   getWeekAppointmentsVariables
 } from '../../../__generated__/getWeekAppointments';
+import { UserService } from './user.service';
+import {
+  getOpenSlots,
+  getOpenSlotsVariables
+} from '../../../__generated__/getOpenSlots';
+import { takeSlot, takeSlotVariables } from '../../../__generated__/takeSlot';
 
 @Injectable({
   providedIn: 'root'
@@ -47,20 +50,12 @@ export class AppointmentsService {
     }
   `;
 
-  private static GET_FREE_APPOINTMENTS = gql`
-    query getFreeAppointments($after: String!) {
-      getAppointments(taken: false, after: $after) {
-        edges {
-          node {
-            id
-            title
-            taken
-            appointmentStart
-            appointmentEnd
-            commentDoctor
-            commentPatient
-          }
-        }
+  private static GET_POSSIBLE_SLOTS = gql`
+    query getOpenSlots($date: DateTime!, $minus: Int!, $plus: Int!) {
+      getSlotLists(date: $date, minusdays: $minus, plusdays: $plus) {
+        appointmentStart
+        appointmentEnd
+        id
       }
     }
   `;
@@ -109,7 +104,15 @@ export class AppointmentsService {
     }
   `;
 
-  constructor(private apollo: Apollo) {}
+  private static TAKE_SLOT_MUTATION = gql`
+    mutation takeSlot($list: [ID]!) {
+      bookSlots(input: { appointmentList: $list }) {
+        appointmentList
+      }
+    }
+  `;
+
+  constructor(private apollo: Apollo, private userService: UserService) {}
 
   public getAppointments() {
     return this.apollo
@@ -125,27 +128,38 @@ export class AppointmentsService {
             })
           )
         )
+        // tap(a => console.log(JSON.stringify(a[240])))
       );
   }
 
-  public getFreeAppointments() {
+  public getFreeSlots(date: Date, minus = 5, plus = 5) {
     return this.apollo
-      .watchQuery<getFreeAppointments, getFreeAppointmentsVariables>({
-        query: AppointmentsService.GET_FREE_APPOINTMENTS,
+      .watchQuery<getOpenSlots, getOpenSlotsVariables>({
+        query: AppointmentsService.GET_POSSIBLE_SLOTS,
         variables: {
-          after: moment()
-            .toDate()
-            .toString()
+          date,
+          minus,
+          plus
         }
       })
       .valueChanges.pipe(
         map(appts =>
-          appts.data.getAppointments.edges.map(item =>
-            Object.assign({}, item.node, {
-              startMoment: moment(item.node.appointmentStart),
-              endMoment: moment(item.node.appointmentEnd)
-            })
-          )
+          appts.data.getSlotLists.map(slot => {
+            const momentAppointments = slot.map(appointment =>
+              Object.assign({}, appointment, {
+                startMoment: moment(appointment.appointmentStart),
+                endMoment: moment(appointment.appointmentEnd)
+              })
+            );
+            momentAppointments.sort(appt => appt.startMoment.valueOf());
+            return {
+              start: moment(momentAppointments[0].startMoment),
+              end: moment(
+                momentAppointments[momentAppointments.length - 1].endMoment
+              ),
+              appointments: momentAppointments.map(appt => appt.id)
+            };
+          })
         )
       );
   }
@@ -178,16 +192,19 @@ export class AppointmentsService {
   }
 
   public getDays() {
-    return this.getFreeAppointments().pipe(
-      map(appts => {
+    return this.getFreeSlots(
+      moment()
+        .add(4, 'weeks')
+        .toDate()
+    ).pipe(
+      map(slots => {
         const days = {};
-        appts.forEach(appt => {
-          const day =
-            appt.startMoment.year() * 1000 + appt.startMoment.dayOfYear();
+        slots.forEach(slot => {
+          const day = slot.start.year() * 1000 + slot.start.dayOfYear();
           if (!days[day]) {
             days[day] = [];
           }
-          days[day].push({ ...appt, day });
+          days[day].push({ ...slot, day });
         });
         return days;
       })
@@ -219,7 +236,7 @@ export class AppointmentsService {
           const week = appt.startMoment.year() * 100 + appt.startMoment.week();
           const day = appt.startMoment.day();
           const morningMoment = moment(appt.startMoment);
-          morningMoment.startOf('day');
+          morningMoment.hour(0).minute(0);
           morningMoment.add(8, 'hours');
           const startMinute = Math.round(
             appt.startMoment.diff(morningMoment, 'minutes') / 15
@@ -278,5 +295,12 @@ export class AppointmentsService {
         this.createAppointment(appointment).toPromise()
       )
     );
+  }
+
+  public bookSlot(variables: takeSlotVariables) {
+    return this.apollo.mutate<takeSlot, takeSlotVariables>({
+      mutation: AppointmentsService.TAKE_SLOT_MUTATION,
+      variables
+    });
   }
 }

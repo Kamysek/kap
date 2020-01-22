@@ -43,6 +43,13 @@
   </form>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-dialog-close>Cancel</button>
-  <button (click)="submit()" [disabled]="appointmentForm.invalid">Save</button>
+  <button color="warn" mat-dialog-close mat-stroked-button>Cancel</button>
+  <button
+    (click)="submit()"
+    [disabled]="appointmentForm.invalid"
+    color="primary"
+    mat-stroked-button
+  >
+    Save
+  </button>
 </mat-dialog-actions>
