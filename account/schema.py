@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import django_filters
 import graphene
 from django.contrib.auth import get_user_model
@@ -8,6 +10,9 @@ from graphql import GraphQLError
 from graphql_relay import from_global_id
 from account.models import CustomUser, Checkup, Study
 from graphql_jwt.decorators import login_required
+
+from appointments.models import Appointment
+from klinischesanwendungsprojekt.crons import countSeperateAppointments
 
 
 def hasGroup(groups, info):
@@ -372,6 +377,8 @@ class Query(graphene.AbstractType):
     get_overdue_patients = DjangoFilterConnectionField(UserType, filterset_class=UserFilter)
     get_user_group = graphene.String()
 
+    get_checkup_date = graphene.DateTime()
+
     @login_required
     def resolve_get_overdue_patients(self, info, **kwargs):
         if hasGroup(["Admin", "Doctor", "Labor"], info):
@@ -398,6 +405,24 @@ class Query(graphene.AbstractType):
     def resolve_get_me(self, info, **kwargs):
         if hasGroup(["Admin", "Doctor",  "Labor", "Patient"], info):
             return info.context.user
+        else:
+            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+
+    @login_required
+    def resolve_get_checkup_date(self, info, **kwargs):
+        if hasGroup(["Admin", "Doctor",  "Labor", "Patient"], info):
+            try:
+                checkups = info.context.user.study_participation.checkup_set.all().order_by("daysUntil")
+                appointmentsAttended = Appointment.objects.all().filter(patient=info.context.user).filter(
+                    noshow=False).order_by(
+                    'appointment_start')  # get number of  attended appointments
+                appointmentCount = countSeperateAppointments(appointmentsAttended)
+                nextCheckup = checkups[appointmentCount]
+                date = info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil)
+            except:
+                raise GraphQLError(message="User does not have study participation!")
+
+            return date
         else:
             raise UnauthorisedAccessError(message='No permissions to view the user group!')
 
