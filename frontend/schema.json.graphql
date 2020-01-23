@@ -47,6 +47,29 @@ type BookSlotsPayload {
   clientMutationId: String
 }
 
+type CallType implements Node {
+  comment: String
+  date: DateTime
+  "The ID of the object."
+  id: ID!
+  user: UserType!
+}
+
+type CallTypeConnection {
+  "Contains the nodes in this connection."
+  edges: [CallTypeEdge]!
+  "Pagination data for this connection."
+  pageInfo: PageInfo!
+}
+
+"A Relay edge containing a `CallType` and its cursor."
+type CallTypeEdge {
+  "A cursor for use in pagination"
+  cursor: String!
+  "The item at the end of the edge"
+  node: CallType
+}
+
 type CheckupType implements Node {
   daysUntil: Int
   "The ID of the object."
@@ -281,6 +304,7 @@ type Mutation {
   updateSurvey(input: UpdateSurveyInput!): UpdateSurveyPayload
   updateTextAnswer(input: UpdateTextAnswerInput!): UpdateTextAnswerPayload
   updateUser(input: UpdateUserInput!): UpdateUserPayload
+  userCalled(input: UserCalledInput!): UserCalledPayload
   verifyToken(token: String!): Verify
 }
 
@@ -330,10 +354,10 @@ type Query {
   "The ID of the object"
   getAppointment(id: ID!): AppointmentType
   getAppointments(
-    after: String
+    after: DateTime
     appointmentEnd: DateTime
     appointmentStart: DateTime
-    before: String
+    before: DateTime
     first: Int
     last: Int
     taken: Boolean
@@ -341,6 +365,7 @@ type Query {
   ): AppointmentTypeConnection
   "The ID of the object"
   getCheckup(id: ID!): CheckupType
+  getCheckupDate: DateTime
   "The ID of the object"
   getChoice(id: ID!): ChoiceType
   "The ID of the object"
@@ -387,6 +412,23 @@ type Query {
     question: ID
     updatedOn: DateTime
   ): NumberAnswerTypeConnection
+  getOverduePatients(
+    after: String
+    before: String
+    checkupOverdue: DateTime
+    dateJoined: DateTime
+    email: String
+    first: Int
+    id: ID
+    isActive: Boolean
+    isStaff: Boolean
+    last: Int
+    overdueNotified: DateTime
+    passwordChanged: Boolean
+    studyParticipation: ID
+    timeslotsNeeded: Int
+    username: String
+  ): UserTypeConnection
   "The ID of the object"
   getQuestion(id: ID!): QuestionType
   getQuestions(
@@ -402,11 +444,7 @@ type Query {
     updatedBy: ID
     updatedOn: DateTime
   ): QuestionTypeConnection
-  getSlotLists(
-    date: DateTime!
-    minusdays: Int = 7
-    plusdays: Int = 7
-  ): [[AppointmentType]]
+  getSlotLists(minusdays: Int = 7, plusdays: Int = 7): [[AppointmentType]]
   getStudies(
     after: String
     before: String
@@ -448,7 +486,6 @@ type Query {
   getUsers(
     after: String
     before: String
-    called: Int
     checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
@@ -638,8 +675,18 @@ type UpdateUserPayload {
   user: UserType
 }
 
+type UserCalledPayload {
+  clientMutationId: String
+  user: UserType
+}
+
 type UserType implements Node {
-  called: Int
+  callSet(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): CallTypeConnection!
   checkupOverdue: DateTime
   dateJoined: DateTime
   email: String
@@ -694,7 +741,7 @@ input AppointmentInput {
 input BookSlotsInput {
   appointmentList: [ID]
   clientMutationId: String
-  patientComment: String
+  commentPatient: String
 }
 
 input CreateAppointmentInput {
@@ -876,6 +923,12 @@ input UpdateUserInput {
   isStaff: Boolean
   password: String
   removeGroup: String
+}
+
+input UserCalledInput {
+  clientMutationId: String
+  comment: String
+  userId: ID
 }
 
 """
