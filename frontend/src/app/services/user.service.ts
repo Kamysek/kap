@@ -9,6 +9,11 @@ import {
 } from '../../../__generated__/createUser';
 import { CreateUserInput } from '../../../__generated__/globalTypes';
 import { getUserDetails } from '../../../__generated__/getUserDetails';
+import { getOverdue } from '../../../__generated__/getOverdue';
+import {
+  recordCall,
+  recordCallVariables
+} from '../../../__generated__/recordCall';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +30,32 @@ export class UserService {
             dateJoined
             checkupOverdue
             timeslotsNeeded
+          }
+        }
+      }
+    }
+  `;
+
+  private static LOAD_OVERDUE_QUERY = gql`
+    query getOverdue {
+      getOverduePatients {
+        edges {
+          node {
+            username
+            email
+            id
+            dateJoined
+            checkupOverdue
+            timeslotsNeeded
+            callSet {
+              edges {
+                node {
+                  date
+                  comment
+                  id
+                }
+              }
+            }
           }
         }
       }
@@ -53,6 +84,24 @@ export class UserService {
     }
   `;
 
+  private static RECORD_CALL_MUTATION = gql`
+    mutation recordCall($recordInput: UserCalledInput!) {
+      userCalled(input: $recordInput) {
+        user {
+          callSet {
+            edges {
+              node {
+                comment
+                date
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
   constructor(private apollo: Apollo) {}
 
   getUsers() {
@@ -60,6 +109,20 @@ export class UserService {
       .watchQuery<getUsers>({ query: UserService.LOAD_USERS_QUERY })
       .valueChanges.pipe(
         map(res => res.data.getUsers.edges.map(edge => edge.node))
+      );
+  }
+
+  getOverdueUsers() {
+    return this.apollo
+      .watchQuery<getOverdue>({ query: UserService.LOAD_OVERDUE_QUERY })
+      .valueChanges.pipe(
+        map(res =>
+          res.data.getOverduePatients.edges.map(edge =>
+            Object.assign({}, edge.node, {
+              calls: edge.node.callSet.edges.map(callEdge => callEdge.node)
+            })
+          )
+        )
       );
   }
 
@@ -86,5 +149,13 @@ export class UserService {
         refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
       })
       .subscribe(console.log);
+  }
+
+  recordCall(variables: recordCallVariables) {
+    return this.apollo.mutate<recordCall, recordCallVariables>({
+      mutation: UserService.RECORD_CALL_MUTATION,
+      variables,
+      refetchQueries: [{ query: UserService.LOAD_OVERDUE_QUERY }]
+    });
   }
 }

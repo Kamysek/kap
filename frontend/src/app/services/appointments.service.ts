@@ -51,8 +51,8 @@ export class AppointmentsService {
   `;
 
   private static GET_POSSIBLE_SLOTS = gql`
-    query getOpenSlots($date: DateTime!, $minus: Int!, $plus: Int!) {
-      getSlotLists(date: $date, minusdays: $minus, plusdays: $plus) {
+    query getOpenSlots($minus: Int!, $plus: Int!) {
+      getSlotLists(minusdays: $minus, plusdays: $plus) {
         appointmentStart
         appointmentEnd
         id
@@ -61,7 +61,7 @@ export class AppointmentsService {
   `;
 
   private static GET_WEEK_APPOINTMENTS = gql`
-    query getWeekAppointments($after: String!, $before: String!) {
+    query getWeekAppointments($after: DateTime!, $before: DateTime!) {
       getAppointments(taken: true, after: $after, before: $before) {
         edges {
           node {
@@ -137,7 +137,6 @@ export class AppointmentsService {
       .watchQuery<getOpenSlots, getOpenSlotsVariables>({
         query: AppointmentsService.GET_POSSIBLE_SLOTS,
         variables: {
-          date,
           minus,
           plus
         }
@@ -171,12 +170,10 @@ export class AppointmentsService {
         variables: {
           after: moment()
             .startOf('week')
-            .toDate()
-            .toString(),
+            .toDate(),
           before: moment()
             .endOf('week')
             .toDate()
-            .toString()
         }
       })
       .valueChanges.pipe(

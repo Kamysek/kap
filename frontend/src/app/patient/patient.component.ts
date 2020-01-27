@@ -40,13 +40,13 @@ export class PatientComponent implements OnInit {
   }
 
   async takeAppointment(slot) {
-    const patientComment = await this.dialog
+    const commentPatient = await this.dialog
       .open(CollectCommentDialogComponent, { data: slot })
       .afterClosed()
       .toPromise();
     await this.appointmentsService
       .bookSlot(
-        { input: { patientComment, appointmentList: slot.appointments } },
+        { input: { commentPatient, appointmentList: slot.appointments } },
         this.appointmentConfig.value
       )
       .toPromise();
