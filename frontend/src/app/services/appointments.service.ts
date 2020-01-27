@@ -44,6 +44,9 @@ export class AppointmentsService {
             appointmentEnd
             commentDoctor
             commentPatient
+            patient {
+              username
+            }
           }
         }
       }
@@ -72,6 +75,10 @@ export class AppointmentsService {
             appointmentEnd
             commentDoctor
             commentPatient
+            patient {
+              username
+              email
+            }
           }
         }
       }
@@ -169,10 +176,10 @@ export class AppointmentsService {
         query: AppointmentsService.GET_WEEK_APPOINTMENTS,
         variables: {
           after: moment()
-            .startOf('week')
+            .startOf('isoWeek')
             .toDate(),
           before: moment()
-            .endOf('week')
+            .endOf('isoWeek')
             .toDate()
         }
       })
@@ -295,7 +302,8 @@ export class AppointmentsService {
       mutation: AppointmentsService.TAKE_SLOT_MUTATION,
       variables,
       refetchQueries: [
-        { query: AppointmentsService.GET_POSSIBLE_SLOTS, variables: config }
+        { query: AppointmentsService.GET_POSSIBLE_SLOTS, variables: config },
+        { query: UserService.LOAD_USER_DETAILS }
       ]
     });
   }

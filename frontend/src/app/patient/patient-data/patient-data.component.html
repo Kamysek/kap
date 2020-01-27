@@ -2,14 +2,14 @@
 <p><strong>Username: </strong>{{ patient?.username }}</p>
 <p><strong>Mail: </strong>{{ patient?.email }}</p>
 <p><strong>Joined: </strong>{{ patient?.dateJoined | date }}</p>
-<ng-container *ngIf="patient?.isOverdue">
+<ng-container *ngIf="patient?.checkupOverdue">
   <strong>Messages:</strong>
   <div class="messages" fxLayout="column" fxLayoutGap="1rem">
     <div class="message">
       <p>
         Your last checkup should have been on
-        {{ patient?.isOverdue | date: 'fullDate' }} please book an appointment
-        below
+        {{ patient?.checkupOverdue | date: 'fullDate' }} please book an
+        appointment below
       </p>
     </div>
   </div>

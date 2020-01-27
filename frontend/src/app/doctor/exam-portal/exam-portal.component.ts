@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { AppointmentsService } from '../../services/appointments.service';
+import { map } from 'rxjs/operators';
+import * as moment from 'moment';
 
 @Component({
   selector: 'kap-exam-portal',
@@ -9,6 +11,7 @@ import { AppointmentsService } from '../../services/appointments.service';
 })
 export class ExamPortalComponent implements OnInit {
   appointments$;
+  days$;
 
   constructor(
     private authService: AuthService,
@@ -17,6 +20,13 @@ export class ExamPortalComponent implements OnInit {
 
   ngOnInit() {
     this.appointments$ = this.appointmentsService.getCurrentWeek();
+    this.days$ = this.appointments$.pipe(
+      map(appointments =>
+        Object.keys(appointments).map(dayNum =>
+          Object.assign({}, { dayNum, dayMoment: moment(dayNum, 'YYYDD') })
+        )
+      )
+    );
   }
 
   logout() {

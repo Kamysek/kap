@@ -62,7 +62,7 @@ export class UserService {
     }
   `;
 
-  private static LOAD_USER_DETAILS = gql`
+  public static LOAD_USER_DETAILS = gql`
     query getUserDetails {
       getMe {
         id

@@ -29,7 +29,10 @@
     gdColumn="{{ appointment.day + 1 }}"
     gdRow="{{ appointment.startMinute + 2 }}/{{ appointment.endMinute + 2 }}"
   >
-    {{ appointment.appointmentStart | date: 'shortTime' }} -
-    {{ appointment.appointmentEnd | date: 'shortTime' }}
+    <p>
+      {{ appointment.appointmentStart | date: 'shortTime' }} -
+      {{ appointment.appointmentEnd | date: 'shortTime' }}
+    </p>
+    <p *ngIf="appointment.patient">{{ appointment.patient.username }}</p>
   </div>
 </div>
