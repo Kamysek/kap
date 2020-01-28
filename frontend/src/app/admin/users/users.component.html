@@ -27,6 +27,18 @@
       <td *matCellDef="let element" mat-cell>{{ element.timeslotsNeeded }}</td>
     </ng-container>
 
+    <ng-container matColumnDef="checkup">
+      <th *matHeaderCellDef mat-header-cell>Overdue</th>
+      <td *matCellDef="let element" mat-cell>
+        <ng-container *ngIf="element.checkupOverdue; else notOverdue">
+          Since {{ element.checkupOverdue | date }}
+        </ng-container>
+        <ng-template #notOverdue>
+          Not overdue
+        </ng-template>
+      </td>
+    </ng-container>
+
     <ng-container matColumnDef="actions">
       <th *matHeaderCellDef mat-header-cell></th>
       <td *matCellDef="let element" mat-cell><a mat-button>VIEW</a></td>

@@ -1,1 +1,25 @@
-<p>overdue-patients works!</p>
+<mat-card *ngFor="let patient of patients | async">
+  <mat-card-title>{{ patient.email }}</mat-card-title>
+  <mat-card-subtitle
+    >Overdue since {{ patient.checkupOverdue | date }}</mat-card-subtitle
+  >
+  <mat-card-content>
+    <h2>Actions taken</h2>
+    <mat-list>
+      <mat-list-item *ngFor="let call of patient.calls">
+        <h2 mat-line>On {{ call.date | date }}</h2>
+        <p mat-line>{{ call.comment }}</p>
+      </mat-list-item>
+    </mat-list>
+    <mat-form-field>
+      <input [formControl]="commentControl" matInput placeholder="Comment" />
+    </mat-form-field>
+    <button
+      (click)="recordCall(patient)"
+      [disabled]="commentControl.invalid"
+      mat-button
+    >
+      RECORD ACTION
+    </button>
+  </mat-card-content>
+</mat-card>

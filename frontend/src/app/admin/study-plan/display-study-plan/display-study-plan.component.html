@@ -1,6 +1,26 @@
-<div gdAuto gdColumns="100px auto" gdGap=".5rem">
+<div gdAuto gdColumns="repeat(2, max-content)" gdGap="1rem">
   <ng-container *ngFor="let item of items | async">
-    <span>Month {{ item.order }}</span>
+    <span>After {{ asMonths(item.daysUntil) }} months</span>
     <p>{{ item.name }}</p>
+    <!--    <button mat-button color="warn" (click)="removeItem.emit(item)">REMOVE</button>-->
   </ng-container>
+  <!--<mat-form-field>
+    <input
+      matInput
+      [formControl]="monthControl"
+      type="number"
+      placeholder="Month after Study start"
+    />
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput [formControl]="nameControl" placeholder="Name" />
+  </mat-form-field>
+  <button
+    gdColumn="1/-1"
+    mat-stroked-button
+    (click)="submitItem()"
+    [disabled]="nameControl.invalid || monthControl.invalid"
+  >
+    Add Checkup
+  </button>-->
 </div>
