@@ -7,7 +7,7 @@ from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
-from klinischesanwendungsprojekt.crons import countSeperateAppointments
+from klinischesanwendungsprojekt.crons import countSeperateAppointments,updateUserOverdue
 from .models import Appointment
 from account.models import CustomUser
 from klinischesanwendungsprojekt.mailUtils import VIPreminder, VIPcancel
@@ -114,9 +114,9 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_noshow(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info):
+        if hasGroup(["Admin", "Doctor", 'Labor'], info)  or self.patient == info.context.user:
             return self.noshow
-        return None
+        return False
 
 
 class CreateAppointment(graphene.relay.ClientIDMutation):
@@ -210,11 +210,9 @@ class BookSlots(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
-
+        if hasGroup(["Patient"], info):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
-
                 if appointment_instance.taken:
                     raise GraphQLError('Appointment already taken')
 
@@ -244,11 +242,10 @@ class BookSlots(graphene.relay.ClientIDMutation):
                                       taken=True)
             checkAppointmentFormat(appointment)
             appointment.save()
-
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-
+            updateUserOverdue(info.context.user)
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -282,8 +279,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.appointment_start = input.get('appointment_start')
                         if input.get('appointment_end'):
                             appointment_instance.appointment_end = input.get('appointment_end')
-                        if input.get('patient'):  # Todo: doesn't work
-                            appointment_instance.patient = input.get('patient')
+                        if input.get('patient'):
+                            appointment_instance.patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
@@ -379,7 +376,6 @@ class Query(graphene.ObjectType):
     def resolve_get_slot_lists(self, info, **kwargs):
         if not hasGroup(["Admin", "Doctor", "Labor","Patient"], info):
             raise UnauthorisedAccessError(message='Unauthorized')
-            return None
         qs = Appointment.objects.all().filter(taken=False)
 
         try:
