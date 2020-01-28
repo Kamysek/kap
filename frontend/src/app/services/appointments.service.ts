@@ -44,6 +44,9 @@ export class AppointmentsService {
             appointmentEnd
             commentDoctor
             commentPatient
+            patient {
+              username
+            }
           }
         }
       }
@@ -51,8 +54,8 @@ export class AppointmentsService {
   `;
 
   private static GET_POSSIBLE_SLOTS = gql`
-    query getOpenSlots($date: DateTime!, $minus: Int!, $plus: Int!) {
-      getSlotLists(date: $date, minusdays: $minus, plusdays: $plus) {
+    query getOpenSlots($minus: Int!, $plus: Int!) {
+      getSlotLists(minusdays: $minus, plusdays: $plus) {
         appointmentStart
         appointmentEnd
         id
@@ -61,7 +64,7 @@ export class AppointmentsService {
   `;
 
   private static GET_WEEK_APPOINTMENTS = gql`
-    query getWeekAppointments($after: String!, $before: String!) {
+    query getWeekAppointments($after: DateTime!, $before: DateTime!) {
       getAppointments(taken: true, after: $after, before: $before) {
         edges {
           node {
@@ -72,6 +75,10 @@ export class AppointmentsService {
             appointmentEnd
             commentDoctor
             commentPatient
+            patient {
+              username
+              email
+            }
           }
         }
       }
@@ -137,7 +144,6 @@ export class AppointmentsService {
       .watchQuery<getOpenSlots, getOpenSlotsVariables>({
         query: AppointmentsService.GET_POSSIBLE_SLOTS,
         variables: {
-          date,
           minus,
           plus
         }
@@ -170,13 +176,11 @@ export class AppointmentsService {
         query: AppointmentsService.GET_WEEK_APPOINTMENTS,
         variables: {
           after: moment()
-            .startOf('week')
-            .toDate()
-            .toString(),
+            .startOf('isoWeek')
+            .toDate(),
           before: moment()
-            .endOf('week')
+            .endOf('isoWeek')
             .toDate()
-            .toString()
         }
       })
       .valueChanges.pipe(
@@ -298,7 +302,8 @@ export class AppointmentsService {
       mutation: AppointmentsService.TAKE_SLOT_MUTATION,
       variables,
       refetchQueries: [
-        { query: AppointmentsService.GET_POSSIBLE_SLOTS, variables: config }
+        { query: AppointmentsService.GET_POSSIBLE_SLOTS, variables: config },
+        { query: UserService.LOAD_USER_DETAILS }
       ]
     });
   }

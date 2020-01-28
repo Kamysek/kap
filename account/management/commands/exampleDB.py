@@ -13,15 +13,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         s = Study(name='Standard')
         s.save()
-        c = Checkup(name="First Checkup", daysUntil=-8, study=s)
+        c = Checkup(name="Initial checkup", daysUntil=0, study=s)
         c.save()
-        c = Checkup(name="2nd Checkup", daysUntil=360, study=s)
+        c = Checkup(name="Six month checkup", daysUntil=30*6, study=s)
         c.save()
-        c = Checkup(name="3rd Checkup", daysUntil=420, study=s)
+        c = Checkup(name="One year checkup", daysUntil=30*12, study=s)
         c.save()
-        c = Checkup(name="4th Checkup", daysUntil=480, study=s)
+        c = Checkup(name="1.5 year checkup", daysUntil=30*18, study=s)
         c.save()
-        c = Checkup(name="5th Checkup", daysUntil=540, study=s)
+        c = Checkup(name="2 year checkup", daysUntil=30*24, study=s)
         c.save()
 
         user1 = get_user_model().objects.create_user('kap', password='kap', email="kap@kap.com")
@@ -37,20 +37,6 @@ class Command(BaseCommand):
         user2.save()
         my_group = Group.objects.get(name='Patient')
         my_group.user_set.add(user2)
-
-        Appointment(title="Appointment 1", comment_doctor="Doc", comment_patient="Patient", patient=user1,
-                    appointment_start=str(timezone.now()),
-                    appointment_end=str(timezone.now() + timedelta(minutes=8)), taken=True).save()
-
-        Appointment(title="Appointment 2", comment_doctor="Doc", comment_patient="Patient", patient=user1,
-                    appointment_start=str(timezone.now() + timedelta(minutes=10)),
-                    appointment_end=str(timezone.now() + timedelta(minutes=18)), taken=True).save()
-
-        Appointment(title="Appointment 2.5", comment_doctor="Doc", comment_patient="Patient", patient=user1,appointment_start=str(timezone.now() + timedelta(minutes=50)),appointment_end=str(timezone.now() + timedelta(minutes=18)), taken=True).save()
-
-        Appointment(title="Appointment 3", comment_doctor="Doc",
-                    appointment_start=str(timezone.now() + timedelta(minutes=20)),
-                    appointment_end=str(timezone.now() + timedelta(minutes=27)), taken=False).save()
 
         print("Successfully populated database with example data!")
 

@@ -7,4 +7,36 @@
     <h1 style="margin: 0;">KAP Exam Portal</h1>
     <button (click)="logout()" mat-flat-button>LOGOUT</button>
   </div>
+  <div fxLayout="column" fxLayoutGap="1rem">
+    <ng-container *ngFor="let day of days$ | async">
+      <h3 style="margin: 0;">{{ day.dayMoment | date }}</h3>
+      <mat-card *ngFor="let appointment of (appointments$ | async)[day.dayNum]">
+        <mat-card-title>{{ appointment.patient.username }}</mat-card-title>
+        <mat-card-subtitle
+          >{{ appointment.appointmentStart | date: 'shortTime' }} -
+          {{
+            appointment.appointmentEnd | date: 'shortTime'
+          }}</mat-card-subtitle
+        >
+        <mat-card-content>
+          <p>
+            <strong>Patient comment:</strong><br />{{
+              appointment.commentPatient
+            }}
+          </p>
+          <strong>Doctor Comment</strong> <br />
+          <mat-form-field>
+            <textarea matInput placeholder="Leave a comment"></textarea>
+          </mat-form-field>
+        </mat-card-content>
+        <mat-card-actions>
+          <button color="primary" mat-stroked-button>Save comment</button>
+          <button color="warn" mat-stroked-button>Mark as no-show</button>
+          <button mat-stroked-button>
+            Make new appointment for this patient
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </ng-container>
+  </div>
 </main>
