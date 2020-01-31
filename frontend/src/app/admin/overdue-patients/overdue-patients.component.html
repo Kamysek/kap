@@ -1,5 +1,5 @@
 <mat-card *ngFor="let patient of patients | async">
-  <mat-card-title>{{ patient.email }}</mat-card-title>
+  <mat-card-title>{{ patient.username }} ({{ patient.email }})</mat-card-title>
   <mat-card-subtitle
     >Overdue since {{ patient.checkupOverdue | date }}</mat-card-subtitle
   >
