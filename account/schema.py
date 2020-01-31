@@ -195,7 +195,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('id'))[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'),CustomUser)[1])
                 if user_instance:
                     if input.get('password'):
                         user_instance.set_password(input.get('password'))
@@ -236,7 +236,7 @@ class DeleteUser(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('id'))[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'), CustomUser)[1])
                 if user_instance:
                     user_instance.delete()
                     return DeleteUser(ok=True)
@@ -283,12 +283,12 @@ class UpdateGroup(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), CustomUser)[1])
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
 
             try:
-                group_instance = Group.objects.get(name=from_global_id(input.get('group_str'))[1])
+                group_instance = Group.objects.get(name=valid_id(input.get('group_str'), Group)[1])
             except Group.DoesNotExist:
                 raise GraphQLError('Group does not exist!')
 
@@ -303,21 +303,21 @@ class UserCalled(graphene.relay.ClientIDMutation):
     user = graphene.Field(UserType)
 
     class Input:
-        user_id = graphene.ID()
-        comment = graphene.String()
+        user_id = graphene.ID(required=True)
+        comment = graphene.String(required=True)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor", "Labor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
-                comment = input.get('comment')
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), CustomUser)[1])
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
-            Call(date=timezone.now(), comment=comment, user=user_instance).save()
+            if input.get('comment'):
+                Call(date=timezone.now(), comment=input.get('comment'), user=user_instance).save()
             return UserCalled(user=user_instance)
         else:
-            raise UnauthorisedAccessError(message='No permissions to update a group!')
+            raise UnauthorisedAccessError(message='No permissions to update user called field!')
 
 
 class StudyFilter(django_filters.FilterSet):
@@ -386,7 +386,7 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
         if has_group(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("id"):
 
-                study_instance = Study.objects.get(pk=valid_id(input.get('id'))[1])
+                study_instance = Study.objects.get(pk=valid_id(input.get('id'), Study)[1])
 
                 if study_instance:
                     study_instance.name = input.get("name")
@@ -408,7 +408,7 @@ class DeleteStudy(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             if input.get("id"):
-                study_instance = Study.objects.get(pk=valid_id(input.get('id')))[1]
+                study_instance = Study.objects.get(pk=valid_id(input.get('id'), Study)[1])
                 if study_instance:
                     study_instance.delete()
                     return DeleteStudy(ok=True)
@@ -436,20 +436,19 @@ class CheckupType(DjangoObjectType):
     def resolve_id(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info):
             return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
+        return None
 
     @login_required
     def resolve_name(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info):
             return self.name
-        return ""
+        return None
 
     @login_required
     def resolve_daysUntil(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info):
             return self.daysUntil
-        return -1
+        return None
 
     @login_required
     def resolve_study(self, info):
@@ -470,14 +469,14 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("study_id") and input.get("daysUntil"):
-                study_instance = Study.objects.get(pk=from_global_id(input.get('study_id'))[1])
+                study_instance = Study.objects.get(pk=valid_id(input.get('study_id'), Study)[1])
                 if study_instance:
                     checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"),
                                                study=study_instance)
                     checkup_instance.save()
                     return CreateCheckup(checkup=checkup_instance)
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to create a checkup!')
 
 
 class UpdateCheckup(graphene.relay.ClientIDMutation):
@@ -491,7 +490,7 @@ class UpdateCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            checkup_instance = Checkup.objects.get(pk=from_global_id(input.get('id'))[1])
+            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), Checkup)[1])
             if checkup_instance:
                 if input.get("daysUntil"):
                     checkup_instance.daysUntil = input.get("daysUntil")
@@ -500,7 +499,7 @@ class UpdateCheckup(graphene.relay.ClientIDMutation):
                 checkup_instance.save()
                 return UpdateCheckup(checkup=checkup_instance)
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to update checkup!')
 
 
 class DeleteCheckup(graphene.relay.ClientIDMutation):
@@ -512,12 +511,12 @@ class DeleteCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            checkup_instance = Checkup.objects.get(pk=from_global_id(input.get('id'))[1])
+            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), Checkup)[1])
             if checkup_instance:
                 checkup_instance.delete()
                 return DeleteCheckup(ok=True)
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to delete checkup!')
 
 
 class Query(graphene.AbstractType):
@@ -539,9 +538,8 @@ class Query(graphene.AbstractType):
     @login_required
     def resolve_get_overdue_patients(self, info, **kwargs):
         if has_group(["Admin", "Doctor", "Labor"], info):
-            return CustomUser.objects.filter(groups__name="Patient", ).filter(checkup_overdue__isnull=False)
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+            return CustomUser.objects.filter(groups__name="Patient", checkup_overdue__isnull=False)
+        return None
 
     @login_required
     def resolve_get_user_group(self, info, **kwargs):
@@ -554,15 +552,13 @@ class Query(graphene.AbstractType):
                 return "Labor"
             if info.context.user.groups.filter(name="Patient").exists():
                 return "Patient"
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+        return None
 
     @login_required
     def resolve_get_me(self, info, **kwargs):
         if has_group(["Admin", "Doctor", "Labor", "Patient"], info):
             return info.context.user
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+        return None
 
     @login_required
     def resolve_get_checkup_date(self, info, **kwargs):
@@ -577,10 +573,8 @@ class Query(graphene.AbstractType):
                 date = info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil)
             except:
                 raise GraphQLError(message="User does not have study participation!")
-
             return date
-        else:
-            raise UnauthorisedAccessError(message='No permissions to view the user group!')
+        return None
 
 
 class Mutation(graphene.ObjectType):
