@@ -7,3 +7,10 @@ def valid_id(global_id):
         return from_global_id(global_id)
     except:
         raise GraphQLError("Invalid ID")
+
+
+def has_group(groups, info):
+    for role in groups:
+        if info.context.user.groups.filter(name=role).exists():
+            return True
+    return False
