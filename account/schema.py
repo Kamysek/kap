@@ -14,7 +14,7 @@ from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
 from klinischesanwendungsprojekt.crons import countSeperateAppointments
 
-from Utils.HelperMethods import validId
+from utils.HelperMethods import validId
 
 def hasGroup(groups, info):
     for role in groups:
@@ -392,7 +392,7 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
         if hasGroup(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("id"):
 
-                study_instance = Study.objects.get(pk=validID(input.get('id'))[1])
+                study_instance = Study.objects.get(pk=validId(input.get('id'))[1])
 
                 if study_instance:
                     study_instance.name = input.get("name")
