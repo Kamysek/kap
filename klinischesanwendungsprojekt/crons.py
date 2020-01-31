@@ -46,6 +46,26 @@ def checkUserOverdue(user):
     user.save()
 
 
+def updateUserOverdue(user):#Updates UserOverdue fields without triggering email notification bc. of faster response
+    appointments = Appointment.objects.filter(patient=user).order_by('-appointment_start')
+    days_since_joined = (timezone.now() - user.date_joined).days
+    checkups = user.study_participation.checkup_set.all().order_by("daysUntil")
+    appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).order_by('appointment_start')# get number of  attended appointments
+    appointmentCount= countSeperateAppointments(appointmentsAttended)
+    if appointmentCount == checkups.count() or Appointment.objects.all().filter(patient=user).filter(appointment_start__gte=timezone.now()).count() > 0:# Finished study or already has upcoming appointment
+        user.checkup_overdue = None;
+        user.overdue_notified = timezone.now()
+        user.save()
+        return
+    nextCheckup = checkups[appointmentCount]
+    if (nextCheckup.daysUntil < days_since_joined):
+        user.checkup_overdue = user.date_joined + timedelta(days=nextCheckup.daysUntil)
+    else:
+        user.checkup_overdue = None;
+        user.overdue_notified = timezone.now()
+    user.save()
+
+
 def checkAllUsersOverdue():
     patients = User.objects.filter(groups__name="Patient",)
     for p in patients:

@@ -323,7 +323,7 @@ class UserCalled(graphene.relay.ClientIDMutation):
 class StudyFilter(django_filters.FilterSet):
     class Meta:
         model = Study
-        fields = ['name']
+        fields = ['name','id']
 
 
 class StudyType(DjangoObjectType):
@@ -338,7 +338,6 @@ class StudyType(DjangoObjectType):
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')
-            return None
 
     @login_required
     def resolve_name(self, info):
@@ -402,6 +401,120 @@ class CheckupType(DjangoObjectType):
         if hasGroup(["Admin", "Doctor",  "Labor"], info):
             return self.study
         return None
+
+class CreateStudy(graphene.relay.ClientIDMutation):
+    class Input:
+        name = graphene.String(required=True)
+
+    study = graphene.Field(StudyType)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            if not input.get("name") == None:
+                study_instance = Study(name=input.get("name"))
+                study_instance.save()
+                return CreateStudy(study=study_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+class UpdateStudy(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+        name = graphene.String(required=True)
+
+    study = graphene.Field(StudyType)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            if not input.get("name") == None:
+                study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
+                if study_instance:
+                    study_instance.name = input.get("name")
+                    study_instance.save()
+                    return UpdateStudy(study=study_instance)
+                else:
+                    raise GraphQLError("No study with this ID found")
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+class DeleteStudy(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
+            if study_instance:
+                study_instance.delete()
+                return DeleteStudy(ok=True)
+            else:
+                raise GraphQLError("No study with this ID found")
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+class CreateCheckup(graphene.relay.ClientIDMutation):
+    class Input:
+        name = graphene.String(required=True)
+        study_id = graphene.ID(required=True)
+        daysUntil = graphene.Int(required=True)
+
+    checkup = graphene.Field(CheckupType)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            if input.get("name") and input.get("study_id") and input.get("daysUntil"):
+                study_instance = Study.objects.get(pk=from_global_id(input.get('study_id'))[1])
+                if study_instance:
+                    checkup_instance = Checkup(name=input.get("name"),daysUntil=input.get("daysUntil"),study=study_instance)
+                    checkup_instance.save()
+                    return CreateCheckup(checkup=checkup_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+class UpdateCheckup(graphene.relay.ClientIDMutation):
+    class Input:
+        name = graphene.String()
+        id = graphene.ID(required=True)
+        daysUntil = graphene.Int()
+
+    checkup = graphene.Field(CheckupType)
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            checkup_instance = Checkup.objects.get(pk=from_global_id(input.get('id'))[1])
+            if checkup_instance:
+                if input.get("daysUntil"):
+                    checkup_instance.daysUntil = input.get("daysUntil")
+                if input.get("name"):
+                    checkup_instance.name = input.get("name")
+                checkup_instance.save()
+                return UpdateCheckup(checkup=checkup_instance)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
+class DeleteCheckup(graphene.relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+
+    @login_required
+    def mutate_and_get_payload(self, info, **input):
+        if hasGroup(["Admin", "Doctor"], info):
+            checkup_instance = Checkup.objects.get(pk=from_global_id(input.get('id'))[1])
+            if checkup_instance:
+                checkup_instance.delete()
+                return DeleteCheckup(ok=True)
+        else:
+            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
 
 
 class Query(graphene.AbstractType):
@@ -478,3 +591,11 @@ class Mutation(graphene.ObjectType):
     user_called = UserCalled.Field()
 
     delete_user = DeleteUser.Field()
+
+    create_study = CreateStudy.Field()
+    update_study = UpdateStudy.Field()
+    delete_study = DeleteStudy.Field()
+
+    create_checkup = CreateCheckup.Field()
+    update_checkup = UpdateCheckup.Field()
+    delete_checkup = DeleteCheckup.Field()

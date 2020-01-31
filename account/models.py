@@ -17,7 +17,7 @@ class Study(models.Model):
 class Checkup(models.Model):
     name = models.CharField(max_length=150,blank=False,null=True)
     daysUntil = models.IntegerField(null=True,blank=False)
-    study = models.ForeignKey(Study, on_delete=models.CASCADE,null=True)
+    study = models.ForeignKey(Study, on_delete=models.CASCADE,null=False)
 
     def __str__(self):
         return self.name
