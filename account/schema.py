@@ -14,6 +14,7 @@ from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
 from klinischesanwendungsprojekt.crons import countSeperateAppointments
 
+from Utils.HelperMethods import validId
 
 def hasGroup(groups, info):
     for role in groups:
@@ -76,8 +77,8 @@ class UserType(DjangoObjectType):
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
         fields = (
-        'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified',
-        'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
+            'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified',
+            'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
 
     @login_required
     def resolve_id(self, info):
@@ -341,70 +342,24 @@ class StudyType(DjangoObjectType):
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
+        return None
 
     @login_required
     def resolve_name(self, info):
         if hasGroup(["Patient", "Admin", "Doctor", "Labor"], info):
             return self.name
-        return ""
+        return None
 
     @login_required
     def resolve_customuser_set(self, info):
         if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.customuser_set
-        return []
+        return None
 
     @login_required
     def resolve_checkup_set(self, info):
         if hasGroup(["Patient", "Admin", "Doctor", "Labor"], info):
             return self.checkup_set
-        return []
-
-
-class CheckupFilter(django_filters.FilterSet):
-    class Meta:
-        model = Checkup
-        fields = ['name', 'daysUntil', 'study']
-
-
-class CheckupType(DjangoObjectType):
-    class Meta:
-        model = Checkup
-        interfaces = (graphene.relay.Node,)
-        fields = ('name', 'daysUntil', 'study')
-
-    @login_required
-    def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
-
-    @login_required
-    def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return self.name
-        return None
-
-    @login_required
-    def resolve_order(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return self.order
-        return None
-
-    @login_required
-    def resolve_interval(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return self.interval
-        return None
-
-    @login_required
-    def resolve_study(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return self.study
         return None
 
 
@@ -436,7 +391,9 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("id"):
-                study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
+
+                study_instance = Study.objects.get(pk=validID(input.get('id'))[1])
+
                 if study_instance:
                     study_instance.name = input.get("name")
                     study_instance.save()
@@ -469,6 +426,44 @@ class DeleteStudy(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to delete study!')
 
 
+class CheckupFilter(django_filters.FilterSet):
+    class Meta:
+        model = Checkup
+        fields = ['name', 'daysUntil', 'study']
+
+
+class CheckupType(DjangoObjectType):
+    class Meta:
+        model = Checkup
+        interfaces = (graphene.relay.Node,)
+        fields = ('name', 'daysUntil', 'study')
+
+    @login_required
+    def resolve_id(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return self.id
+        else:
+            raise UnauthorisedAccessError(message='Unauthorized')
+
+    @login_required
+    def resolve_name(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return self.name
+        return ""
+
+    @login_required
+    def resolve_daysUntil(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return self.daysUntil
+        return -1
+
+    @login_required
+    def resolve_study(self, info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
+            return self.study
+        return None
+
+
 class CreateCheckup(graphene.relay.ClientIDMutation):
     class Input:
         name = graphene.String(required=True)
@@ -480,7 +475,7 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if input.get("name") and input.get("study_id") and input.get("daysUntil"):
+            if input.get("name") and len(input.get("name")) != 0 and input.get("study_id") and input.get("daysUntil"):
                 study_instance = Study.objects.get(pk=from_global_id(input.get('study_id'))[1])
                 if study_instance:
                     checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"),
