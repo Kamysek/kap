@@ -8,7 +8,7 @@ from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from account.models import CustomUser, Checkup, Study,Call
+from account.models import CustomUser, Checkup, Study, Call
 from graphql_jwt.decorators import login_required
 
 from appointments.models import Appointment
@@ -30,13 +30,14 @@ class UnauthorisedAccessError(GraphQLError):
 class CallFilter(django_filters.FilterSet):
     class Meta:
         model = Call
-        fields = ['date','comment','user']
+        fields = ['date', 'comment', 'user']
+
 
 class CallType(DjangoObjectType):
     class Meta:
         model = Call
         interfaces = (graphene.relay.Node,)
-        fields = ('date','comment','user')
+        fields = ('date', 'comment', 'user')
 
     @login_required
     def resolve_date(self, info):
@@ -66,14 +67,17 @@ class CallType(DjangoObjectType):
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed','overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation']
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed',
+                  'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation']
 
 
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
-        fields = ('id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
+        fields = (
+        'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified',
+        'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
 
     @login_required
     def resolve_id(self, info):
@@ -97,25 +101,25 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_email(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.email
         return None
 
     @login_required
     def resolve_email_notification(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.email_notification
         return None
 
     @login_required
     def resolve_is_staff(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.is_staff
         return None
 
     @login_required
     def resolve_is_active(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.is_active
         return None
 
@@ -133,16 +137,15 @@ class UserType(DjangoObjectType):
 
     @login_required
     def resolve_called(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.called
         return None
 
     @login_required
     def resolve_call_set(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info) or self == info.context.user:
+        if hasGroup(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.call_set
         return []
-
 
 
 class CreateUser(graphene.relay.ClientIDMutation):
@@ -307,23 +310,25 @@ class UserCalled(graphene.relay.ClientIDMutation):
     class Input:
         user_id = graphene.ID()
         comment = graphene.String()
+
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin","Doctor","Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             try:
                 user_instance = CustomUser.objects.get(pk=from_global_id(input.get('user_id'))[1])
                 comment = input.get('comment')
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
-            Call(date=timezone.now(), comment=comment,user=user_instance).save()
+            Call(date=timezone.now(), comment=comment, user=user_instance).save()
             return UserCalled(user=user_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to update a group!')
 
+
 class StudyFilter(django_filters.FilterSet):
     class Meta:
         model = Study
-        fields = ['name','id']
+        fields = ['id', 'name']
 
 
 class StudyType(DjangoObjectType):
@@ -334,26 +339,26 @@ class StudyType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')
 
     @login_required
     def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Patient", "Admin", "Doctor", "Labor"], info):
             return self.name
-        return None
+        return ""
 
     @login_required
     def resolve_customuser_set(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.customuser_set
         return []
 
     @login_required
     def resolve_checkup_set(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Patient", "Admin", "Doctor", "Labor"], info):
             return self.checkup_set
         return []
 
@@ -372,7 +377,7 @@ class CheckupType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.id
         else:
             raise UnauthorisedAccessError(message='Unauthorized')
@@ -380,27 +385,28 @@ class CheckupType(DjangoObjectType):
 
     @login_required
     def resolve_name(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.name
         return None
 
     @login_required
     def resolve_order(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.order
         return None
 
     @login_required
     def resolve_interval(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.interval
         return None
 
     @login_required
     def resolve_study(self, info):
-        if hasGroup(["Admin", "Doctor",  "Labor"], info):
+        if hasGroup(["Admin", "Doctor", "Labor"], info):
             return self.study
         return None
+
 
 class CreateStudy(graphene.relay.ClientIDMutation):
     class Input:
@@ -411,12 +417,13 @@ class CreateStudy(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if not input.get("name") == None:
+            if input.get("name") and len(input.get("name")) != 0:
                 study_instance = Study(name=input.get("name"))
                 study_instance.save()
                 return CreateStudy(study=study_instance)
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to create a study!')
+
 
 class UpdateStudy(graphene.relay.ClientIDMutation):
     class Input:
@@ -428,7 +435,7 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if not input.get("name") == None:
+            if input.get("name") and len(input.get("name")) != 0 and input.get("id"):
                 study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
                 if study_instance:
                     study_instance.name = input.get("name")
@@ -437,7 +444,8 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
                 else:
                     raise GraphQLError("No study with this ID found")
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to update study!')
+
 
 class DeleteStudy(graphene.relay.ClientIDMutation):
     class Input:
@@ -448,14 +456,18 @@ class DeleteStudy(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
-            if study_instance:
-                study_instance.delete()
-                return DeleteStudy(ok=True)
+            if input.get("id"):
+                study_instance = Study.objects.get(pk=from_global_id(input.get('id'))[1])
+                if study_instance:
+                    study_instance.delete()
+                    return DeleteStudy(ok=True)
+                else:
+                    raise GraphQLError("No study with this ID found")
             else:
                 raise GraphQLError("No study with this ID found")
         else:
-            raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+            raise UnauthorisedAccessError(message='No permissions to delete study!')
+
 
 class CreateCheckup(graphene.relay.ClientIDMutation):
     class Input:
@@ -471,11 +483,13 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
             if input.get("name") and input.get("study_id") and input.get("daysUntil"):
                 study_instance = Study.objects.get(pk=from_global_id(input.get('study_id'))[1])
                 if study_instance:
-                    checkup_instance = Checkup(name=input.get("name"),daysUntil=input.get("daysUntil"),study=study_instance)
+                    checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"),
+                                               study=study_instance)
                     checkup_instance.save()
                     return CreateCheckup(checkup=checkup_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
+
 
 class UpdateCheckup(graphene.relay.ClientIDMutation):
     class Input:
@@ -499,6 +513,7 @@ class UpdateCheckup(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
+
 class DeleteCheckup(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
@@ -514,7 +529,6 @@ class DeleteCheckup(graphene.relay.ClientIDMutation):
                 return DeleteCheckup(ok=True)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
-
 
 
 class Query(graphene.AbstractType):
@@ -536,14 +550,13 @@ class Query(graphene.AbstractType):
     @login_required
     def resolve_get_overdue_patients(self, info, **kwargs):
         if hasGroup(["Admin", "Doctor", "Labor"], info):
-            return CustomUser.objects.filter(groups__name="Patient",).filter(checkup_overdue__isnull=False)
+            return CustomUser.objects.filter(groups__name="Patient", ).filter(checkup_overdue__isnull=False)
         else:
             raise UnauthorisedAccessError(message='No permissions to view the user group!')
 
-
     @login_required
     def resolve_get_user_group(self, info, **kwargs):
-        if hasGroup(["Admin", "Doctor",  "Labor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
             if info.context.user.groups.filter(name="Admin").exists():
                 return "Admin"
             if info.context.user.groups.filter(name="Doctor").exists():
@@ -557,14 +570,14 @@ class Query(graphene.AbstractType):
 
     @login_required
     def resolve_get_me(self, info, **kwargs):
-        if hasGroup(["Admin", "Doctor",  "Labor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
             return info.context.user
         else:
             raise UnauthorisedAccessError(message='No permissions to view the user group!')
 
     @login_required
     def resolve_get_checkup_date(self, info, **kwargs):
-        if hasGroup(["Admin", "Doctor",  "Labor", "Patient"], info):
+        if hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
             try:
                 checkups = info.context.user.study_participation.checkup_set.all().order_by("daysUntil")
                 appointmentsAttended = Appointment.objects.all().filter(patient=info.context.user).filter(

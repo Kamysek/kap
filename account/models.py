@@ -8,19 +8,20 @@ from account.managers import CustomUserManager
 
 
 class Study(models.Model):
-    name = models.CharField(max_length=200, blank=False, null=True)
+    name = models.CharField(max_length=200, blank=False, null=False)
 
     def __str__(self):
         return self.name
 
 
 class Checkup(models.Model):
-    name = models.CharField(max_length=150,blank=False,null=True)
-    daysUntil = models.IntegerField(null=True,blank=False)
-    study = models.ForeignKey(Study, on_delete=models.CASCADE,null=False)
+    name = models.CharField(max_length=150, blank=False, null=False)
+    daysUntil = models.IntegerField(blank=False, null=False,)
+    study = models.ForeignKey(Study, on_delete=models.CASCADE, null=False)
 
     def __str__(self):
         return self.name
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(unique=True, max_length=150, null=True, blank=False)
