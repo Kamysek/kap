@@ -96,6 +96,10 @@ export class AppointmentsService {
           appointmentEnd
           commentDoctor
           commentPatient
+          patient {
+            username
+            email
+          }
         }
       }
     }
