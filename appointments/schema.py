@@ -11,6 +11,7 @@ from utils import HelperMethods
 from utils.HelperMethods import countSeperateAppointments, updateUserOverdue
 from .models import Appointment
 from account.models import CustomUser
+from account.schema import UserType
 from utils.mailUtils import VIPreminder, deleteNotify
 import datetime
 from django.utils.timezone import make_aware
@@ -201,8 +202,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Patient"], info):
             for app in input.get('appointmentList'):
-                HelperMethods.valid_id(app)
-                appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
+                appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(app,AppointmentType))
                 if appointment_instance.taken:
                     raise GraphQLError('Appointment already taken')
 
@@ -257,8 +257,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            HelperMethods.valid_id(input.get('id'))
-            appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
             if appointment_instance:
                 if hasGroup(["Admin", "Doctor"], info):
                     if input.get('title') and len(input.get('title') != 0):
@@ -270,8 +269,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     if input.get('appointment_end'):
                         appointment_instance.appointment_end = input.get('appointment_end')
                     if input.get('patient'):
-                        HelperMethods.valid_id(input.get('patient'))
-                        appointment_instance.patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
+                        appointment_instance.patient = CustomUser.objects.get(pk=HelperMethods.valid_id(input.get('patient'),UserType))
                         appointment_instance.taken = True
                         if appointment_instance.patient.email_notification:
                             VIPreminder(appointment_instance.patient)
@@ -310,8 +308,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            HelperMethods.valid_id(input.get('id'))
-            appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
             if appointment_instance:
                 if hasGroup(["Admin", "Doctor"], info):
                     if input.get('remove_patient'):
