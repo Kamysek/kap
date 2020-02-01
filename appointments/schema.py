@@ -217,7 +217,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 if app_end > max_date:
                     max_date = app_end
 
-            user_instance = None
+            user_instance = info.context.user
             if input.get('user_id'):
                 user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
 
@@ -225,7 +225,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
                                       comment_patient=input.get('comment_patient'),
-                                      patient=user_instance if user_instance else info.context.user,
+                                      patient=user_instance,
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
@@ -234,7 +234,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            updateUserOverdue(info.context.user)
+            updateUserOverdue(user_instance)
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
