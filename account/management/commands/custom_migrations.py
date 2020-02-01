@@ -8,7 +8,6 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.models import Session
 from django_cron.models import CronJobLog
-from survey.models import Survey, Question, Choice, Answer, TextAnswer, ChoiceAnswer, NumberAnswer
 
 GROUPS_PERMISSIONS = {
     'Admin': {
@@ -25,14 +24,6 @@ GROUPS_PERMISSIONS = {
 
         Appointment: ['add', 'change', 'delete', 'view'],
 
-        Survey: ['add', 'change', 'delete', 'view'],
-        Question: ['add', 'change', 'delete', 'view'],
-        Choice: ['add', 'change', 'delete', 'view'],
-        Answer: ['add', 'change', 'delete', 'view'],
-        TextAnswer: ['add', 'change', 'delete', 'view'],
-        ChoiceAnswer: ['add', 'change', 'delete', 'view'],
-        NumberAnswer: ['add', 'change', 'delete', 'view'],
-
     },
     'Doctor': {
         CustomUser: ['add', 'change', 'delete', 'view'],
@@ -42,13 +33,6 @@ GROUPS_PERMISSIONS = {
 
         Appointment: ['add', 'change', 'delete', 'view'],
 
-        Survey: ['add', 'change', 'delete', 'view'],
-        Question: ['add', 'change', 'delete', 'view'],
-        Choice: ['add', 'change', 'delete', 'view'],
-        Answer: ['add', 'change', 'delete', 'view'],
-        TextAnswer: ['add', 'change', 'delete', 'view'],
-        ChoiceAnswer: ['add', 'change', 'delete', 'view'],
-        NumberAnswer: ['add', 'change', 'delete', 'view'],
     },
     'Labor': {
         CustomUser: ['view'],
@@ -57,27 +41,11 @@ GROUPS_PERMISSIONS = {
         CronJobLog: ['view'],
 
         Appointment: ['view'],
-
-        Survey: ['view'],
-        Question: ['view'],
-        Choice: ['view'],
-        Answer: ['view'],
-        TextAnswer: ['view'],
-        ChoiceAnswer: ['view'],
-        NumberAnswer: ['view'],
     },
     'Patient': {
         Checkup: ['view'],
         Study: ['view'],
         CronJobLog: ['view'],
-
-        Survey: ['view'],
-        Question: ['view'],
-        Choice: ['view'],
-        Answer: ['add', 'change', 'delete'],
-        TextAnswer: ['add', 'change', 'delete'],
-        ChoiceAnswer: ['add', 'change', 'delete'],
-        NumberAnswer: ['add', 'change', 'delete'],
     },
 }
 
