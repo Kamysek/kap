@@ -3,7 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { AppointmentsService } from '../../services/appointments.service';
 import { first, map } from 'rxjs/operators';
 import * as moment from 'moment';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { MakeAppointmentDialogComponent } from './make-appointment-dialog/make-appointment-dialog.component';
 
 @Component({
@@ -18,6 +18,7 @@ export class ExamPortalComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private dialog: MatDialog,
+    private snackBar: MatSnackBar,
     private appointmentsService: AppointmentsService
   ) {}
 
@@ -32,7 +33,13 @@ export class ExamPortalComponent implements OnInit {
     );
   }
 
-  reportNoShow(id) {}
+  async saveComment(id) {
+    await this.appointmentsService.updateAppointment({ id });
+  }
+
+  async reportNoShow(id) {
+    await this.appointmentsService.reportNoShow(id).toPromise();
+  }
 
   async makeNewAppointment(user) {
     const slots = await this.appointmentsService
@@ -47,6 +54,21 @@ export class ExamPortalComponent implements OnInit {
       })
       .afterClosed()
       .toPromise();
+    if (choice) {
+      const result = await this.appointmentsService
+        .bookSlot(
+          {
+            input: { appointmentList: choice.appointments, userId: user.id }
+          },
+          { minus: 7, plus: 7, user: user.id }
+        )
+        .toPromise();
+      if (result) {
+        this.snackBar.open('Appointment booked successfully!', null, {
+          duration: 3000
+        });
+      }
+    }
   }
 
   logout() {

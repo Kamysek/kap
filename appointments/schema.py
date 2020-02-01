@@ -195,7 +195,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if has_group(["Patient"], info):
+        if has_group(["Patient", "Doctor", "Admin"], info):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(app, AppointmentType)[1])
                 if appointment_instance.taken:

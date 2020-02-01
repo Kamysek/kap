@@ -52,6 +52,9 @@ class Command(BaseCommand):
         user5.save()
         my_group = Group.objects.get(name='Patient')
         my_group.user_set.add(user2)
+        my_group.user_set.add(user3)
+        my_group.user_set.add(user4)
+        my_group.user_set.add(user5)
 
         Appointment(title="Appointment 1", comment_doctor="Doc", comment_patient="Patient", patient=user4,
                     appointment_start=str(timezone.now().replace(hour=8, minute=0) - timedelta(days=29)),

@@ -18,6 +18,7 @@ import {
   MatListModule,
   MatSelectModule,
   MatSlideToggleModule,
+  MatSnackBarModule,
   MatTableModule,
   ShowOnDirtyErrorStateMatcher
 } from '@angular/material';
@@ -38,6 +39,7 @@ const exportedModules = [
   MatMomentDateModule,
   MatSelectModule,
   MatSlideToggleModule,
+  MatSnackBarModule,
   MatTableModule,
   ReactiveFormsModule
 ];

@@ -80,6 +80,7 @@ export class AppointmentsService {
             appointmentEnd
             commentDoctor
             commentPatient
+            noshow
             patient {
               id
               username
@@ -320,7 +321,7 @@ export class AppointmentsService {
     });
   }
 
-  public reportNoShow(id) {
-    this.updateAppointment({ id });
+  public reportNoShow(id: string) {
+    return this.updateAppointment({ id, noshow: true });
   }
 }

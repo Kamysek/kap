@@ -35,7 +35,14 @@
         </mat-card-content>
         <mat-card-actions>
           <button color="primary" mat-stroked-button>Save comment</button>
-          <button color="warn" mat-stroked-button>Mark as no-show</button>
+          <button
+            color="warn"
+            mat-stroked-button
+            [disabled]="appointment.noshow"
+            (click)="reportNoShow(appointment.id)"
+          >
+            Mark as no-show
+          </button>
           <button
             (click)="makeNewAppointment(appointment.patient)"
             mat-stroked-button
