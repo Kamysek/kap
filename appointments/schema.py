@@ -6,11 +6,12 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
+from utils import HelperMethods
 
 from klinischesanwendungsprojekt.crons import countSeperateAppointments,updateUserOverdue
 from .models import Appointment
 from account.models import CustomUser
-from klinischesanwendungsprojekt.mailUtils import VIPreminder, VIPcancel
+from utils.mailUtils import VIPreminder, deleteNotify
 import datetime
 from django.utils.timezone import make_aware
 
@@ -62,7 +63,7 @@ class AppointmentType(DjangoObjectType):
     def resolve_id(self, info):
         if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
-        return -1
+        return None
 
     @login_required
     def resolve_title(self, info):
@@ -96,13 +97,13 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_appointment_start(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_start
         return None
 
     @login_required
     def resolve_appointment_end(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_end
         return None
 
@@ -127,31 +128,26 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
         comment_doctor = graphene.String()
         appointment_start = graphene.DateTime(required=True)
         appointment_end = graphene.DateTime(required=True)
-        patient = graphene.ID()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor"], info):
-            if input.get('patient'):
-                try:
-                    patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
-                    if patient.email_notification:
-                        VIPreminder(patient)
-                except Appointment.DoesNotExist:
-                    raise GraphQLError('Patient does not exist!')
-            appointment_instance = Appointment(title=input.get('title'),
-                                               comment_doctor="" if input.get('comment_doctor') is None else input.get(
-                                                   'comment_doctor'),
-                                               patient=None if input.get('patient') is None else patient,
-                                               appointment_start=input.get('appointment_start'),
-                                               appointment_end=input.get('appointment_end'),
-                                               taken=False)
-            checkAppointmentFormat(appointment_instance)
-            if not isAppointmentFree(appointment_instance):
-                raise GraphQLError("Selected time slot overlaps with existing appointment")
+            if len(input.get('title')) != 0:
+                appointment_instance = Appointment(title=input.get('title'),
+                                                   comment_doctor="" if input.get('comment_doctor') is None else input.get(
+                                                       'comment_doctor'),
+                                                   patient=None,
+                                                   appointment_start=input.get('appointment_start'),
+                                                   appointment_end=input.get('appointment_end'),
+                                                   taken=False)
+                checkAppointmentFormat(appointment_instance)
+                if not isAppointmentFree(appointment_instance):
+                    raise GraphQLError("Selected time slot overlaps with existing appointment")
 
-            appointment_instance.save()
-            return CreateAppointment(appointment=appointment_instance)
+                appointment_instance.save()
+                return CreateAppointment(appointment=appointment_instance)
+            else:
+                raise GraphQLError(message='Invalid Title')
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
@@ -175,22 +171,15 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         if hasGroup(["Admin", "Doctor"], info):
             failed_appointments = []
             for app in input.get('appointments'):
-                if app.get('patient'):
-                    try:
-                        patient = CustomUser.objects.get(pk=from_global_id(app.get('patient'))[1])
-                        if patient.email_notification:
-                            VIPreminder(patient)
-                    except Appointment.DoesNotExist:
-                        raise GraphQLError('Patient does not exist!')
                 appointment_instance = Appointment(title=app.get('title'),
                                                    comment_doctor="" if app.get('comment_doctor') is None else app.get(
                                                        'comment_doctor'),
-                                                   patient=None if app.get('patient') is None else patient,
+                                                   patient=None,
                                                    appointment_start=app.get('appointment_start'),
                                                    appointment_end=app.get('appointment_end'),
                                                    taken=False)
                 checkAppointmentFormat(appointment_instance)
-                if not isAppointmentFree(appointment_instance):
+                if not isAppointmentFree(appointment_instance) or len(app.get('title') == 0):
                     failed_appointments.append(appointment_instance)
                     continue
 
@@ -212,6 +201,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Patient"], info):
             for app in input.get('appointmentList'):
+                HelperMethods.valid_id(app)
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 if appointment_instance.taken:
                     raise GraphQLError('Appointment already taken')
@@ -267,49 +257,46 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            try:
-                appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
-                if appointment_instance:
-                    if hasGroup(["Admin", "Doctor"], info):
-                        if input.get('title'):
-                            appointment_instance.title = input.get('title')
-                        if input.get('comment_doctor'):
-                            appointment_instance.comment_doctor = input.get('comment_doctor')
-                        if input.get('appointment_start'):
-                            appointment_instance.appointment_start = input.get('appointment_start')
-                        if input.get('appointment_end'):
-                            appointment_instance.appointment_end = input.get('appointment_end')
-                        if input.get('patient'):
-                            appointment_instance.patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
-                            appointment_instance.taken = True
-                            if appointment_instance.patient.email_notification:
-                                VIPreminder(appointment_instance.patient)
-                        if input.get('taken'):
-                            appointment_instance.taken = input.get('taken')
-                            if not input.get('taken'):
-                                appointment_instance.patient = None
-                            if appointment_instance.patient.email_notification:
-                                VIPreminder(appointment_instance.patient)
-                        checkAppointmentFormat(appointment_instance)
-                        if not isAppointmentFree(appointment_instance):
-                            raise GraphQLError("Selected time slot overlaps with existing appointment")
-                        appointment_instance.save()
-                        return CreateAppointment(appointment=appointment_instance)
-                    elif hasGroup(["Patient"], info) and (
-                            appointment_instance.taken == False or appointment_instance.patient == info.context.user):
-                        appointment_instance.patient = info.context.user
-                        appointment_instance.comment_patient = "" if input.get(
-                            'comment_patient') is None else input.get('comment_patient'),
+            HelperMethods.valid_id(input.get('id'))
+            appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
+            if appointment_instance:
+                if hasGroup(["Admin", "Doctor"], info):
+                    if input.get('title') and len(input.get('title') != 0):
+                        appointment_instance.title = input.get('title')
+                    if input.get('comment_doctor'):
+                        appointment_instance.comment_doctor = input.get('comment_doctor')
+                    if input.get('appointment_start'):
+                        appointment_instance.appointment_start = input.get('appointment_start')
+                    if input.get('appointment_end'):
+                        appointment_instance.appointment_end = input.get('appointment_end')
+                    if input.get('patient'):
+                        HelperMethods.valid_id(input.get('patient'))
+                        appointment_instance.patient = CustomUser.objects.get(pk=from_global_id(input.get('patient'))[1])
                         appointment_instance.taken = True
-                        appointment_instance.save()
-                        if info.context.user.email_notification:
-                            VIPreminder(info.context.user)
+                        if appointment_instance.patient.email_notification:
+                            VIPreminder(appointment_instance.patient)
+                    if input.get('taken'):
+                        appointment_instance.taken = input.get('taken')
+                        if not input.get('taken'):
+                            deleteNotify(appointment_instance.patient)
+                            appointment_instance.patient = None
+                    checkAppointmentFormat(appointment_instance)
+                    if not isAppointmentFree(appointment_instance):
+                        raise GraphQLError("Selected time slot overlaps with existing appointment")
+                    appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
-            except Appointment.DoesNotExist:
-                raise GraphQLError('Appointment does not exist!')
+                elif hasGroup(["Patient"], info) and (
+                        appointment_instance.taken == False or appointment_instance.patient == info.context.user):
+                    appointment_instance.patient = info.context.user
+                    appointment_instance.comment_patient = "" if input.get(
+                        'comment_patient') is None else input.get('comment_patient'),
+                    appointment_instance.taken = True
+                    appointment_instance.save()
+                    if info.context.user.email_notification:
+                        VIPreminder(info.context.user)
+                return CreateAppointment(appointment=appointment_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to change a appointment!')
-
 
 class DeleteAppointment(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
@@ -322,28 +309,26 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if hasGroup(["Admin", "Doctor", "Patient"], info):
-            try:
-                appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
-                if appointment_instance:
-                    if hasGroup(["Admin", "Doctor"], info):
-                        if input.get('remove_patient'):
-                            appointment_instance.patient = None
-                            appointment_instance.comment_patient = ""
-                            appointment_instance.taken = False
-                            appointment_instance.save()
-                        else:
-                            appointment_instance.delete()
-                    elif hasGroup(["Patient"], info):
-                        if appointment_instance.patient == info.context.user:
-                            appointment_instance.patient = None
-                            appointment_instance.comment_patient = ""
-                            appointment_instance.taken = False
-                            appointment_instance.save()
-                            if info.context.user.email_notification:
-                                VIPcancel(info.context.user)
-                    return DeleteAppointment(ok=True)
-            except Appointment.DoesNotExist:
-                raise GraphQLError('Appointment does not exist!')
+            HelperMethods.valid_id(input.get('id'))
+            appointment_instance = Appointment.objects.get(pk=from_global_id(input.get('id'))[1])
+            if appointment_instance:
+                if hasGroup(["Admin", "Doctor"], info):
+                    if input.get('remove_patient'):
+                        appointment_instance.patient = None
+                        appointment_instance.comment_patient = ""
+                        appointment_instance.taken = False
+                        appointment_instance.save()
+                    else:
+                        appointment_instance.delete()
+                elif hasGroup(["Patient"], info):
+                    if appointment_instance.patient == info.context.user:
+                        appointment_instance.patient = None
+                        appointment_instance.comment_patient = ""
+                        appointment_instance.taken = False
+                        appointment_instance.save()
+                        updateUserOverdue(info.context.user)
+                        deleteNotify(info.context.user)
+                return DeleteAppointment(ok=True)
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a appointment!')
 
@@ -359,8 +344,7 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
         if not hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
+            return []
         qs = Appointment.objects.all().filter()
 
         if kwargs.get('after'):
@@ -371,11 +355,11 @@ class Query(graphene.ObjectType):
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
 
         return qs
-
+    #TODO:double check this funciton
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
         if not hasGroup(["Admin", "Doctor", "Labor","Patient"], info):
-            raise UnauthorisedAccessError(message='Unauthorized')
+            return []
         qs = Appointment.objects.all().filter(taken=False)
 
         try:
@@ -399,7 +383,6 @@ class Query(graphene.ObjectType):
 
         slot_list = []
         if info.context.user.timeslots_needed > 1:
-
             if minusdays is None:
                 minusdays = 0
             if plusdays is None:
