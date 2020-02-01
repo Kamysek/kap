@@ -143,9 +143,7 @@ export class UserService {
     this.apollo
       .mutate<createUser, createUserVariables>({
         mutation: UserService.CREATE_USER_MUTATION,
-        variables: {
-          userInput: { ...userInput }
-        },
+        variables: { userInput },
         refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
       })
       .subscribe(console.log);

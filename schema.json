@@ -370,6 +370,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "checkupOverdue",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "DateTime",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "overdueNotified",
                   "type": {
                     "kind": "SCALAR",
@@ -629,6 +639,16 @@
                   "type": {
                     "kind": "SCALAR",
                     "name": "ID",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "checkupOverdue",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "DateTime",
                     "ofType": null
                   }
                 },
@@ -1061,6 +1081,18 @@
               "type": {
                 "kind": "OBJECT",
                 "name": "StudyType",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": "",
+              "isDeprecated": false,
+              "name": "checkupOverdue",
+              "type": {
+                "kind": "SCALAR",
+                "name": "DateTime",
                 "ofType": null
               }
             },
@@ -3195,9 +3227,13 @@
               "description": null,
               "name": "group",
               "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
               }
             },
             {

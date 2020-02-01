@@ -199,6 +199,7 @@ type Query {
   getOverduePatients(
     after: String
     before: String
+    checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
     emailNotification: Boolean
@@ -227,6 +228,7 @@ type Query {
   getUsers(
     after: String
     before: String
+    checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
     emailNotification: Boolean
@@ -312,6 +314,7 @@ type UserType implements Node {
     first: Int
     last: Int
   ): CallTypeConnection!
+  checkupOverdue: DateTime
   dateJoined: DateTime
   email: String
   emailNotification: Boolean!
@@ -388,7 +391,7 @@ input CreateUserInput {
   clientMutationId: String
   email: String!
   emailNotification: Boolean
-  group: String
+  group: String!
   isActive: Boolean!
   isStaff: Boolean!
   password: String!
