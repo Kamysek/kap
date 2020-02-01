@@ -252,6 +252,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
         appointment_end = graphene.DateTime()
         patient = graphene.String()
         taken = graphene.Boolean()
+        noshow = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -263,6 +264,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         appointment_instance.title = input.get('title')
                     if input.get('comment_doctor'):
                         appointment_instance.comment_doctor = input.get('comment_doctor')
+                    if input.get('noshow') != None:
+                        appointment_instance.noshow = input.get('noshow')
                     if input.get('comment_patient'):
                         appointment_instance.comment_patient = input.get('comment_patient')
                     if input.get('appointment_start'):
@@ -276,7 +279,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
-                    if input.get('taken') or not input.get('taken'):
+                    if input.get('taken')!= None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
                             deleteNotify(appointment_instance.patient)
