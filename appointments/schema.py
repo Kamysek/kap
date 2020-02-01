@@ -16,6 +16,7 @@ from utils.mailUtils import VIPreminder, deleteNotify
 import datetime
 from django.utils.timezone import make_aware
 from django.utils import timezone
+import threading
 
 
 def isAppointmentFree(newAppointment):
@@ -234,7 +235,9 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            updateUserOverdue(user_instance)
+            updateUserOverdue(appointment.patient)
+            t1 = threading.Thread(target=VIPreminder(appointment.patient))
+            t1.start()
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -278,11 +281,13 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.patient = userObj
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
-                                VIPreminder(appointment_instance.patient)
+                                t1 = threading.Thread(target=VIPreminder(appointment_instance.patient))
+                                t1.start()
                     if input.get('taken')!= None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
-                            deleteNotify(appointment_instance.patient)
+                            t1 = threading.Thread(target=deleteNotify(appointment_instance.patient))
+                            t1.start()
                             appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
                     if not isAppointmentFree(appointment_instance):
@@ -295,7 +300,8 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     appointment_instance.taken = True
                     appointment_instance.save()
                     if info.context.user.email_notification:
-                        VIPreminder(info.context.user)
+                        t1 = threading.Thread(target=VIPreminder(appointment_instance.patient))
+                        t1.start()
                 return CreateAppointment(appointment=appointment_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to change a appointment!')
@@ -329,7 +335,8 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                         appointment_instance.taken = False
                         appointment_instance.save()
                         updateUserOverdue(info.context.user)
-                        deleteNotify(info.context.user)
+                        t1 = threading.Thread(target=deleteNotify(info.context.user))
+                        t1.start()
                 return DeleteAppointment(ok=True)
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a appointment!')

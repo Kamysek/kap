@@ -7,6 +7,7 @@ from graphql_relay import from_global_id
 from appointments.models import Appointment
 from django.contrib.auth import get_user_model
 from utils.mailUtils import sendOverdueMail, sendDayReminderMail, sendWeekReminderMail
+import threading
 
 User = get_user_model()
 
@@ -42,8 +43,11 @@ def countSeperateAppointments(appointments):
         tmp = app
     return count
 
-
 def checkUserOverdue(user):
+    t1 = threading.Thread(target=checkUserOverdue(user))
+    t1.start()
+
+def checkUserOverdue1(user):
     appointments = Appointment.objects.filter(patient=user).order_by('-appointment_start')
     days_since_joined = (timezone.now() - user.date_joined).days
     checkups = user.study_participation.checkup_set.all().order_by("daysUntil")
