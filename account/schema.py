@@ -1,9 +1,11 @@
 from datetime import timedelta
+import datetime
 from django.utils import timezone
 import django_filters
 import graphene
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.utils.timezone import make_aware
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
@@ -53,7 +55,7 @@ class CallType(DjangoObjectType):
 
 class UserFilter(django_filters.FilterSet):
     class Meta:
-        model = CustomUser
+        model = get_user_model()
         fields = ['username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
                   'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'groups']
 
@@ -66,7 +68,7 @@ class UserType(DjangoObjectType):
         interfaces = (graphene.relay.Node,)
         fields = (
             'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-            'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set','group')
+            'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set', 'group', 'appointment_set')
 
     @login_required
     def resolve_group(self, info):
@@ -164,6 +166,20 @@ class UserType(DjangoObjectType):
     def resolve_call_set(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.call_set
+        return []
+
+    @login_required
+    def resolve_appointment_set(self, info, **kwargs):
+        if has_group(['Patient',"Admin", "Doctor", "Labor"], info) or self == info.context.user:
+
+            appointments = self.appointment_set
+
+            if kwargs.get('after'):
+                appointments = appointments.filter(appointment_start__range=[kwargs.get('after'), make_aware(
+                    datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+
+            return appointments.order_by('appointment_start')
+
         return []
 
 

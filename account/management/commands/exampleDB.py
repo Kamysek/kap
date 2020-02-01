@@ -33,6 +33,14 @@ class Command(BaseCommand):
         my_group = Group.objects.get(name='Doctor')
         my_group.user_set.add(user1)
 
+        Appointment(title="Appointment 1", comment_doctor="Doc", comment_patient="Patient", patient=user1,
+                    appointment_start=str(timezone.now() + timedelta(minutes=10)),
+                    appointment_end=str(timezone.now() + timedelta(minutes=18)), taken=True).save()
+
+        Appointment(title="Appointment 2", comment_doctor="Doc", comment_patient="Patient", patient=user1,
+                    appointment_start=str(timezone.now() + timedelta(minutes=190)),
+                    appointment_end=str(timezone.now() + timedelta(minutes=190) + timedelta(minutes=18)), taken=True).save()
+
         user2 = get_user_model().objects.create_user('TestPatient', password='patient', email='E.P.Riedel@gmail.com', study_participation=s,date_joined = timezone.now() - timedelta(days=30))
         user2.save()
         my_group = Group.objects.get(name='Patient')
