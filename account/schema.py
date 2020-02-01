@@ -1,9 +1,11 @@
 from datetime import timedelta
+import datetime
 from django.utils import timezone
 import django_filters
 import graphene
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.utils.timezone import make_aware
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
@@ -167,9 +169,17 @@ class UserType(DjangoObjectType):
         return []
 
     @login_required
-    def resolve_appointment_set(self, info):
+    def resolve_appointment_set(self, info, **kwargs):
         if has_group(['Patient',"Admin", "Doctor", "Labor"], info) or self == info.context.user:
-            return self.appointment_set
+
+            appointments = self.appointment_set
+
+            if kwargs.get('after'):
+                appointments = appointments.filter(appointment_start__range=[kwargs.get('after'), make_aware(
+                    datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+
+            return appointments.order_by('appointment_start')
+
         return []
 
 
