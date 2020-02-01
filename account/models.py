@@ -31,10 +31,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True, null=True, blank=False)
     date_joined = models.DateTimeField(default=timezone.now, null=True, blank=False)
     password_changed = models.BooleanField(default=False, null=True, blank=False)
-    study_participation = models.ForeignKey(Study,on_delete=models.SET_NULL,null=True)
+    study_participation = models.ForeignKey(Study, on_delete=models.SET_NULL, null=True)
     checkup_overdue = models.DateTimeField(null=True, blank=False)
-    overdue_notified = models.DateTimeField(default = timezone.now() - timedelta(days=100),null=True, blank=False)
-    timeslots_needed = models.IntegerField(default = 1, null=True, blank=False)
+    overdue_notified = models.DateTimeField(default=timezone.now() - timedelta(days=100), null=True, blank=False)
+    timeslots_needed = models.IntegerField(default=1, null=True, blank=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
@@ -52,6 +52,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Call(models.Model):
-    date = models.DateTimeField(default = timezone.now,null=True, blank=False)
+    date = models.DateTimeField(default=timezone.now, null=True, blank=False)
     comment = models.CharField(max_length=500, blank=False, null=True)
-    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)

@@ -4,19 +4,13 @@ from graphql_relay import from_global_id
 
 def valid_id(global_id, type):
     try:
-        print(type)
-        print(from_global_id(global_id)[0])
-        print(from_global_id(global_id)[1])
-        print(type(type))
-        print(type(from_global_id(global_id)[0]))
-        print(type(from_global_id(global_id)[1]))
-
-
-        if type(type) is type(from_global_id(global_id)[0]):
+        print(str(type))
+        print(str(from_global_id(global_id)[0]))
+        if str(type) == str(from_global_id(global_id)[0]):
             return from_global_id(global_id)
     except:
-        raise GraphQLError("Invalid ID 1")
-    raise GraphQLError("InvalidID 2")
+        raise GraphQLError("Invalid ID")
+    raise GraphQLError("InvalidID")
 
 
 def has_group(groups, info):
@@ -24,3 +18,8 @@ def has_group(groups, info):
         if info.context.user.groups.filter(name=role).exists():
             return True
     return False
+
+
+class UnauthorisedAccessError(GraphQLError):
+    def __init__(self, message, *args, **kwargs):
+        super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)

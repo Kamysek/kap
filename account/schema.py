@@ -7,19 +7,11 @@ from django.contrib.auth.models import Group
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql import GraphQLError
-from graphql_relay import from_global_id
 from account.models import CustomUser, Checkup, Study, Call
 from graphql_jwt.decorators import login_required
-
 from appointments.models import Appointment
 from klinischesanwendungsprojekt.crons import countSeperateAppointments
-
-from utils.HelperMethods import valid_id, has_group
-
-
-class UnauthorisedAccessError(GraphQLError):
-    def __init__(self, message, *args, **kwargs):
-        super(UnauthorisedAccessError, self).__init__(message, *args, **kwargs)
+from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError
 
 
 class CallFilter(django_filters.FilterSet):
@@ -35,35 +27,35 @@ class CallType(DjangoObjectType):
         fields = ('date', 'comment', 'user')
 
     @login_required
+    def resolve_id(self, info):
+        if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
+            return self.id
+        return None
+
+    @login_required
     def resolve_date(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
             return self.date
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
+        return None
 
     @login_required
     def resolve_comment(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
             return self.comment
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
+        return None
 
     @login_required
     def resolve_user(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self.user == info.context.user:
             return self.user
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
+        return None
 
 
 class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-                  'overdue_notified', 'timeslots_needed', 'checkup_overdue', 'study_participation']
+        fields = ['username', 'email','email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
+                  'study_participation', 'overdue_notified', 'timeslots_needed']
 
 
 class UserType(DjangoObjectType):
@@ -71,27 +63,19 @@ class UserType(DjangoObjectType):
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
         fields = (
-            'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'overdue_notified',
-            'timeslots_needed', 'checkup_overdue', 'study_participation', 'call_set')
+            'username', 'email','email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
+                  'study_participation', 'overdue_notified', 'timeslots_needed', 'call_set')
 
     @login_required
     def resolve_id(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.id
-        else:
-            raise UnauthorisedAccessError(message='Unauthorized')
-            return None
+        return None
 
     @login_required
     def resolve_username(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.username
-        return None
-
-    @login_required
-    def resolve_password(self, info):
-        if self == info.context.user:
-            return self.password
         return None
 
     @login_required
@@ -104,6 +88,12 @@ class UserType(DjangoObjectType):
     def resolve_email_notification(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
             return self.email_notification
+        return None
+
+    @login_required
+    def resolve_password(self, info):
+        if self == info.context.user:
+            return self.password
         return None
 
     @login_required
@@ -131,9 +121,27 @@ class UserType(DjangoObjectType):
         return None
 
     @login_required
-    def resolve_called(self, info):
-        if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
-            return self.called
+    def resolve_study_participation(self, info):
+        if has_group(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.study_participation
+        return None
+
+    @login_required
+    def resolve_checkup_overdue(self, info):
+        if has_group(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.checkup_overdue
+        return None
+
+    @login_required
+    def resolve_overdue_notified(self, info):
+        if has_group(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.overdue_notified
+        return None
+
+    @login_required
+    def resolve_timeslots_needed(self, info):
+        if has_group(["Admin", "Doctor"], info) or self == info.context.user:
+            return self.timeslots_needed
         return None
 
     @login_required
@@ -153,6 +161,8 @@ class CreateUser(graphene.relay.ClientIDMutation):
         is_staff = graphene.Boolean(required=True)
         is_active = graphene.Boolean(required=True)
         group = graphene.String(required=False)
+        timeslots_needed = graphene.Int()
+        study_participation = graphene.Field()
         email_notification = graphene.Boolean()
 
     @login_required
@@ -163,7 +173,8 @@ class CreateUser(graphene.relay.ClientIDMutation):
                 email=input.get('email'),
                 is_staff=input.get('is_staff'),
                 is_active=input.get('is_active'),
-                email_notification=input.get('email_notification'),
+                timeslots_needed= input.get('timeslots_needed') if input.get('timeslots_needed') else 1,
+                email_notification= input.get('email_notification') if input.get('email_notification') else True,
             )
             user_instance.set_password(input.get('password'))
             user_instance.save()
@@ -195,7 +206,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'),CustomUser)[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'), UserType)[1])
                 if user_instance:
                     if input.get('password'):
                         user_instance.set_password(input.get('password'))
@@ -236,7 +247,7 @@ class DeleteUser(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'), CustomUser)[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'), UserType)[1])
                 if user_instance:
                     user_instance.delete()
                     return DeleteUser(ok=True)
@@ -246,65 +257,12 @@ class DeleteUser(graphene.relay.ClientIDMutation):
             raise UnauthorisedAccessError(message='No permissions to delete a user!')
 
 
-class GroupFilter(django_filters.FilterSet):
-    class Meta:
-        model = CustomUser
-        fields = ['id']
-
-
-class GroupType(DjangoObjectType):
-    class Meta:
-        model = Group
-        interfaces = (graphene.relay.Node,)
-
-
-class CreateGroup(graphene.relay.ClientIDMutation):
-    group = graphene.Field(GroupType)
-
-    class Input:
-        name = graphene.String()
-
-    @login_required
-    def mutate_and_get_payload(self, info, **input):
-        if has_group(["Admin"], info):
-            group_instance = Group.objects.get_or_create(name=input.get('name'))
-            group_instance.save()
-            return CreateGroup(group=group_instance)
-        else:
-            raise UnauthorisedAccessError(message='No permissions to create a group!')
-
-
-class UpdateGroup(graphene.relay.ClientIDMutation):
-    class Input:
-        group_str = graphene.String()
-        user_id = graphene.ID()
-
-    @login_required
-    def mutate_and_get_payload(self, info, **input):
-        if has_group(["Admin"], info):
-            try:
-                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), CustomUser)[1])
-            except CustomUser.DoesNotExist:
-                raise GraphQLError('User does not exist!')
-
-            try:
-                group_instance = Group.objects.get(name=valid_id(input.get('group_str'), Group)[1])
-            except Group.DoesNotExist:
-                raise GraphQLError('Group does not exist!')
-
-            user_instance.groups.add(group_instance)
-
-            return UpdateGroup(group_str=group_instance.name, user_id=user_instance.id)
-        else:
-            raise UnauthorisedAccessError(message='No permissions to update a group!')
-
-
 class UserCalled(graphene.relay.ClientIDMutation):
     user = graphene.Field(UserType)
 
     class Input:
         user_id = graphene.ID(required=True)
-        comment = graphene.String(required=True)
+        comment = graphene.String()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -348,13 +306,13 @@ class StudyType(DjangoObjectType):
     def resolve_customuser_set(self, info):
         if has_group(["Admin", "Doctor", "Labor"], info):
             return self.customuser_set
-        return None
+        return []
 
     @login_required
     def resolve_checkup_set(self, info):
         if has_group(["Patient", "Admin", "Doctor", "Labor"], info):
             return self.checkup_set
-        return None
+        return []
 
 
 class CreateStudy(graphene.relay.ClientIDMutation):
@@ -386,7 +344,7 @@ class UpdateStudy(graphene.relay.ClientIDMutation):
         if has_group(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("id"):
 
-                study_instance = Study.objects.get(pk=valid_id(input.get('id'), Study)[1])
+                study_instance = Study.objects.get(pk=valid_id(input.get('id'), StudyType)[1])
 
                 if study_instance:
                     study_instance.name = input.get("name")
@@ -408,7 +366,7 @@ class DeleteStudy(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             if input.get("id"):
-                study_instance = Study.objects.get(pk=valid_id(input.get('id'), Study)[1])
+                study_instance = Study.objects.get(pk=valid_id(input.get('id'), StudyType)[1])
                 if study_instance:
                     study_instance.delete()
                     return DeleteStudy(ok=True)
@@ -469,7 +427,7 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             if input.get("name") and len(input.get("name")) != 0 and input.get("study_id") and input.get("daysUntil"):
-                study_instance = Study.objects.get(pk=valid_id(input.get('study_id'), Study)[1])
+                study_instance = Study.objects.get(pk=valid_id(input.get('study_id'), StudyType)[1])
                 if study_instance:
                     checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"),
                                                study=study_instance)
@@ -490,7 +448,7 @@ class UpdateCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), Checkup)[1])
+            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), CheckupType)[1])
             if checkup_instance:
                 if input.get("daysUntil"):
                     checkup_instance.daysUntil = input.get("daysUntil")
@@ -511,7 +469,7 @@ class DeleteCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), Checkup)[1])
+            checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), CheckupType)[1])
             if checkup_instance:
                 checkup_instance.delete()
                 return DeleteCheckup(ok=True)
@@ -579,10 +537,8 @@ class Query(graphene.AbstractType):
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
-    create_group = CreateGroup.Field()
 
     update_user = UpdateUser.Field()
-    update_group = UpdateGroup.Field()
 
     user_called = UserCalled.Field()
 
