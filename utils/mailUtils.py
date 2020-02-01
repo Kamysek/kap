@@ -34,8 +34,6 @@ SMTP_SERVER = "smtp.web.de"
 DOCTORS = User.objects.filter(groups__name="Doctor")
 
 
-
-
 def sendTestMail(recipient):
     msg = EmailMessage()
     msg.set_content("TestBody")
@@ -49,8 +47,11 @@ def sendTestMail(recipient):
             s.login(MY_ADDRESS,PASSWORD)
             s.send_message(msg)
             s.quit()
+            return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
+            return -1
+    return -1
 
 def sendWeekReminderMail(recipient):
     msg = EmailMessage()
@@ -65,8 +66,11 @@ def sendWeekReminderMail(recipient):
             s.login(MY_ADDRESS,PASSWORD)
             s.send_message(msg)
             s.quit()
+            return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
+            return -1
+    return -1
 
 
 def sendDayReminderMail(recipient):
@@ -82,8 +86,11 @@ def sendDayReminderMail(recipient):
             s.login(MY_ADDRESS,PASSWORD)
             s.send_message(msg)
             s.quit()
+            return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
+            return -1
+    return -1
 
 
 def sendOverdueMail(recipient,checkupName):
@@ -99,9 +106,11 @@ def sendOverdueMail(recipient,checkupName):
             s.login(MY_ADDRESS,PASSWORD)
             s.send_message(msg)
             s.quit()
+            return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
-
+            return -1
+    return -1
 
 def deleteNotify(user):
     with timeout(7):
@@ -121,8 +130,11 @@ def deleteNotify(user):
             msg['To'] = user.email
             s.send_message(msg)
             s.quit()
+            return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
+            return -1
+    return -1
 
 
 def VIPreminder(vip):
@@ -139,5 +151,8 @@ def VIPreminder(vip):
                 msg['To'] = doc.email
                 s.send_message(msg)
                 s.quit()
+                return 0
         except Exception as err:
             print("error sending email: {0}".format(err))
+            return -1
+    return -1

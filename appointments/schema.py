@@ -334,11 +334,11 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
-    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None),
+    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None), has_patient=graphene.Boolean(),
                                                    before=graphene.DateTime(default_value=None),
                                                    filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7),
-                                   plusdays=graphene.Int(default_value=7), user_id=graphene.ID(default_value=None))
+                                   plusdays=graphene.Int(default_value=7))
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
@@ -352,6 +352,8 @@ class Query(graphene.ObjectType):
         if kwargs.get('before'):
             qs = qs.filter(appointment_start__range=[make_aware(
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+        if kwargs.get('has_patient')!= None:
+            qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
         return qs
 
