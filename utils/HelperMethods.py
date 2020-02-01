@@ -12,8 +12,6 @@ User = get_user_model()
 
 def valid_id(global_id, type):
     try:
-        print(str(type))
-        print(str(from_global_id(global_id)[0]))
         if str(type) == str(from_global_id(global_id)[0]):
             return from_global_id(global_id)
     except:
@@ -61,8 +59,8 @@ def checkUserOverdue(user):
     if (nextCheckup.daysUntil < days_since_joined):
         user.checkup_overdue = user.date_joined + timedelta(days=nextCheckup.daysUntil)
         if(days_since_joined-nextCheckup.daysUntil) > 3 and ((timezone.now() - user.overdue_notified) > timedelta(days=7)): # Notify if patient is more than 3 days overdue or last Notification is 1 week overdue
-            sendOverdueMail(user,nextCheckup.name)
-            user.overdue_notified = timezone.now()
+            if sendOverdueMail(user,nextCheckup.name) != -1:
+                user.overdue_notified = timezone.now()
     else:
         user.checkup_overdue = None;
         user.overdue_notified = timezone.now()
