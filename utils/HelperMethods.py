@@ -5,9 +5,10 @@ from graphql import GraphQLError
 from graphql_relay import from_global_id
 
 from appointments.models import Appointment
-from klinischesanwendungsprojekt.crons import User
+from django.contrib.auth import get_user_model
 from utils.mailUtils import sendOverdueMail, sendDayReminderMail, sendWeekReminderMail
 
+User = get_user_model()
 
 def valid_id(global_id, type):
     try:

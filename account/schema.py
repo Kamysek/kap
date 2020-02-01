@@ -251,7 +251,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                     if input.get('study_participation'):
                         user_instance.is_active = input.get('study_participation')
                     if input.get('timeslots_needed'):
-                        user_instance.is_active = input.get('timeslots_needed')
+                        user_instance.timeslots_needed = input.get('timeslots_needed')
                     if input.get('group'):
                         current_group = user_instance.groups.first()
                         if not Group.objects.filter(name=input.get('group')).exists():
@@ -464,20 +464,21 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
     class Input:
         name = graphene.String(required=True)
         study_id = graphene.ID(required=True)
-        daysUntil = graphene.Int(required=True)
+        days_until = graphene.Int(required=True)
 
     checkup = graphene.Field(CheckupType)
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            if input.get("name") and len(input.get("name")) != 0 and input.get("study_id") and input.get("daysUntil"):
+            if (input.get("name") and (len(input.get("name")) != 0) and input.get("study_id") and input.get("days_until") != None):
                 study_instance = Study.objects.get(pk=valid_id(input.get('study_id'), StudyType)[1])
                 if study_instance:
-                    checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"),
-                                               study=study_instance)
+                    checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"), study=study_instance)
                     checkup_instance.save()
                     return CreateCheckup(checkup=checkup_instance)
+            else:
+                raise GraphQLError(message="Invalid parameters given")
         else:
             raise UnauthorisedAccessError(message='No permissions to create a checkup!')
 
