@@ -2,6 +2,29 @@
 import smtplib
 from email.message import EmailMessage
 from django.contrib.auth import get_user_model
+import signal
+from contextlib import contextmanager
+
+@contextmanager
+def timeout(time):
+    # Register a function to raise a TimeoutError on the signal.
+    signal.signal(signal.SIGALRM, raise_timeout)
+    # Schedule the signal to be sent after ``time``.
+    signal.alarm(time)
+
+    try:
+        yield
+    except TimeoutError:
+        pass
+    finally:
+        # Unregister the signal so it won't be triggered
+        # if the timeout is not reached.
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+
+def raise_timeout(signum, frame):
+    raise TimeoutError
+
 
 User = get_user_model()
 
@@ -11,17 +34,20 @@ SMTP_SERVER = "smtp.web.de"
 DOCTORS = User.objects.filter(groups__name="Doctor")
 
 
+
+
 def sendTestMail(recipient):
     msg = EmailMessage()
     msg.set_content("TestBody")
     msg['Subject'] = "TestSubject"
     msg['From'] = "kapTest@web.de"
     msg['To'] = recipient.email
-    s = smtplib.SMTP(SMTP_SERVER)
-    s.starttls()
-    s.login(MY_ADDRESS,PASSWORD)
-    s.send_message(msg)
-    s.quit()
+    with timeout(7):
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.starttls()
+        s.login(MY_ADDRESS,PASSWORD)
+        s.send_message(msg)
+        s.quit()
 
 
 def sendWeekReminderMail(recipient):
@@ -30,11 +56,12 @@ def sendWeekReminderMail(recipient):
     msg['Subject'] = "Termin Erinnerung"
     msg['From'] = "kapTest@web.de"
     msg['To'] = recipient.email
-    s = smtplib.SMTP(SMTP_SERVER)
-    s.starttls()
-    s.login(MY_ADDRESS, PASSWORD)
-    s.send_message(msg)
-    s.quit()
+    with timeout(7):
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.starttls()
+        s.login(MY_ADDRESS,PASSWORD)
+        s.send_message(msg)
+        s.quit()
 
 def sendDayReminderMail(recipient):
     msg = EmailMessage()
@@ -43,9 +70,10 @@ def sendDayReminderMail(recipient):
     msg['From'] = "kapTest@web.de"
     msg['To'] = recipient.email
     s = smtplib.SMTP(SMTP_SERVER)
-    s.starttls()
-    s.login(MY_ADDRESS, PASSWORD)
-    s.send_message(msg)
+    with timeout(7):
+        s.starttls()
+        s.login(MY_ADDRESS,PASSWORD)
+        s.send_message(msg)
     s.quit()
 
 def sendOverdueMail(recipient,checkupName):
@@ -55,27 +83,28 @@ def sendOverdueMail(recipient,checkupName):
     msg['From'] = "kapTest@web.de"
     msg['To'] = recipient.email
     s = smtplib.SMTP(SMTP_SERVER)
-    s.starttls()
-    s.login(MY_ADDRESS, PASSWORD)
-    s.send_message(msg)
+    with timeout(7):
+        s.starttls()
+        s.login(MY_ADDRESS,PASSWORD)
+        s.send_message(msg)
     s.quit()
 
 def deleteNotify(user):
     s = smtplib.SMTP(SMTP_SERVER)
     s.starttls()
     s.login(MY_ADDRESS, PASSWORD)
-    msg = EmailMessage()
-    msg.set_content("Der Patient\": " + user.username + " hat einen Termin abgebrochen!")
-    msg['Subject'] = "Patient hat Termin ABGEBROCHEN"
-    msg['From'] = "kapTest@web.de"
-    for doc in DOCTORS:
-        msg['To'] = doc.email
+    with timeout(7):
+        msg = EmailMessage()
+        msg.set_content("Der Patient\": " + user.username + " hat einen Termin abgebrochen!")
+        msg['Subject'] = "Patient hat Termin ABGEBROCHEN"
+        msg['From'] = "kapTest@web.de"
+        for doc in DOCTORS:
+            msg['To'] = doc.email
+            s.send_message(msg)
+        msg['Subject'] = "Termin ABGEBROCHEN"
+        msg.set_content("BENACHRICHTIGUNG: Ihr Termin bei uns wurde abgebrochen!")
+        msg['To'] = user.email
         s.send_message(msg)
-
-    msg['Subject'] = "Termin ABGEBROCHEN"
-    msg.set_content("BENACHRICHTIGUNG: Ihr Termin bei uns wurde abgebrochen!")
-    msg['To'] = user.email
-    s.send_message(msg)
     s.quit()
 
 
@@ -83,11 +112,12 @@ def VIPreminder(vip):
     s = smtplib.SMTP(SMTP_SERVER)
     s.starttls()
     s.login(MY_ADDRESS, PASSWORD)
-    for doc in DOCTORS:
-        msg = EmailMessage()
-        msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat sich für einen Termin angemeldet!")
-        msg['Subject'] = "VIP Terminanmeldung"
-        msg['From'] = "kapTest@web.de"
-        msg['To'] = doc.email
-        s.send_message(msg)
+    with timeout(7):
+        for doc in DOCTORS:
+            msg = EmailMessage()
+            msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat sich für einen Termin angemeldet!")
+            msg['Subject'] = "VIP Terminanmeldung"
+            msg['From'] = "kapTest@web.de"
+            msg['To'] = doc.email
+            s.send_message(msg)
     s.quit()
