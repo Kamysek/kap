@@ -341,7 +341,7 @@ class Query(graphene.ObjectType):
                                                    before=graphene.DateTime(default_value=None),
                                                    filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7),
-                                   plusdays=graphene.Int(default_value=7))
+                                   plusdays=graphene.Int(default_value=7), user_id = graphene.ID(default_value=None))
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
