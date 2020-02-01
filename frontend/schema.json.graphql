@@ -52,7 +52,7 @@ type CallType implements Node {
   date: DateTime
   "The ID of the object."
   id: ID!
-  user: UserType!
+  user: UserType
 }
 
 type CallTypeConnection {
@@ -93,59 +93,6 @@ type CheckupTypeEdge {
   node: CheckupType
 }
 
-type ChoiceAnswerType implements Node {
-  choiceAnswer: ChoiceType
-  createdBy: UserType
-  createdOn: DateTime
-  "The ID of the object."
-  id: ID!
-  question: QuestionType
-  updatedOn: DateTime
-}
-
-type ChoiceAnswerTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [ChoiceAnswerTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `ChoiceAnswerType` and its cursor."
-type ChoiceAnswerTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: ChoiceAnswerType
-}
-
-type ChoiceType implements Node {
-  choiceText: String!
-  choiceanswerSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): ChoiceAnswerTypeConnection!
-  "The ID of the object."
-  id: ID!
-  question: QuestionType!
-}
-
-type ChoiceTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [ChoiceTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `ChoiceType` and its cursor."
-type ChoiceTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: ChoiceType
-}
-
 type CreateAppointmentPayload {
   appointment: AppointmentType
   clientMutationId: String
@@ -156,39 +103,14 @@ type CreateAppointmentsPayload {
   clientMutationId: String
 }
 
-type CreateChoiceAnswerPayload {
-  choiceAnswer: ChoiceAnswerType
+type CreateCheckupPayload {
+  checkup: CheckupType
   clientMutationId: String
 }
 
-type CreateChoicePayload {
-  choice: ChoiceType
+type CreateStudyPayload {
   clientMutationId: String
-}
-
-type CreateGroupPayload {
-  clientMutationId: String
-  group: GroupType
-}
-
-type CreateNumberAnswerPayload {
-  clientMutationId: String
-  numberAnswer: NumberAnswerType
-}
-
-type CreateQuestionPayload {
-  clientMutationId: String
-  question: QuestionType
-}
-
-type CreateSurveyPayload {
-  clientMutationId: String
-  survey: SurveyType
-}
-
-type CreateTextAnswerPayload {
-  clientMutationId: String
-  textAnswer: TextAnswerType
+  study: StudyType
 }
 
 type CreateUserPayload {
@@ -202,40 +124,14 @@ type DeleteAppointmentPayload {
   ok: Boolean
 }
 
-type DeleteChoiceAnswerPayload {
-  choiceAnswer: ChoiceAnswerType
+type DeleteCheckupPayload {
   clientMutationId: String
   ok: Boolean
 }
 
-type DeleteChoicePayload {
-  choice: ChoiceType
+type DeleteStudyPayload {
   clientMutationId: String
   ok: Boolean
-}
-
-type DeleteNumberAnswerPayload {
-  clientMutationId: String
-  numberAnswer: NumberAnswerType
-  ok: Boolean
-}
-
-type DeleteQuestionPayload {
-  clientMutationId: String
-  ok: Boolean
-  question: QuestionType
-}
-
-type DeleteSurveyPayload {
-  clientMutationId: String
-  ok: Boolean
-  survey: SurveyType
-}
-
-type DeleteTextAnswerPayload {
-  clientMutationId: String
-  ok: Boolean
-  textAnswer: TextAnswerType
 }
 
 type DeleteUserPayload {
@@ -244,93 +140,26 @@ type DeleteUserPayload {
   user: UserType
 }
 
-type GroupType implements Node {
-  "The ID of the object."
-  id: ID!
-  name: String!
-  "The groups this user belongs to. A user will get all permissions granted to each of their groups."
-  userSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): UserTypeConnection!
-}
-
-type GroupTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [GroupTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `GroupType` and its cursor."
-type GroupTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: GroupType
-}
-
 type Mutation {
   bookSlots(input: BookSlotsInput!): BookSlotsPayload
   createAppointment(input: CreateAppointmentInput!): CreateAppointmentPayload
   createAppointments(input: CreateAppointmentsInput!): CreateAppointmentsPayload
-  createChoice(input: CreateChoiceInput!): CreateChoicePayload
-  createChoiceAnswer(input: CreateChoiceAnswerInput!): CreateChoiceAnswerPayload
-  createGroup(input: CreateGroupInput!): CreateGroupPayload
-  createNumberAnswer(input: CreateNumberAnswerInput!): CreateNumberAnswerPayload
-  createQuestion(input: CreateQuestionInput!): CreateQuestionPayload
-  createSurvey(input: CreateSurveyInput!): CreateSurveyPayload
-  createTextAnswer(input: CreateTextAnswerInput!): CreateTextAnswerPayload
+  createCheckup(input: CreateCheckupInput!): CreateCheckupPayload
+  createStudy(input: CreateStudyInput!): CreateStudyPayload
   createUser(input: CreateUserInput!): CreateUserPayload
   deleteAppointment(input: DeleteAppointmentInput!): DeleteAppointmentPayload
-  deleteChoice(input: DeleteChoiceInput!): DeleteChoicePayload
-  deleteChoiceAnswer(input: DeleteChoiceAnswerInput!): DeleteChoiceAnswerPayload
-  deleteNumberAnswer(input: DeleteNumberAnswerInput!): DeleteNumberAnswerPayload
-  deleteQuestion(input: DeleteQuestionInput!): DeleteQuestionPayload
-  deleteSurvey(input: DeleteSurveyInput!): DeleteSurveyPayload
-  deleteTextAnswer(input: DeleteTextAnswerInput!): DeleteTextAnswerPayload
+  deleteCheckup(input: DeleteCheckupInput!): DeleteCheckupPayload
+  deleteStudy(input: DeleteStudyInput!): DeleteStudyPayload
   deleteUser(input: DeleteUserInput!): DeleteUserPayload
   refreshToken(token: String!): Refresh
   "Obtain JSON Web Token mutation"
   tokenAuth(password: String!, username: String!): ObtainJSONWebToken
   updateAppointment(input: UpdateAppointmentInput!): UpdateAppointmentPayload
-  updateChoice(input: UpdateChoiceInput!): UpdateChoicePayload
-  updateChoiceAnswer(input: UpdateChoiceAnswerInput!): UpdateChoiceAnswerPayload
-  updateGroup(input: UpdateGroupInput!): UpdateGroupPayload
-  updateNumberAnswer(input: UpdateNumberAnswerInput!): UpdateNumberAnswerPayload
-  updateQuestion(input: UpdateQuestionInput!): UpdateQuestionPayload
-  updateSurvey(input: UpdateSurveyInput!): UpdateSurveyPayload
-  updateTextAnswer(input: UpdateTextAnswerInput!): UpdateTextAnswerPayload
+  updateCheckup(input: UpdateCheckupInput!): UpdateCheckupPayload
+  updateStudy(input: UpdateStudyInput!): UpdateStudyPayload
   updateUser(input: UpdateUserInput!): UpdateUserPayload
   userCalled(input: UserCalledInput!): UserCalledPayload
   verifyToken(token: String!): Verify
-}
-
-type NumberAnswerType implements Node {
-  createdBy: UserType
-  createdOn: DateTime
-  "The ID of the object."
-  id: ID!
-  numberAnswer: Int
-  question: QuestionType
-  updatedOn: DateTime
-}
-
-type NumberAnswerTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [NumberAnswerTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `NumberAnswerType` and its cursor."
-type NumberAnswerTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: NumberAnswerType
 }
 
 "Obtain JSON Web Token mutation"
@@ -366,60 +195,14 @@ type Query {
   "The ID of the object"
   getCheckup(id: ID!): CheckupType
   getCheckupDate: DateTime
-  "The ID of the object"
-  getChoice(id: ID!): ChoiceType
-  "The ID of the object"
-  getChoiceAnswer(id: ID!): ChoiceAnswerType
-  getChoiceAnswers(
-    after: String
-    before: String
-    choiceAnswer: ID
-    createdBy: ID
-    createdOn: DateTime
-    first: Int
-    last: Int
-    question: ID
-    updatedOn: DateTime
-  ): ChoiceAnswerTypeConnection
-  getChoices(
-    after: String
-    before: String
-    choiceText: String
-    first: Int
-    last: Int
-    question: ID
-  ): ChoiceTypeConnection
-  "The ID of the object"
-  getGroup(id: ID!): GroupType
-  getGroups(
-    after: String
-    before: String
-    first: Int
-    id: ID
-    last: Int
-  ): GroupTypeConnection
   getMe: UserType
-  "The ID of the object"
-  getNumberAnswer(id: ID!): NumberAnswerType
-  getNumberAnswers(
-    after: String
-    before: String
-    createdBy: ID
-    createdOn: DateTime
-    first: Int
-    last: Int
-    numberAnswer: Int
-    question: ID
-    updatedOn: DateTime
-  ): NumberAnswerTypeConnection
   getOverduePatients(
     after: String
     before: String
-    checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
+    emailNotification: Boolean
     first: Int
-    id: ID
     isActive: Boolean
     isStaff: Boolean
     last: Int
@@ -429,68 +212,25 @@ type Query {
     timeslotsNeeded: Int
     username: String
   ): UserTypeConnection
-  "The ID of the object"
-  getQuestion(id: ID!): QuestionType
-  getQuestions(
-    after: String
-    before: String
-    createdBy: ID
-    createdOn: DateTime
-    first: Int
-    last: Int
-    questionText: String
-    questionType: String
-    survey: ID
-    updatedBy: ID
-    updatedOn: DateTime
-  ): QuestionTypeConnection
   getSlotLists(minusdays: Int = 7, plusdays: Int = 7): [[AppointmentType]]
   getStudies(
     after: String
     before: String
     first: Int
+    id: ID
     last: Int
     name: String
   ): StudyTypeConnection
-  "The ID of the object"
-  getSurvey(id: ID!): SurveyType
-  getSurveys(
-    after: String
-    before: String
-    createdBy: ID
-    createdOn: DateTime
-    description: String
-    first: Int
-    last: Int
-    pubDate: DateTime
-    surveyName: String
-    updatedBy: ID
-    updatedOn: DateTime
-  ): SurveyTypeConnection
-  "The ID of the object"
-  getTextAnswer(id: ID!): TextAnswerType
-  getTextAnswers(
-    after: String
-    before: String
-    createdBy: ID
-    createdOn: DateTime
-    first: Int
-    last: Int
-    question: ID
-    textAnswer: String
-    updatedOn: DateTime
-  ): TextAnswerTypeConnection
   "The ID of the object"
   getUser(id: ID!): UserType
   getUserGroup: String
   getUsers(
     after: String
     before: String
-    checkupOverdue: DateTime
     dateJoined: DateTime
     email: String
+    emailNotification: Boolean
     first: Int
-    id: ID
     isActive: Boolean
     isStaff: Boolean
     last: Int
@@ -500,39 +240,6 @@ type Query {
     timeslotsNeeded: Int
     username: String
   ): UserTypeConnection
-}
-
-type QuestionType implements Node {
-  choiceSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): ChoiceTypeConnection!
-  createdBy: UserType
-  createdOn: DateTime
-  "The ID of the object."
-  id: ID!
-  questionText: String
-  questionType: QuestionQuestionType
-  survey: SurveyType
-  updatedBy: UserType
-  updatedOn: DateTime
-}
-
-type QuestionTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [QuestionTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `QuestionType` and its cursor."
-type QuestionTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: QuestionType
 }
 
 type Refresh {
@@ -573,101 +280,19 @@ type StudyTypeEdge {
   node: StudyType
 }
 
-type SurveyType implements Node {
-  createdBy: UserType
-  createdOn: DateTime
-  description: String
-  "The ID of the object."
-  id: ID!
-  pubDate: DateTime
-  questionSet(
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): QuestionTypeConnection!
-  surveyName: String
-  updatedBy: UserType
-  updatedOn: DateTime
-}
-
-type SurveyTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [SurveyTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `SurveyType` and its cursor."
-type SurveyTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: SurveyType
-}
-
-type TextAnswerType implements Node {
-  createdBy: UserType
-  createdOn: DateTime
-  "The ID of the object."
-  id: ID!
-  question: QuestionType
-  textAnswer: String
-  updatedOn: DateTime
-}
-
-type TextAnswerTypeConnection {
-  "Contains the nodes in this connection."
-  edges: [TextAnswerTypeEdge]!
-  "Pagination data for this connection."
-  pageInfo: PageInfo!
-}
-
-"A Relay edge containing a `TextAnswerType` and its cursor."
-type TextAnswerTypeEdge {
-  "A cursor for use in pagination"
-  cursor: String!
-  "The item at the end of the edge"
-  node: TextAnswerType
-}
-
 type UpdateAppointmentPayload {
   appointment: AppointmentType
   clientMutationId: String
 }
 
-type UpdateChoiceAnswerPayload {
-  choiceAnswer: ChoiceAnswerType
+type UpdateCheckupPayload {
+  checkup: CheckupType
   clientMutationId: String
 }
 
-type UpdateChoicePayload {
-  choice: ChoiceType
+type UpdateStudyPayload {
   clientMutationId: String
-}
-
-type UpdateGroupPayload {
-  clientMutationId: String
-}
-
-type UpdateNumberAnswerPayload {
-  clientMutationId: String
-  numberAnswer: NumberAnswerType
-}
-
-type UpdateQuestionPayload {
-  clientMutationId: String
-  question: QuestionType
-}
-
-type UpdateSurveyPayload {
-  clientMutationId: String
-  survey: SurveyType
-}
-
-type UpdateTextAnswerPayload {
-  clientMutationId: String
-  textAnswer: TextAnswerType
+  study: StudyType
 }
 
 type UpdateUserPayload {
@@ -687,9 +312,9 @@ type UserType implements Node {
     first: Int
     last: Int
   ): CallTypeConnection!
-  checkupOverdue: DateTime
   dateJoined: DateTime
   email: String
+  emailNotification: Boolean!
   "The ID of the object."
   id: ID!
   isActive: Boolean!
@@ -697,7 +322,7 @@ type UserType implements Node {
   overdueNotified: DateTime
   passwordChanged: Boolean!
   studyParticipation: StudyType
-  timeslotsNeeded: Int!
+  timeslotsNeeded: Int
   username: String
 }
 
@@ -720,16 +345,6 @@ type Verify {
   payload: GenericScalar
 }
 
-"An enumeration."
-enum QuestionQuestionType {
-  #choice
-  CHOICE
-  #number
-  NUMBER
-  #text
-  TEXT
-}
-
 input AppointmentInput {
   appointmentEnd: DateTime!
   appointmentStart: DateTime!
@@ -749,7 +364,6 @@ input CreateAppointmentInput {
   appointmentStart: DateTime!
   clientMutationId: String
   commentDoctor: String
-  patient: ID
   title: String!
 }
 
@@ -758,47 +372,16 @@ input CreateAppointmentsInput {
   clientMutationId: String
 }
 
-input CreateChoiceAnswerInput {
-  choiceAnswer: ID!
+input CreateCheckupInput {
   clientMutationId: String
-  question: ID!
+  daysUntil: Int!
+  name: String!
+  studyId: ID!
 }
 
-input CreateChoiceInput {
-  choiceText: String!
+input CreateStudyInput {
   clientMutationId: String
-  question: ID!
-}
-
-input CreateGroupInput {
-  clientMutationId: String
-  name: String
-}
-
-input CreateNumberAnswerInput {
-  clientMutationId: String
-  numberAnswer: String!
-  question: ID!
-}
-
-input CreateQuestionInput {
-  clientMutationId: String
-  questionText: String!
-  questionType: String!
-  survey: ID!
-}
-
-input CreateSurveyInput {
-  clientMutationId: String
-  description: String!
-  pubDate: DateTime
-  surveyName: String!
-}
-
-input CreateTextAnswerInput {
-  clientMutationId: String
-  question: ID!
-  textAnswer: String!
+  name: String!
 }
 
 input CreateUserInput {
@@ -809,6 +392,8 @@ input CreateUserInput {
   isActive: Boolean!
   isStaff: Boolean!
   password: String!
+  studyParticipation: ID
+  timeslotsNeeded: Int
   username: String!
 }
 
@@ -818,31 +403,14 @@ input DeleteAppointmentInput {
   removePatient: Boolean
 }
 
-input DeleteChoiceAnswerInput {
+input DeleteCheckupInput {
   clientMutationId: String
   id: ID!
 }
 
-input DeleteChoiceInput {
+input DeleteStudyInput {
   clientMutationId: String
   id: ID!
-}
-
-input DeleteNumberAnswerInput {
-  clientMutationId: String
-}
-
-input DeleteQuestionInput {
-  clientMutationId: String
-}
-
-input DeleteSurveyInput {
-  clientMutationId: String
-  id: ID!
-}
-
-input DeleteTextAnswerInput {
-  clientMutationId: String
 }
 
 input DeleteUserInput {
@@ -862,59 +430,21 @@ input UpdateAppointmentInput {
   title: String
 }
 
-input UpdateChoiceAnswerInput {
-  choiceAnswer: ID
+input UpdateCheckupInput {
   clientMutationId: String
+  daysUntil: Int
   id: ID!
-  question: ID
+  name: String
 }
 
-input UpdateChoiceInput {
-  choiceText: String
+input UpdateStudyInput {
   clientMutationId: String
   id: ID!
-  question: ID
-}
-
-input UpdateGroupInput {
-  clientMutationId: String
-  groupStr: String
-  userId: ID
-}
-
-input UpdateNumberAnswerInput {
-  clientMutationId: String
-  id: ID!
-  numberAnswer: String
-  question: ID
-}
-
-input UpdateQuestionInput {
-  clientMutationId: String
-  id: ID!
-  questionText: String
-  questionType: String
-  survey: ID
-}
-
-input UpdateSurveyInput {
-  clientMutationId: String
-  description: String
-  id: ID!
-  pubDate: DateTime
-  surveyName: String
-}
-
-input UpdateTextAnswerInput {
-  clientMutationId: String
-  id: ID!
-  question: ID
-  textAnswer: String
+  name: String!
 }
 
 input UpdateUserInput {
   addGroup: String
-  called: Boolean
   clientMutationId: String
   email: String
   emailNotification: Boolean
@@ -923,12 +453,14 @@ input UpdateUserInput {
   isStaff: Boolean
   password: String
   removeGroup: String
+  studyParticipation: ID
+  timeslotsNeeded: Int
 }
 
 input UserCalledInput {
   clientMutationId: String
   comment: String
-  userId: ID
+  userId: ID!
 }
 
 """
