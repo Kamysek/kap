@@ -8,7 +8,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from utils import HelperMethods
 
-from utils.HelperMethods import countSeperateAppointments, updateUserOverdue
+from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group
 from .models import Appointment
 from account.models import CustomUser
 from account.schema import UserType
@@ -29,13 +29,6 @@ def isAppointmentFree(newAppointment):
             # Invalid Appointment time
             return False
     return True
-
-
-def hasGroup(groups, info):
-    for role in groups:
-        if info.context.user.groups.filter(name=role).exists():
-            return True
-    return False
 
 
 def checkAppointmentFormat(newAppointment):
@@ -62,61 +55,61 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return None
 
     @login_required
     def resolve_title(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.title
         return None
 
     @login_required
     def resolve_comment_doctor(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_doctor
         return None
 
     @login_required
     def resolve_comment_patient(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_patient
         return None
 
     @login_required
     def resolve_patient(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.patient
         return None
 
     @login_required
     def resolve_created_at(self, info):
-        if hasGroup(["Admin", "Doctor", "Labor"], info):
+        if has_group(["Admin", "Doctor", "Labor"], info):
             return self.created_at
         return None
 
     @login_required
     def resolve_appointment_start(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_start
         return None
 
     @login_required
     def resolve_appointment_end(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_end
         return None
 
     @login_required
     def resolve_taken(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.taken
         return None
 
     @login_required
     def resolve_noshow(self, info):
-        if hasGroup(["Admin", "Doctor", 'Labor'], info)  or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor'], info)  or self.patient == info.context.user:
             return self.noshow
         return False
 
@@ -132,7 +125,7 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin", "Doctor"], info):
+        if has_group(["Admin", "Doctor"], info):
             if len(input.get('title')) != 0:
                 appointment_instance = Appointment(title=input.get('title'),
                                                    comment_doctor="" if input.get('comment_doctor') is None else input.get(
@@ -169,7 +162,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin", "Doctor"], info):
+        if has_group(["Admin", "Doctor"], info):
             failed_appointments = []
             for app in input.get('appointments'):
                 appointment_instance = Appointment(title=app.get('title'),
@@ -200,7 +193,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Patient"], info):
+        if has_group(["Patient"], info):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(app,AppointmentType))
                 if appointment_instance.taken:
@@ -256,10 +249,10 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if has_group(["Admin", "Doctor", "Patient"], info):
             appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
             if appointment_instance:
-                if hasGroup(["Admin", "Doctor"], info):
+                if has_group(["Admin", "Doctor"], info):
                     if input.get('title') and len(input.get('title') != 0):
                         appointment_instance.title = input.get('title')
                     if input.get('comment_doctor'):
@@ -283,7 +276,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
-                elif hasGroup(["Patient"], info) and (
+                elif has_group(["Patient"], info) and (
                         appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
                     appointment_instance.comment_patient = "" if input.get(
@@ -307,10 +300,10 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if hasGroup(["Admin", "Doctor", "Patient"], info):
+        if has_group(["Admin", "Doctor", "Patient"], info):
             appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
             if appointment_instance:
-                if hasGroup(["Admin", "Doctor"], info):
+                if has_group(["Admin", "Doctor"], info):
                     if input.get('remove_patient'):
                         appointment_instance.patient = None
                         appointment_instance.comment_patient = ""
@@ -318,7 +311,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                         appointment_instance.save()
                     else:
                         appointment_instance.delete()
-                elif hasGroup(["Patient"], info):
+                elif has_group(["Patient"], info):
                     if appointment_instance.patient == info.context.user:
                         appointment_instance.patient = None
                         appointment_instance.comment_patient = ""
@@ -341,7 +334,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
-        if not hasGroup(["Admin", "Doctor", "Labor", "Patient"], info):
+        if not has_group(["Admin", "Doctor", "Labor", "Patient"], info):
             return []
         qs = Appointment.objects.all().filter()
 
@@ -356,7 +349,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
-        if not hasGroup(["Admin", "Doctor", "Labor","Patient"], info):
+        if not has_group(["Admin", "Doctor", "Labor","Patient"], info):
             return []
         qs = Appointment.objects.all().filter(taken=False)
 
