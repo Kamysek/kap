@@ -55,7 +55,7 @@ class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-                  'study_participation', 'overdue_notified', 'timeslots_needed']
+                  'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed']
 
 
 class UserType(DjangoObjectType):
@@ -64,7 +64,7 @@ class UserType(DjangoObjectType):
         interfaces = (graphene.relay.Node,)
         fields = (
             'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-            'study_participation', 'overdue_notified', 'timeslots_needed', 'call_set')
+            'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set')
 
     @login_required
     def resolve_id(self, info):
