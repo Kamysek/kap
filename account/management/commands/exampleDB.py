@@ -33,7 +33,7 @@ class Command(BaseCommand):
         my_group = Group.objects.get(name='Doctor')
         my_group.user_set.add(user1)
 
-        user2 = get_user_model().objects.create_user('TestPatient', password='patient', email='E.P.Riedel@gmail.com', study_participation=s)
+        user2 = get_user_model().objects.create_user('TestPatient', password='patient', email='E.P.Riedel@gmail.com', study_participation=s,date_joined = timezone.now() - timedelta(days=30))
         user2.save()
         my_group = Group.objects.get(name='Patient')
         my_group.user_set.add(user2)

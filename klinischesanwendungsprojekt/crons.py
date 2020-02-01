@@ -2,7 +2,7 @@ from django_cron import CronJobBase, Schedule
 from appointments.models import Appointment
 from django.utils import timezone
 from datetime import timedelta
-from klinischesanwendungsprojekt.mailUtils import sendOverdueMail,sendDayReminderMail,sendWeekReminderMail
+from utils.mailUtils import sendOverdueMail,sendDayReminderMail,sendWeekReminderMail
 from django.contrib.auth import get_user_model
 
 User = get_user_model()

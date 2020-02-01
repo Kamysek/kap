@@ -60,6 +60,25 @@ def sendOverdueMail(recipient,checkupName):
     s.send_message(msg)
     s.quit()
 
+def deleteNotify(user):
+    s = smtplib.SMTP(SMTP_SERVER)
+    s.starttls()
+    s.login(MY_ADDRESS, PASSWORD)
+    msg = EmailMessage()
+    msg.set_content("Der Patient\": " + user.username + " hat einen Termin abgebrochen!")
+    msg['Subject'] = "Patient hat Termin ABGEBROCHEN"
+    msg['From'] = "kapTest@web.de"
+    for doc in DOCTORS:
+        msg['To'] = doc.email
+        s.send_message(msg)
+
+    msg['Subject'] = "Termin ABGEBROCHEN"
+    msg.set_content("BENACHRICHTIGUNG: Ihr Termin bei uns wurde abgebrochen!")
+    msg['To'] = user.email
+    s.send_message(msg)
+    s.quit()
+
+
 def VIPreminder(vip):
     s = smtplib.SMTP(SMTP_SERVER)
     s.starttls()
@@ -68,19 +87,6 @@ def VIPreminder(vip):
         msg = EmailMessage()
         msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat sich für einen Termin angemeldet!")
         msg['Subject'] = "VIP Terminanmeldung"
-        msg['From'] = "kapTest@web.de"
-        msg['To'] = doc.email
-        s.send_message(msg)
-    s.quit()
-
-def VIPcancel(vip):
-    s = smtplib.SMTP(SMTP_SERVER)
-    s.starttls()
-    s.login(MY_ADDRESS, PASSWORD)
-    for doc in DOCTORS:
-        msg = EmailMessage()
-        msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat einen Termin abgebrochen!")
-        msg['Subject'] = "VIP Termin ABGEBROCHEN"
         msg['From'] = "kapTest@web.de"
         msg['To'] = doc.email
         s.send_message(msg)
