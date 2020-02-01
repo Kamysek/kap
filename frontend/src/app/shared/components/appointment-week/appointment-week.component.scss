@@ -20,6 +20,10 @@
   &:hover {
     @include mat-elevation(5);
   }
+
+  p {
+    margin: 0;
+  }
 }
 
 .lines:not(:first-of-type) {

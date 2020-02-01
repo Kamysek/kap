@@ -64,7 +64,7 @@ export class EditAppointmentDialogComponent implements OnInit {
       commentPatient: formValue.commentPatient,
       appointmentStart: moment(startMoment).toDate(),
       appointmentEnd: moment(startMoment)
-        .add(45, 'minutes')
+        .add(30, 'minutes')
         .toDate(),
       taken: takenEnabled ? formValue.taken : true
     };

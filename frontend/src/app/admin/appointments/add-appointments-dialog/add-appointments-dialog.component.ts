@@ -55,11 +55,22 @@ export class AddAppointmentsDialogComponent implements OnInit {
   }
 
   addAppointment() {
+    let newTime = '08:00';
+    let newDay = 1;
+    if (this.appointments.length) {
+      const lastAppointment = this.appointments.controls[
+        this.appointments.length - 1
+      ];
+      newTime = moment(lastAppointment.get('time').value, 'HH:mm')
+        .add(30, 'minutes')
+        .format('HH:mm');
+      newDay = lastAppointment.get('day').value;
+    }
     this.appointments.push(
       this.fb.group({
-        day: [1, Validators.pattern('[1-5]')],
+        day: [newDay, Validators.pattern('[1-5]')],
         time: [
-          '08:00',
+          newTime,
           Validators.pattern('(08|09|10|11|12|13|14|15):(00|15|30|45)')
         ]
       })
@@ -87,7 +98,7 @@ export class AddAppointmentsDialogComponent implements OnInit {
               appointmentStart: moment(firstMoment).add(week, 'weeks'),
               appointmentEnd: moment(firstMoment)
                 .add(week, 'weeks')
-                .add(45, 'minutes')
+                .add(30, 'minutes')
             }
           )
         )
