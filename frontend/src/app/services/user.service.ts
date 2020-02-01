@@ -7,13 +7,20 @@ import {
   createUser,
   createUserVariables
 } from '../../../__generated__/createUser';
-import { CreateUserInput } from '../../../__generated__/globalTypes';
+import {
+  CreateUserInput,
+  UpdateUserInput
+} from '../../../__generated__/globalTypes';
 import { getUserDetails } from '../../../__generated__/getUserDetails';
 import { getOverdue } from '../../../__generated__/getOverdue';
 import {
   recordCall,
   recordCallVariables
 } from '../../../__generated__/recordCall';
+import {
+  updateUser,
+  updateUserVariables
+} from '../../../__generated__/updateUser';
 
 @Injectable({
   providedIn: 'root'
@@ -84,6 +91,16 @@ export class UserService {
     }
   `;
 
+  private static UPDATE_USER_MUTATION = gql`
+    mutation updateUser($userInput: UpdateUserInput!) {
+      updateUser(input: $userInput) {
+        user {
+          id
+        }
+      }
+    }
+  `;
+
   private static RECORD_CALL_MUTATION = gql`
     mutation recordCall($recordInput: UserCalledInput!) {
       userCalled(input: $recordInput) {
@@ -143,6 +160,16 @@ export class UserService {
     this.apollo
       .mutate<createUser, createUserVariables>({
         mutation: UserService.CREATE_USER_MUTATION,
+        variables: { userInput },
+        refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
+      })
+      .subscribe(console.log);
+  }
+
+  updateUser(userInput: UpdateUserInput) {
+    this.apollo
+      .mutate<updateUser, updateUserVariables>({
+        mutation: UserService.UPDATE_USER_MUTATION,
         variables: { userInput },
         refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
       })

@@ -42,9 +42,6 @@ export class EditAppointmentDialogComponent implements OnInit {
       commentDoctor,
       commentPatient
     });
-    if (taken) {
-      this.appointmentForm.get('taken').disable();
-    }
     if (moment() > startMoment) {
       this.appointmentForm.get('startDate').disable();
       this.appointmentForm.get('startTime').disable();

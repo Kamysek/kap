@@ -59,6 +59,20 @@ export class UsersComponent implements OnInit, OnDestroy {
       });
   }
 
+  editUser(user) {
+    this.dialog
+      .open(NewUserDialogComponent, { data: user })
+      .afterClosed()
+      .subscribe(res => {
+        if (!!res) {
+          if (!res.password) {
+            delete res.password;
+          }
+          this.usersService.updateUser(res);
+        }
+      });
+  }
+
   ngOnDestroy(): void {
     this.destroyed$.complete();
   }
