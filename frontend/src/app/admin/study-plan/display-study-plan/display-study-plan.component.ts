@@ -29,7 +29,9 @@ export class DisplayStudyPlanComponent implements OnChanges {
     // console.log(changes);
     if (changes.hasOwnProperty('plan')) {
       this.items.next(
-        changes.plan.currentValue.checkups.sort(item => item.daysUntil)
+        changes.plan.currentValue.checkups.sort(
+          (a, b) => a.daysUntil - b.daysUntil
+        )
       );
     }
   }
