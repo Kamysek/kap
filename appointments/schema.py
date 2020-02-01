@@ -8,7 +8,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from utils import HelperMethods
 
-from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group
+from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group, valid_id
 from .models import Appointment
 from account.models import CustomUser
 from account.schema import UserType
@@ -189,6 +189,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
         comment_patient = graphene.String()
+        user_id = graphene.ID()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -216,11 +217,15 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 if app_end > max_date:
                     max_date = app_end
 
+            user_instance = None
+            if input.get('user_id'):
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
                                       comment_patient=input.get('comment_patient'),
-                                      patient=info.context.user,
+                                      patient=user_instance if user_instance else info.context.user,
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
@@ -333,7 +338,7 @@ class Query(graphene.ObjectType):
                                                    before=graphene.DateTime(default_value=None),
                                                    filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7),
-                                   plusdays=graphene.Int(default_value=7))
+                                   plusdays=graphene.Int(default_value=7), user_id=graphene.ID(default_value=None))
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
@@ -369,6 +374,12 @@ class Query(graphene.ObjectType):
 
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
+        user_id = kwargs.get('user_id')
+
+        if user_id:
+            user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            qs.filter(patient=user_instance)
+
 
         if date:
             startdate = date - timedelta(days=minusdays)
