@@ -251,7 +251,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                     if input.get('study_participation'):
                         user_instance.is_active = input.get('study_participation')
                     if input.get('timeslots_needed'):
-                        user_instance.is_active = input.get('timeslots_needed')
+                        user_instance.timeslots_needed = input.get('timeslots_needed')
                     if input.get('group'):
                         current_group = user_instance.groups.first()
                         if not Group.objects.filter(name=input.get('group')).exists():
