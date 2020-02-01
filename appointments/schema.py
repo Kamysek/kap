@@ -8,7 +8,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from utils import HelperMethods
 
-from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group
+from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group, valid_id
 from .models import Appointment
 from account.models import CustomUser
 from account.schema import UserType
@@ -189,6 +189,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
         comment_patient = graphene.String()
+        user_id = graphene.ID()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -216,11 +217,15 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 if app_end > max_date:
                     max_date = app_end
 
+            user_instance = None
+            if input.get('user_id'):
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
                                       comment_doctor=tmp_app.comment_doctor,
                                       comment_patient=input.get('comment_patient'),
-                                      patient=info.context.user,
+                                      patient=user_instance if user_instance else info.context.user,
                                       appointment_start=min_date,
                                       appointment_end=max_date,
                                       taken=True)
@@ -271,7 +276,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
-                    if input.get('taken'):
+                    if input.get('taken') or not input.get('taken'):
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
                             deleteNotify(appointment_instance.patient)
@@ -329,7 +334,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
 class Query(graphene.ObjectType):
     get_appointment = graphene.relay.Node.Field(AppointmentType)
-    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None),
+    get_appointments = DjangoFilterConnectionField(AppointmentType, after=graphene.DateTime(default_value=None), has_patient=graphene.Boolean(),
                                                    before=graphene.DateTime(default_value=None),
                                                    filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7),
@@ -347,6 +352,8 @@ class Query(graphene.ObjectType):
         if kwargs.get('before'):
             qs = qs.filter(appointment_start__range=[make_aware(
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+        if kwargs.get('has_patient')!= None:
+            qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
         return qs
 
@@ -369,6 +376,12 @@ class Query(graphene.ObjectType):
 
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
+        user_id = kwargs.get('user_id')
+
+        if user_id:
+            user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            qs.filter(patient=user_instance)
+
 
         if date:
             startdate = date - timedelta(days=minusdays)

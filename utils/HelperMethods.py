@@ -101,10 +101,10 @@ def doAppointmentReminders():
 
     for appointment in appointmentsOneDay:
         if not appointment.dayReminder:
-            sendDayReminderMail(appointment.patient)
-            appointment.dayReminder = True
+            if sendDayReminderMail(appointment.patient) != -1:
+                appointment.dayReminder = True
 
     for appointment in appointmentsOneWeek:
         if not appointment.weekReminder:
-            sendWeekReminderMail(appointment.patient)
-            appointment.weekReminder = True
+            if sendWeekReminderMail(appointment.patient) != -1:
+                appointment.weekReminder = True
