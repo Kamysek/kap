@@ -296,6 +296,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to change a appointment!')
 
+
 class DeleteAppointment(graphene.relay.ClientIDMutation):
     ok = graphene.Boolean()
     appointment = graphene.Field(AppointmentType)

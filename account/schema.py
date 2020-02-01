@@ -160,7 +160,7 @@ class CreateUser(graphene.relay.ClientIDMutation):
         email = graphene.String(required=True)
         is_staff = graphene.Boolean(required=True)
         is_active = graphene.Boolean(required=True)
-        group = graphene.String(required=False)
+        group = graphene.String(required=True)
         timeslots_needed = graphene.Int()
         study_participation = graphene.ID()
         email_notification = graphene.Boolean()
