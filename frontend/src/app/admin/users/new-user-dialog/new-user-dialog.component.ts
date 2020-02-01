@@ -13,7 +13,7 @@ export class NewUserDialogComponent {
     this.userForm = fb.group({
       username: ['', Validators.required],
       email: ['', Validators.required],
-      slots: [1, Validators.required],
+      timeslots_needed: [1],
       emailNotification: [false, Validators.required],
       password: ['', Validators.required],
       group: ['Patient', Validators.required]
