@@ -160,14 +160,13 @@ class CreateUser(graphene.relay.ClientIDMutation):
         email = graphene.String(required=True)
         group = graphene.String(required=True)
         timeslots_needed = graphene.Int()
-        study_participation = graphene.ID()
         email_notification = graphene.Boolean()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin"], info):
 
-            study_instance = Study.objects.all().first
+            study_instance = Study.objects.first()
 
             user_instance = get_user_model()(
                 username=input.get('username'),
@@ -177,11 +176,13 @@ class CreateUser(graphene.relay.ClientIDMutation):
                 email_notification=input.get('email_notification') if input.get('email_notification') else True,
             )
             user_instance.set_password(input.get('password'))
+
             user_instance.save()
 
             if input.get('group') == "Admin" and not has_group(["Admin"], info):
+                user_instance.delete()
                 raise UnauthorisedAccessError(message='Must be Admin to create Admin')
-            Group.objects.get(name=input.get('group')).add(user_instance)
+            Group.objects.get(name=input.get('group')).user_set.add(user_instance)
 
             return CreateUser(user=user_instance)
         else:
