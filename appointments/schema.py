@@ -8,7 +8,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from utils import HelperMethods
 
-from klinischesanwendungsprojekt.crons import countSeperateAppointments,updateUserOverdue
+from utils.HelperMethods import countSeperateAppointments, updateUserOverdue
 from .models import Appointment
 from account.models import CustomUser
 from utils.mailUtils import VIPreminder, deleteNotify
@@ -355,7 +355,7 @@ class Query(graphene.ObjectType):
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
 
         return qs
-    #TODO:double check this funciton
+
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
         if not hasGroup(["Admin", "Doctor", "Labor","Patient"], info):

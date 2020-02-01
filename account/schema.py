@@ -10,8 +10,7 @@ from graphql import GraphQLError
 from account.models import CustomUser, Checkup, Study, Call
 from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
-from klinischesanwendungsprojekt.crons import countSeperateAppointments
-from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError
+from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError, countSeperateAppointments
 
 
 class CallFilter(django_filters.FilterSet):
