@@ -144,7 +144,7 @@ export class UserService {
       .mutate<createUser, createUserVariables>({
         mutation: UserService.CREATE_USER_MUTATION,
         variables: {
-          userInput: { ...userInput, isActive: true, isStaff: false }
+          userInput: { ...userInput }
         },
         refetchQueries: [{ query: UserService.LOAD_USERS_QUERY }]
       })
