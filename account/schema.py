@@ -167,13 +167,13 @@ class CreateUser(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin"], info):
 
-            study_instance = Study.objects.get(pk=valid_id(input.get('study_participation'), StudyType)[1])
+            study_instance = Study.objects.all().first
 
             user_instance = get_user_model()(
                 username=input.get('username'),
                 email=input.get('email'),
                 timeslots_needed=input.get('timeslots_needed') if input.get('timeslots_needed') else 1,
-                study_participation=study_instance if study_instance else None,
+                study_participation=study_instance if study_instance and input.get('group') == "Patient" else None,
                 email_notification=input.get('email_notification') if input.get('email_notification') else True,
             )
             user_instance.set_password(input.get('password'))
@@ -196,8 +196,6 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         password = graphene.String()
         email = graphene.String()
         email_notification = graphene.Boolean()
-        is_staff = graphene.Boolean()
-        is_active = graphene.Boolean()
         study_participation = graphene.ID()
         timeslots_needed = graphene.Int()
         add_group = graphene.String()
@@ -215,10 +213,6 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.email = input.get('email')
                     if input.get('email_notification'):
                         user_instance.email_notification = input.get('email_notification')
-                    if input.get('is_staff'):
-                        user_instance.is_staff = input.get('is_staff')
-                    if input.get('is_active'):
-                        user_instance.is_active = input.get('is_active')
                     if input.get('study_participation'):
                         user_instance.is_active = input.get('study_participation')
                     if input.get('timeslots_needed'):
