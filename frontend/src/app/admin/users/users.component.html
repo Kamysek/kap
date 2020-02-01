@@ -27,6 +27,11 @@
       <td *matCellDef="let element" mat-cell>{{ element.timeslotsNeeded }}</td>
     </ng-container>
 
+    <ng-container matColumnDef="group">
+      <th *matHeaderCellDef mat-header-cell>Permission group</th>
+      <td *matCellDef="let element" mat-cell>{{ element.group }}</td>
+    </ng-container>
+
     <ng-container matColumnDef="checkup">
       <th *matHeaderCellDef mat-header-cell>Overdue</th>
       <td *matCellDef="let element" mat-cell>

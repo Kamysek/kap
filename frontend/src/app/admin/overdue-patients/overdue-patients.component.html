@@ -23,3 +23,5 @@
     </button>
   </mat-card-content>
 </mat-card>
+
+<h2 *ngIf="!(patients | async).length">Currently there are no overdue Users</h2>

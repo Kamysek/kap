@@ -396,6 +396,20 @@
                     "name": "Int",
                     "ofType": null
                   }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "groups",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "ID",
+                      "ofType": null
+                    }
+                  }
                 }
               ],
               "deprecationReason": null,
@@ -670,6 +684,20 @@
                     "kind": "SCALAR",
                     "name": "Int",
                     "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "groups",
+                  "type": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "ID",
+                      "ofType": null
+                    }
                   }
                 }
               ],
@@ -1191,6 +1219,18 @@
                   "name": "ID",
                   "ofType": null
                 }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "group",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
               }
             }
           ],
@@ -3301,6 +3341,16 @@
             {
               "defaultValue": null,
               "description": null,
+              "name": "username",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
               "name": "password",
               "type": {
                 "kind": "SCALAR",
@@ -3351,17 +3401,7 @@
             {
               "defaultValue": null,
               "description": null,
-              "name": "addGroup",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "defaultValue": null,
-              "description": null,
-              "name": "removeGroup",
+              "name": "group",
               "type": {
                 "kind": "SCALAR",
                 "name": "String",

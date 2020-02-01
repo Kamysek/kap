@@ -19,6 +19,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [
     'email',
     'username',
+    'group',
     'slots',
     'checkup',
     'actions'
@@ -50,7 +51,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   createUser() {
     this.dialog
-      .open(NewUserDialogComponent)
+      .open(NewUserDialogComponent, { data: false })
       .afterClosed()
       .subscribe(res => {
         if (!!res) {
@@ -68,7 +69,7 @@ export class UsersComponent implements OnInit, OnDestroy {
           if (!res.password) {
             delete res.password;
           }
-          this.usersService.updateUser(res);
+          this.usersService.updateUser({ id: user.id, ...res });
         }
       });
   }

@@ -28,11 +28,11 @@
         type="password"
       />
       <mat-hint *ngIf="showPasswordHint"
-        >Leave empty to not override the password</mat-hint
-      >
+        >Leave empty to not override the password
+      </mat-hint>
     </mat-form-field>
-    <mat-form-field formControlName="group">
-      <mat-select placeholder="Permission group">
+    <mat-form-field>
+      <mat-select formControlName="group" placeholder="Permission group">
         <mat-option value="Patient">Patient</mat-option>
         <mat-option value="Doctor">Doctor</mat-option>
         <mat-option value="Labor">Lab Tech</mat-option>
@@ -40,8 +40,8 @@
       </mat-select>
     </mat-form-field>
     <mat-checkbox formControlName="emailNotification"
-      >Notify if this User makes an Appointment</mat-checkbox
-    >
+      >Notify if this User makes an Appointment
+    </mat-checkbox>
   </form>
 </mat-dialog-content>
 <mat-dialog-actions>

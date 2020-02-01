@@ -37,6 +37,7 @@ export class UserService {
             dateJoined
             checkupOverdue
             timeslotsNeeded
+            group
           }
         }
       }

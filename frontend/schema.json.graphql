@@ -204,6 +204,7 @@ type Query {
     email: String
     emailNotification: Boolean
     first: Int
+    groups: [ID]
     isActive: Boolean
     isStaff: Boolean
     last: Int
@@ -233,6 +234,7 @@ type Query {
     email: String
     emailNotification: Boolean
     first: Int
+    groups: [ID]
     isActive: Boolean
     isStaff: Boolean
     last: Int
@@ -318,6 +320,7 @@ type UserType implements Node {
   dateJoined: DateTime
   email: String
   emailNotification: Boolean!
+  group: String
   "The ID of the object."
   id: ID!
   isActive: Boolean!
@@ -392,10 +395,7 @@ input CreateUserInput {
   email: String!
   emailNotification: Boolean
   group: String!
-  isActive: Boolean!
-  isStaff: Boolean!
   password: String!
-  studyParticipation: ID
   timeslotsNeeded: Int
   username: String!
 }
@@ -428,7 +428,7 @@ input UpdateAppointmentInput {
   commentDoctor: String
   commentPatient: String
   id: ID!
-  patient: ID
+  patient: String
   taken: Boolean
   title: String
 }
@@ -447,17 +447,15 @@ input UpdateStudyInput {
 }
 
 input UpdateUserInput {
-  addGroup: String
   clientMutationId: String
   email: String
   emailNotification: Boolean
+  group: String
   id: ID!
-  isActive: Boolean
-  isStaff: Boolean
   password: String
-  removeGroup: String
   studyParticipation: ID
   timeslotsNeeded: Int
+  username: String
 }
 
 input UserCalledInput {
