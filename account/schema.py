@@ -242,7 +242,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                             raise GraphQLError(message="Unknown group")
                         if not has_group(["Admin"], info) and (input.get('group') == "Admin" or current_group == "Admin"):
                             raise UnauthorisedAccessError(message='Must be Admin to modify Admin')
-                        for g in user_instance.groups:
+                        for g in user_instance.groups.all():
                             g.user_set.remove(user_instance)
                         Group.objects.get(name=input.get('group')).user_set.add(user_instance)
                     user_instance.save()
