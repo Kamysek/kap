@@ -158,8 +158,6 @@ class CreateUser(graphene.relay.ClientIDMutation):
         username = graphene.String(required=True)
         password = graphene.String(required=True)
         email = graphene.String(required=True)
-        is_staff = graphene.Boolean(required=True)
-        is_active = graphene.Boolean(required=True)
         group = graphene.String(required=True)
         timeslots_needed = graphene.Int()
         study_participation = graphene.ID()
@@ -174,8 +172,6 @@ class CreateUser(graphene.relay.ClientIDMutation):
             user_instance = get_user_model()(
                 username=input.get('username'),
                 email=input.get('email'),
-                is_staff=input.get('is_staff'),
-                is_active=input.get('is_active'),
                 timeslots_needed=input.get('timeslots_needed') if input.get('timeslots_needed') else 1,
                 study_participation=study_instance if study_instance else None,
                 email_notification=input.get('email_notification') if input.get('email_notification') else True,
