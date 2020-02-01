@@ -8,7 +8,7 @@ from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from utils import HelperMethods
 
-from utils.HelperMethods import countSeperateAppointments, updateUserOverdue, has_group, valid_id
+from utils.HelperMethods import countSeperateAppointments, checkUserOverdue, updateUserOverdue, has_group, valid_id
 from .models import Appointment
 from account.models import CustomUser
 from account.schema import UserType
@@ -34,7 +34,6 @@ def isAppointmentFree(newAppointment):
 
 
 def checkAppointmentFormat(newAppointment):
-    print(str(newAppointment.appointment_end - newAppointment.appointment_start))
     if (newAppointment.appointment_end - newAppointment.appointment_start).total_seconds() < 250:
         raise GraphQLError("Appointment too short ( < 5 min)")
 
@@ -185,12 +184,15 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
+def updateandremind(user):#dirty hack that makes it possible to run in one thread and not hurt processing time
+    updateUserOverdue(user)
+    VIPreminder(user)
 
 class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
         comment_patient = graphene.String()
-        user_id = graphene.ID()
+        #user_id = graphene.ID()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -219,8 +221,8 @@ class BookSlots(graphene.relay.ClientIDMutation):
                     max_date = app_end
 
             user_instance = info.context.user
-            if input.get('user_id'):
-                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            #if input.get('user_id'):#REMOVED BECAUSE PATIENT COULD POTENTIALLY BOOK APPOINTMENT FOR ANOTHER PATIENT
+            #    user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
 
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
@@ -235,9 +237,9 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            updateUserOverdue(appointment.patient)
-            t1 = threading.Thread(target=VIPreminder(appointment.patient))
-            t1.start()
+            print(1)
+            threading.Thread(target=updateandremind(user_instance)).start()
+            print(2)
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -263,6 +265,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
             appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'), AppointmentType)[1])
             if appointment_instance:
                 if has_group(["Admin", "Doctor"], info):
+                    pat = appointment_instance.patient
                     if input.get('title') and len(input.get('title')) != 0:
                         appointment_instance.title = input.get('title')
                     if input.get('comment_doctor'):
@@ -280,28 +283,26 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         if userObj:
                             appointment_instance.patient = userObj
                             appointment_instance.taken = True
-                            if appointment_instance.patient.email_notification:
-                                t1 = threading.Thread(target=VIPreminder(appointment_instance.patient))
-                                t1.start()
-                    if input.get('taken')!= None:
+                            pat = userObj
+                            if pat.email_notification:
+                                threading.Thread(target=VIPreminder(pat)).start()
+                    if input.get('taken') != None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
-                            t1 = threading.Thread(target=deleteNotify(appointment_instance.patient))
-                            t1.start()
+                            threading.Thread(target=deleteNotify(pat)).start()
                             appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
                     if not isAppointmentFree(appointment_instance):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
+                    if input.get('taken') != None and not input.get('taken'):
+                       threading.Thread(target=checkUserOverdue(pat)).start()
                     return CreateAppointment(appointment=appointment_instance)
                 elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
                     appointment_instance.comment_patient = "" if input.get('comment_patient') is None else input.get('comment_patient'),
                     appointment_instance.taken = True
                     appointment_instance.save()
-                    if info.context.user.email_notification:
-                        t1 = threading.Thread(target=VIPreminder(appointment_instance.patient))
-                        t1.start()
                 return CreateAppointment(appointment=appointment_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to change a appointment!')
@@ -348,7 +349,7 @@ class Query(graphene.ObjectType):
                                                    before=graphene.DateTime(default_value=None),
                                                    filterset_class=AppointmentFilter)
     get_slot_lists = graphene.List(graphene.List(AppointmentType), minusdays=graphene.Int(default_value=7),
-                                   plusdays=graphene.Int(default_value=7), user_id = graphene.ID(default_value=None))
+                                   plusdays=graphene.Int(default_value=7), user_id=graphene.ID(default_value=None))
 
     @login_required
     def resolve_get_appointments(self, info, **kwargs):
@@ -362,7 +363,7 @@ class Query(graphene.ObjectType):
         if kwargs.get('before'):
             qs = qs.filter(appointment_start__range=[make_aware(
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
-        if kwargs.get('has_patient')!= None:
+        if kwargs.get('has_patient') != None:
             qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
         return qs
@@ -386,7 +387,7 @@ class Query(graphene.ObjectType):
                 'appointment_start')  # get number of  attended appointments
             appointmentCount = countSeperateAppointments(appointmentsAttended)
             nextCheckup = checkups[appointmentCount]
-            date = max(userObj.date_joined + timedelta(days=nextCheckup.daysUntil),timezone.now() + timedelta(days=7))
+            date = max(userObj.date_joined + timedelta(days=nextCheckup.daysUntil), timezone.now() + timedelta(days=7))
         except:
             raise GraphQLError(message="User does not have study participation!")
 
