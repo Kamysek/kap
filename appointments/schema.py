@@ -109,7 +109,7 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_noshow(self, info):
-        if has_group(["Admin", "Doctor", 'Labor'], info)  or self.patient == info.context.user:
+        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.noshow
         return False
 
@@ -173,7 +173,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
                                                    appointment_end=app.get('appointment_end'),
                                                    taken=False)
                 checkAppointmentFormat(appointment_instance)
-                if not isAppointmentFree(appointment_instance) or len(app.get('title') == 0):
+                if not isAppointmentFree(appointment_instance) or len(app.get('title')) == 0:
                     failed_appointments.append(appointment_instance)
                     continue
 
@@ -195,7 +195,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Patient"], info):
             for app in input.get('appointmentList'):
-                appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(app,AppointmentType))
+                appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(app, AppointmentType)[1])
                 if appointment_instance.taken:
                     raise GraphQLError('Appointment already taken')
 
@@ -250,19 +250,21 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor", "Patient"], info):
-            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'), AppointmentType)[1])
             if appointment_instance:
                 if has_group(["Admin", "Doctor"], info):
-                    if input.get('title') and len(input.get('title') != 0):
+                    if input.get('title') and len(input.get('title')) != 0:
                         appointment_instance.title = input.get('title')
                     if input.get('comment_doctor'):
                         appointment_instance.comment_doctor = input.get('comment_doctor')
+                    if input.get('comment_patient'):
+                        appointment_instance.comment_patient = input.get('comment_patient')
                     if input.get('appointment_start'):
                         appointment_instance.appointment_start = input.get('appointment_start')
                     if input.get('appointment_end'):
                         appointment_instance.appointment_end = input.get('appointment_end')
                     if input.get('patient'):
-                        appointment_instance.patient = CustomUser.objects.get(pk=HelperMethods.valid_id(input.get('patient'),UserType))
+                        appointment_instance.patient = CustomUser.objects.get(pk=HelperMethods.valid_id(input.get('patient'), UserType)[1])
                         appointment_instance.taken = True
                         if appointment_instance.patient.email_notification:
                             VIPreminder(appointment_instance.patient)
@@ -276,11 +278,9 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     return CreateAppointment(appointment=appointment_instance)
-                elif has_group(["Patient"], info) and (
-                        appointment_instance.taken == False or appointment_instance.patient == info.context.user):
+                elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
-                    appointment_instance.comment_patient = "" if input.get(
-                        'comment_patient') is None else input.get('comment_patient'),
+                    appointment_instance.comment_patient = "" if input.get('comment_patient') is None else input.get('comment_patient'),
                     appointment_instance.taken = True
                     appointment_instance.save()
                     if info.context.user.email_notification:
@@ -301,7 +301,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor", "Patient"], info):
-            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'),AppointmentType))
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id')[1], AppointmentType))
             if appointment_instance:
                 if has_group(["Admin", "Doctor"], info):
                     if input.get('remove_patient'):
@@ -349,7 +349,7 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
-        if not has_group(["Admin", "Doctor", "Labor","Patient"], info):
+        if not has_group(["Admin", "Doctor", "Labor", "Patient"], info):
             return []
         qs = Appointment.objects.all().filter(taken=False)
 
