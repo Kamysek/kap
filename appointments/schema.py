@@ -264,13 +264,12 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     if input.get('appointment_end'):
                         appointment_instance.appointment_end = input.get('appointment_end')
                     if input.get('patient'):
-                        userObj = CustomUser.objects.filter(username=input.get('username'))
+                        userObj = CustomUser.objects.all().filter(username=input.get('patient'))[0]
                         if userObj:
                             appointment_instance.patient = userObj
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
-
                     if input.get('taken'):
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
