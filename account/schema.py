@@ -73,11 +73,11 @@ class UserType(DjangoObjectType):
         if has_group(["Patient", "Admin", "Doctor", "Labor"], info) or self == info.context.user:
             if self.groups.filter(name="Admin").exists():
                 return "Admin"
-            if self.user.groups.filter(name="Doctor").exists():
+            if self.groups.filter(name="Doctor").exists():
                 return "Doctor"
-            if self.user.groups.filter(name="Labor").exists():
+            if self.groups.filter(name="Labor").exists():
                 return "Labor"
-            if self.user.groups.filter(name="Patient").exists():
+            if self.groups.filter(name="Patient").exists():
                 return "Patient"
             return ""
         return ""
