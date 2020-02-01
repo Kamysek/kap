@@ -366,25 +366,25 @@ class Query(graphene.ObjectType):
             return []
         qs = Appointment.objects.all().filter(taken=False)
 
+        userObj = info.context.user
+
+        if kwargs.get('user_id'):
+            userObj = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            qs.filter(patient=userObj)
+
         try:
-            checkups = info.context.user.study_participation.checkup_set.all().order_by("daysUntil")
-            appointmentsAttended = Appointment.objects.all().filter(patient=info.context.user).filter(
+            checkups = userObj.study_participation.checkup_set.all().order_by("daysUntil")
+            appointmentsAttended = Appointment.objects.all().filter(patient=userObj).filter(
                 noshow=False).order_by(
                 'appointment_start')  # get number of  attended appointments
             appointmentCount = countSeperateAppointments(appointmentsAttended)
             nextCheckup = checkups[appointmentCount]
-            date = max(info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil),timezone.now() + timedelta(days=7))
+            date = max(userObj.date_joined + timedelta(days=nextCheckup.daysUntil),timezone.now() + timedelta(days=7))
         except:
             raise GraphQLError(message="User does not have study participation!")
 
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
-        user_id = kwargs.get('user_id')
-
-        if user_id:
-            user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
-            qs.filter(patient=user_instance)
-
 
         if date:
             startdate = date - timedelta(days=minusdays)
@@ -392,7 +392,7 @@ class Query(graphene.ObjectType):
             qs = qs.filter(appointment_start__range=[startdate, enddate])
 
         slot_list = []
-        if info.context.user.timeslots_needed > 1:
+        if userObj.timeslots_needed > 1:
             if minusdays is None:
                 minusdays = 0
             if plusdays is None:
@@ -412,20 +412,20 @@ class Query(graphene.ObjectType):
 
                 qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
 
-                if qs_tmp and info.context.user.timeslots_needed is 2:
+                if qs_tmp and userObj.timeslots_needed is 2:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             if a.appointment_end == b.appointment_start:
                                 slot_list.append([a, b])
 
-                if qs_tmp and info.context.user.timeslots_needed is 3:
+                if qs_tmp and userObj.timeslots_needed is 3:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             for c in qs_tmp:
                                 if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start:
                                     slot_list.append([a, b, c])
 
-                if qs_tmp and info.context.user.timeslots_needed is 4:
+                if qs_tmp and userObj.timeslots_needed is 4:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             for c in qs_tmp:
