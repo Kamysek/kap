@@ -55,16 +55,32 @@ class UserFilter(django_filters.FilterSet):
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-                  'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed']
+                  'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'groups']
 
 
 class UserType(DjangoObjectType):
+    group = graphene.String()
+
     class Meta:
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
         fields = (
             'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
-            'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set')
+            'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set','group')
+
+    @login_required
+    def resolve_group(self, info):
+        if has_group(["Patient", "Admin", "Doctor", "Labor"], info) or self == info.context.user:
+            if self.groups.filter(name="Admin").exists():
+                return "Admin"
+            if self.user.groups.filter(name="Doctor").exists():
+                return "Doctor"
+            if self.user.groups.filter(name="Labor").exists():
+                return "Labor"
+            if self.user.groups.filter(name="Patient").exists():
+                return "Patient"
+            return ""
+        return ""
 
     @login_required
     def resolve_id(self, info):
@@ -199,8 +215,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         email_notification = graphene.Boolean()
         study_participation = graphene.ID()
         timeslots_needed = graphene.Int()
-        add_group = graphene.String()
-        remove_group = graphene.String()
+        group = graphene.String()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -218,14 +233,15 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.is_active = input.get('study_participation')
                     if input.get('timeslots_needed'):
                         user_instance.is_active = input.get('timeslots_needed')
-                    if input.get('add_group'):
-                        if input.get('add_group') == "Admin" and not has_group(["Admin"], info):
-                            raise UnauthorisedAccessError(message='Must be Admin to create Admin')
-                        Group.objects.get(name=input.get('add_group')).user_set.add(user_instance)
-                    if input.get('remove_group'):
-                        if input.get('remove_group') == "Admin" and not has_group(["Admin"], info):
-                            raise UnauthorisedAccessError(message='Must be Admin to remove Admin')
-                        Group.objects.get(name=input.get('removegroup')).user_set.remove(user_instance)
+                    if input.get('group'):
+                        current_group = user_instance.groups.first()
+                        if not Group.objects.filter(name=input.get('group')).exists():
+                            raise GraphQLError(message="Unknown group")
+                        if not has_group(["Admin"], info) and (input.get('group') == "Admin" or current_group == "Admin"):
+                            raise UnauthorisedAccessError(message='Must be Admin to modify Admin')
+                        for g in user_instance.groups:
+                            g.user_set.remove(user_instance)
+                        Group.objects.get(name=input.get('group')).user_set.add(user_instance)
                     user_instance.save()
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
