@@ -210,6 +210,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
 
     class Input:
         id = graphene.ID(required=True)
+        username = graphene.String()
         password = graphene.String()
         email = graphene.String()
         email_notification = graphene.Boolean()
@@ -223,6 +224,8 @@ class UpdateUser(graphene.relay.ClientIDMutation):
             try:
                 user_instance = CustomUser.objects.get(pk=valid_id(input.get('id'), UserType)[1])
                 if user_instance:
+                    if input.get('username'):
+                        user_instance.username=input.get('username')
                     if input.get('password'):
                         user_instance.set_password(input.get('password'))
                     if input.get('email'):
