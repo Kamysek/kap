@@ -54,8 +54,8 @@ export class AppointmentsService {
   `;
 
   private static GET_POSSIBLE_SLOTS = gql`
-    query getOpenSlots($minus: Int!, $plus: Int!) {
-      getSlotLists(minusdays: $minus, plusdays: $plus) {
+    query getOpenSlots($minus: Int!, $plus: Int!, $user: ID) {
+      getSlotLists(minusdays: $minus, plusdays: $plus, userId: $user) {
         appointmentStart
         appointmentEnd
         id
@@ -65,7 +65,12 @@ export class AppointmentsService {
 
   private static GET_WEEK_APPOINTMENTS = gql`
     query getWeekAppointments($after: DateTime!, $before: DateTime!) {
-      getAppointments(taken: true, after: $after, before: $before) {
+      getAppointments(
+        taken: true
+        hasPatient: true
+        after: $after
+        before: $before
+      ) {
         edges {
           node {
             id
@@ -76,6 +81,7 @@ export class AppointmentsService {
             commentDoctor
             commentPatient
             patient {
+              id
               username
               email
             }
@@ -143,13 +149,14 @@ export class AppointmentsService {
       );
   }
 
-  public getFreeSlots(date: Date, minus = 7, plus = 7) {
+  public getFreeSlots(minus = 7, plus = 7, user = null) {
     return this.apollo
       .watchQuery<getOpenSlots, getOpenSlotsVariables>({
         query: AppointmentsService.GET_POSSIBLE_SLOTS,
         variables: {
           minus,
-          plus
+          plus,
+          user
         }
       })
       .valueChanges.pipe(
@@ -184,6 +191,7 @@ export class AppointmentsService {
             .toDate(),
           before: moment()
             .endOf('isoWeek')
+            .add(1, 'week')
             .toDate()
         }
       })
@@ -199,8 +207,8 @@ export class AppointmentsService {
       );
   }
 
-  public getDays({ date, minus, plus }) {
-    return this.getFreeSlots(date, minus, plus).pipe(
+  public getDays({ minus, plus, userId = null }) {
+    return this.getFreeSlots(minus, plus, userId).pipe(
       map(slots => {
         const days = {};
         slots.forEach(slot => {
@@ -310,5 +318,9 @@ export class AppointmentsService {
         { query: UserService.LOAD_USER_DETAILS }
       ]
     });
+  }
+
+  public reportNoShow(id) {
+    this.updateAppointment({ id });
   }
 }

@@ -369,7 +369,7 @@ class Query(graphene.ObjectType):
         userObj = info.context.user
 
         if kwargs.get('user_id'):
-            userObj = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            userObj = CustomUser.objects.get(pk=valid_id(kwargs.get('user_id'), UserType)[1])
             qs.filter(patient=userObj)
 
         try:

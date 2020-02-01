@@ -1,0 +1,27 @@
+<h1 mat-dialog-title>Make an appointment for {{ data.user.username }}</h1>
+<mat-dialog-content>
+  <div
+    gdAuto
+    gdColumns="repeat(auto-fit, minmax(175px, 1fr))"
+    gdGap="1rem"
+    style="margin-bottom: 1rem;"
+  >
+    <ng-container *ngFor="let day of days">
+      <strong gdColumn="1 / -1">{{ day.dayMoment | date: 'fullDate' }}</strong>
+      <mat-card *ngFor="let slot of day.slots">
+        <mat-card-title
+          >{{ slot.start | date: 'shortTime' }} -
+          {{ slot.end | date: 'shortTime' }}</mat-card-title
+        >
+        <mat-card-actions>
+          <button [mat-dialog-close]="slot" color="primary" mat-stroked-button>
+            Book Appointment
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </ng-container>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-dialog-close mat-stroked-button>Cancel</button>
+</mat-dialog-actions>

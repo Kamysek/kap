@@ -19,20 +19,27 @@
           }}</mat-card-subtitle
         >
         <mat-card-content>
-          <p>
-            <strong>Patient comment:</strong><br />{{
-              appointment.commentPatient
-            }}
-          </p>
-          <strong>Doctor Comment</strong> <br />
-          <mat-form-field>
-            <textarea matInput placeholder="Leave a comment"></textarea>
-          </mat-form-field>
+          <div fxLayout="row" fxLayoutGap="1rem">
+            <div fxFlex fxLayout="column">
+              <strong>Doctor Comment</strong> <br />
+              <mat-form-field>
+                <textarea matInput placeholder="Leave a comment"></textarea>
+              </mat-form-field>
+            </div>
+            <p fxFlex>
+              <strong>Patient comment:</strong><br />{{
+                appointment.commentPatient
+              }}
+            </p>
+          </div>
         </mat-card-content>
         <mat-card-actions>
           <button color="primary" mat-stroked-button>Save comment</button>
           <button color="warn" mat-stroked-button>Mark as no-show</button>
-          <button mat-stroked-button>
+          <button
+            (click)="makeNewAppointment(appointment.patient)"
+            mat-stroked-button
+          >
             Make new appointment for this patient
           </button>
         </mat-card-actions>

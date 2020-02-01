@@ -8,6 +8,7 @@ import { AuthGuard } from '../guards/auth.guard';
 import { SurveyOverviewComponent } from './survey-overview/survey-overview.component';
 import { SharedModule } from '../shared/shared.module';
 import { CollectCommentDialogComponent } from './collect-comment-dialog/collect-comment-dialog.component';
+import { NextAppointmentsComponent } from './next-appointments/next-appointments.component';
 
 const routes: Routes = [
   { path: 'patient', component: PatientComponent, canActivate: [AuthGuard] }
@@ -19,7 +20,8 @@ const routes: Routes = [
     AppointmentOverviewComponent,
     PatientDataComponent,
     SurveyOverviewComponent,
-    CollectCommentDialogComponent
+    CollectCommentDialogComponent,
+    NextAppointmentsComponent
   ],
   entryComponents: [CollectCommentDialogComponent],
   imports: [CommonModule, RouterModule.forChild(routes), SharedModule]

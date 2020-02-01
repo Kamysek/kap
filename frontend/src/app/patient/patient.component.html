@@ -8,7 +8,10 @@
     <button (click)="logout()" mat-flat-button>LOGOUT</button>
   </div>
   <div fxLayout="column" fxLayout.gt-md="row" fxLayoutGap="4rem">
-    <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
+    <div fxLayout="column" fxLayout.gt-sm="row" fxLayoutGap="2rem">
+      <kap-patient-data [patient]="patient$ | async"></kap-patient-data>
+      <kap-next-appointments [user]="patient$ | async"></kap-next-appointments>
+    </div>
     <kap-appointment-overview
       (loadMore)="loadMoreAppointments()"
       [appointments]="slots$ | async"

@@ -188,6 +188,7 @@ type Query {
     appointmentStart: DateTime
     before: DateTime
     first: Int
+    hasPatient: Boolean
     last: Int
     taken: Boolean
     title: String
@@ -214,7 +215,11 @@ type Query {
     timeslotsNeeded: Int
     username: String
   ): UserTypeConnection
-  getSlotLists(minusdays: Int = 7, plusdays: Int = 7): [[AppointmentType]]
+  getSlotLists(
+    minusdays: Int = 7
+    plusdays: Int = 7
+    userId: ID
+  ): [[AppointmentType]]
   getStudies(
     after: String
     before: String
@@ -310,6 +315,12 @@ type UserCalledPayload {
 }
 
 type UserType implements Node {
+  appointmentSet(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): AppointmentTypeConnection!
   callSet(
     after: String
     before: String
@@ -363,6 +374,7 @@ input BookSlotsInput {
   appointmentList: [ID]
   clientMutationId: String
   commentPatient: String
+  userId: ID
 }
 
 input CreateAppointmentInput {
@@ -428,6 +440,7 @@ input UpdateAppointmentInput {
   commentDoctor: String
   commentPatient: String
   id: ID!
+  noshow: Boolean
   patient: String
   taken: Boolean
   title: String

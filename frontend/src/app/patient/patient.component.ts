@@ -44,12 +44,14 @@ export class PatientComponent implements OnInit {
       .open(CollectCommentDialogComponent, { data: slot })
       .afterClosed()
       .toPromise();
-    await this.appointmentsService
-      .bookSlot(
-        { input: { commentPatient, appointmentList: slot.appointments } },
-        this.appointmentConfig.value
-      )
-      .toPromise();
+    if (commentPatient) {
+      await this.appointmentsService
+        .bookSlot(
+          { input: { commentPatient, appointmentList: slot.appointments } },
+          this.appointmentConfig.value
+        )
+        .toPromise();
+    }
   }
 
   loadMoreAppointments() {

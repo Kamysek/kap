@@ -11,7 +11,10 @@ import {
   CreateUserInput,
   UpdateUserInput
 } from '../../../__generated__/globalTypes';
-import { getUserDetails } from '../../../__generated__/getUserDetails';
+import {
+  getUserDetails,
+  getUserDetailsVariables
+} from '../../../__generated__/getUserDetails';
 import { getOverdue } from '../../../__generated__/getOverdue';
 import {
   recordCall,
@@ -26,18 +29,22 @@ import {
   providedIn: 'root'
 })
 export class UserService {
-  private static LOAD_USERS_QUERY = gql`
-    query getUsers {
-      getUsers {
-        edges {
-          node {
-            username
-            email
-            id
-            dateJoined
-            checkupOverdue
-            timeslotsNeeded
-            group
+  public static LOAD_USER_DETAILS = gql`
+    query getUserDetails($afterDate: String) {
+      getMe {
+        id
+        username
+        email
+        dateJoined
+        checkupOverdue
+        appointmentSet(after: $afterDate) {
+          edges {
+            node {
+              appointmentEnd
+              appointmentStart
+              commentDoctor
+              commentPatient
+            }
           }
         }
       }
@@ -69,15 +76,21 @@ export class UserService {
       }
     }
   `;
-
-  public static LOAD_USER_DETAILS = gql`
-    query getUserDetails {
-      getMe {
-        id
-        username
-        email
-        dateJoined
-        checkupOverdue
+  private static LOAD_USERS_QUERY = gql`
+    query getUsers {
+      getUsers {
+        edges {
+          node {
+            username
+            email
+            id
+            dateJoined
+            checkupOverdue
+            timeslotsNeeded
+            group
+            emailNotification
+          }
+        }
       }
     }
   `;
@@ -146,14 +159,17 @@ export class UserService {
 
   getOwnDetails() {
     return this.apollo
-      .watchQuery<getUserDetails>({ query: UserService.LOAD_USER_DETAILS })
+      .watchQuery<getUserDetails, getUserDetailsVariables>({
+        query: UserService.LOAD_USER_DETAILS,
+        variables: { afterDate: new Date().toJSON() }
+      })
       .valueChanges.pipe(
-        map(res => res.data.getMe)
-        /*map(me =>
+        map(res => res.data.getMe),
+        map(me =>
           Object.assign({}, me, {
             appointments: me.appointmentSet.edges.map(edge => edge.node)
           })
-        )*/
+        )
       );
   }
 

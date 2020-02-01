@@ -99,6 +99,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "hasPatient",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "before",
                   "type": {
                     "kind": "SCALAR",
@@ -196,6 +206,16 @@
                   "type": {
                     "kind": "SCALAR",
                     "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "userId",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "ID",
                     "ofType": null
                   }
                 }
@@ -3020,6 +3040,16 @@
             {
               "defaultValue": null,
               "description": null,
+              "name": "noshow",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
               "name": "clientMutationId",
               "type": {
                 "kind": "SCALAR",
@@ -3190,6 +3220,16 @@
               "type": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "userId",
+              "type": {
+                "kind": "SCALAR",
+                "name": "ID",
                 "ofType": null
               }
             },
