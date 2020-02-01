@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from account.models import CustomUser
 
-
+'''
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ('username', 'email', 'is_staff', 'is_active', 'email_notification', 'timeslots_needed')
@@ -23,3 +23,4 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
+'''
