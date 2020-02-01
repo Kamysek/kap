@@ -271,7 +271,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             if appointment_instance.patient.email_notification:
                                 VIPreminder(appointment_instance.patient)
-                    if input.get('taken'):
+                    if input.get('taken') or not input.get('taken'):
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
                             deleteNotify(appointment_instance.patient)
