@@ -244,7 +244,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
         comment_patient = graphene.String()
         appointment_start = graphene.DateTime()
         appointment_end = graphene.DateTime()
-        patient = graphene.ID()
+        patient = graphene.String()
         taken = graphene.Boolean()
 
     @login_required
@@ -264,10 +264,12 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     if input.get('appointment_end'):
                         appointment_instance.appointment_end = input.get('appointment_end')
                     if input.get('patient'):
-                        appointment_instance.patient = CustomUser.objects.get(pk=HelperMethods.valid_id(input.get('patient'), UserType)[1])
-                        appointment_instance.taken = True
-                        if appointment_instance.patient.email_notification:
-                            VIPreminder(appointment_instance.patient)
+                        userObj = CustomUser.objects.all().filter(username=input.get('patient'))[0]
+                        if userObj:
+                            appointment_instance.patient = userObj
+                            appointment_instance.taken = True
+                            if appointment_instance.patient.email_notification:
+                                VIPreminder(appointment_instance.patient)
                     if input.get('taken'):
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
