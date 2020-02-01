@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { first, startWith } from 'rxjs/operators';
+import { first, map, startWith } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
@@ -14,6 +14,7 @@ import { AppointmentsService } from '../../services/appointments.service';
 })
 export class AppointmentsComponent implements OnInit {
   appointments: Observable<any>;
+  hasAppointments: Observable<boolean>;
 
   constructor(
     private route: ActivatedRoute,
@@ -25,6 +26,9 @@ export class AppointmentsComponent implements OnInit {
     this.appointments = this.appointmentsService
       .getWeeks()
       .pipe(startWith(this.route.snapshot.data.appointments));
+    this.hasAppointments = this.appointments.pipe(
+      map(appointments => !!Object.keys(appointments).length)
+    );
   }
 
   openAppointmentsDialog() {

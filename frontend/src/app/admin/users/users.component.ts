@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { first, map } from 'rxjs/operators';
+import { first, startWith } from 'rxjs/operators';
 import { MatDialog, MatTableDataSource } from '@angular/material';
 import { FormControl } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -34,7 +34,9 @@ export class UsersComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    this.users$ = this.route.data.pipe(map(data => data.users));
+    this.users$ = this.usersService
+      .getUsers()
+      .pipe(startWith(this.route.snapshot.data.users));
     this.dataSource = new MatTableDataSource(
       await this.users$.pipe(first()).toPromise()
     );

@@ -4,7 +4,14 @@
     Add new Appointments
   </button>
   <kap-week-switcher
+    *ngIf="hasAppointments | async; else noAppointments"
     (open)="editAppointment($event)"
     [weeks]="appointments | async"
   ></kap-week-switcher>
+  <ng-template #noAppointments>
+    <h3 style="margin-top: 2rem;">
+      Currently there are no Appointments in the system, please add some to get
+      started!
+    </h3>
+  </ng-template>
 </main>
