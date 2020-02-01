@@ -1,10 +1,10 @@
-rm kap/account/migrations/0001_initial.py
-rm kap/appointments/migrations/0001_initial.py
-rm kap/boards/migrations/0001_initial.py
-rm kap/survey/migrations/0001_initial.py
-rm kap/db.sqlite3
-python kap/manage.py makemigrations
-python kap/manage.py migrate
-python kap/manage.py custom_migrations
-python kap/manage.py graphql_schema
-python kap/manage.py exampleDB
+rm account/migrations/0001_initial.py
+rm appointments/migrations/0001_initial.py
+rm boards/migrations/0001_initial.py
+rm survey/migrations/0001_initial.py
+rm db.sqlite3
+python manage.py makemigrations
+python manage.py migrate
+python manage.py custom_migrations
+python manage.py graphql_schema
+python manage.py exampleDB
