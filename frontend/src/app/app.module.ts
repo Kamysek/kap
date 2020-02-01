@@ -7,7 +7,11 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoginComponent } from './login/login.component';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  HttpClientModule,
+  HttpClientXsrfModule
+} from '@angular/common/http';
 import { AuthInterceptor } from './services/auth.interceptor';
 import { AdminModule } from './admin/admin.module';
 import { GraphQLModule } from './graphql.module';
@@ -26,6 +30,10 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
+    HttpClientXsrfModule.withOptions({
+      cookieName: 'csrftoken',
+      headerName: 'X-CSRFToken'
+    }),
     BrowserAnimationsModule,
     SharedModule,
     AdminModule,
