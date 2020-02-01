@@ -15,6 +15,7 @@ from account.schema import UserType
 from utils.mailUtils import VIPreminder, deleteNotify
 import datetime
 from django.utils.timezone import make_aware
+from django.utils import timezone
 
 
 def isAppointmentFree(newAppointment):
@@ -362,7 +363,7 @@ class Query(graphene.ObjectType):
                 'appointment_start')  # get number of  attended appointments
             appointmentCount = countSeperateAppointments(appointmentsAttended)
             nextCheckup = checkups[appointmentCount]
-            date = info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil)
+            date = max(info.context.user.date_joined + timedelta(days=nextCheckup.daysUntil),timezone.now() + timedelta(days=7))
         except:
             raise GraphQLError(message="User does not have study participation!")
 
