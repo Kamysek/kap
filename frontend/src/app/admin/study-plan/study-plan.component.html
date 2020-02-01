@@ -9,6 +9,8 @@
     </mat-select>
   </mat-form-field>
   <kap-display-study-plan
+    (newItem)="newCheckup($event)"
+    (removeItem)="deleteCheckup($event)"
     [plan]="selectedPlan | async"
   ></kap-display-study-plan>
 </main>

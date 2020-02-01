@@ -20,7 +20,7 @@ export class DisplayStudyPlanComponent implements OnChanges {
   @Output() newItem = new EventEmitter();
   @Output() removeItem = new EventEmitter();
   items = new BehaviorSubject([]);
-  monthControl = new FormControl(null, Validators.pattern('d+'));
+  monthControl = new FormControl(null, Validators.pattern(/\d+/));
   nameControl = new FormControl('', Validators.required);
 
   constructor() {}

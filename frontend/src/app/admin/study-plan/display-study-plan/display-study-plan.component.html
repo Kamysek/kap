@@ -1,10 +1,12 @@
-<div gdAuto gdColumns="repeat(2, max-content)" gdGap="1rem">
+<div gdAuto gdColumns="repeat(3, max-content)" gdGap="1rem">
   <ng-container *ngFor="let item of items | async">
     <span>After {{ asMonths(item.daysUntil) }} months</span>
     <p>{{ item.name }}</p>
-    <!--    <button mat-button color="warn" (click)="removeItem.emit(item)">REMOVE</button>-->
+    <button (click)="removeItem.emit(item.id)" color="warn" mat-button>
+      REMOVE
+    </button>
   </ng-container>
-  <!--<mat-form-field>
+  <mat-form-field>
     <input
       matInput
       [formControl]="monthControl"
@@ -22,5 +24,5 @@
     [disabled]="nameControl.invalid || monthControl.invalid"
   >
     Add Checkup
-  </button>-->
+  </button>
 </div>
