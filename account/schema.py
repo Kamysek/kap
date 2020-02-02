@@ -313,7 +313,7 @@ class UserCalled(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor", "Labor"], info):
             try:
-                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), CustomUser)[1])
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
             if input.get('comment'):
