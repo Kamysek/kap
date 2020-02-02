@@ -87,13 +87,20 @@ def deleteNotify(user):
         s = smtplib.SMTP(SMTP_SERVER,timeout=TIMEOUT)
         s.starttls()
         s.login(MY_ADDRESS, PASSWORD)
-        for doc in User.objects.all().filter(groups__name="Doctor"):
+    except Exception as err:
+        print("error sending email: {0}".format(err))
+        return
+    for doc in User.objects.all().filter(groups__name="Doctor"):
+        try:
             msg = EmailMessage()
             msg.set_content("Der Patient\": " + user.username + " hat einen Termin abgebrochen!")
             msg['Subject'] = "Patient hat Termin ABGEBROCHEN"
             msg['From'] = EMAIL_FROM
             msg['To'] = doc.email
             s.send_message(msg)
+        except Exception as err:
+            print("error sending email: {0}".format(err))
+    try:
         msg = EmailMessage()
         msg['From'] = "kapTest@web.de"
         msg['Subject'] = "Termin ABGEBROCHEN"
@@ -103,8 +110,9 @@ def deleteNotify(user):
         s.quit()
         return
     except Exception as err:
-        print("error sending email: {0}".format(err))
+        print("error sending email: {0}".format(err))#
         return
+
 
 
 def VIPreminder(vip):
@@ -112,7 +120,11 @@ def VIPreminder(vip):
         s = smtplib.SMTP(SMTP_SERVER, timeout=TIMEOUT)
         s.starttls()
         s.login(MY_ADDRESS, PASSWORD)
-        for doc in User.objects.all().filter(groups__name="Doctor"):
+    except Exception as err:
+        print("error sending email: {0}".format(err))
+        return
+    for doc in User.objects.all().filter(groups__name="Doctor"):
+        try:
             msg = EmailMessage()
             msg.set_content("Ein \"Very Important Patient\": " + vip.username +" hat sich für einen Termin angemeldet!")
             msg['Subject'] = "VIP Terminanmeldung"
@@ -120,7 +132,7 @@ def VIPreminder(vip):
             msg['To'] = doc.email
             s.send_message(msg)
             s.quit()
-        return
-    except Exception as err:
-        print("error sending email: {0}".format(err))
-        return
+        except Exception as err:
+            print("error sending email: {0}".format(err))
+    return
+

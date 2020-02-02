@@ -50,8 +50,8 @@ def checkUserOverdue(user):
     appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).order_by('appointment_start')# get number of  attended appointments
     appointmentCount= countSeperateAppointments(appointmentsAttended)
     if appointmentCount == checkups.count() or Appointment.objects.all().filter(patient=user).filter(appointment_start__gte=timezone.now()).count() > 0:# Finished study or already has upcoming appointment
-        user.checkup_overdue = None;
-        user.overdue_notified = timezone.now()
+        user.checkup_overdue = None
+        user.overdue_notified = timezone.now() - timedelta(days=10)
         user.save()
         return
     nextCheckup = checkups[appointmentCount]
@@ -61,8 +61,8 @@ def checkUserOverdue(user):
             if sendOverdueMail(user,nextCheckup.name) != -1:
                 user.overdue_notified = timezone.now()
     else:
-        user.checkup_overdue = None;
-        user.overdue_notified = timezone.now()
+        user.checkup_overdue = None
+        user.overdue_notified = timezone.now()  - timedelta(days=10)
     user.save()
 
 
@@ -74,7 +74,7 @@ def updateUserOverdue(user):#Updates UserOverdue fields without triggering email
     appointmentCount= countSeperateAppointments(appointmentsAttended)
     if appointmentCount == checkups.count() or Appointment.objects.all().filter(patient=user).filter(appointment_start__gte=timezone.now()).count() > 0:# Finished study or already has upcoming appointment
         user.checkup_overdue = None;
-        user.overdue_notified = timezone.now()
+        user.overdue_notified = timezone.now() - timedelta(days=10)
         user.save()
         return
     nextCheckup = checkups[appointmentCount]
@@ -82,7 +82,7 @@ def updateUserOverdue(user):#Updates UserOverdue fields without triggering email
         user.checkup_overdue = user.date_joined + timedelta(days=nextCheckup.daysUntil)
     else:
         user.checkup_overdue = None;
-        user.overdue_notified = timezone.now()
+        user.overdue_notified = timezone.now() - timedelta(days=10)
     user.save()
 
 

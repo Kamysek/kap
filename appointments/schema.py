@@ -237,9 +237,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            print(1)
             threading.Thread(target=updateandremind(user_instance)).start()
-            print(2)
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -296,7 +294,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     if input.get('taken') != None and not input.get('taken'):
-                       threading.Thread(target=checkUserOverdue(pat)).start()
+                        threading.Thread(target=checkUserOverdue(pat)).start()
                     return CreateAppointment(appointment=appointment_instance)
                 elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
