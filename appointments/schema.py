@@ -239,7 +239,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            threading.Thread(target=updateandremind(user_instance)).start()
+            threading.Thread(target=updateandremind,args=(user_instance,)).start()
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -285,18 +285,18 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             pat = userObj
                             if pat.email_notification:
-                                threading.Thread(target=VIPreminder(pat)).start()
+                                threading.Thread(target=VIPreminder,args=(pat,)).start()
                     if input.get('taken') != None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
-                            threading.Thread(target=deleteNotify(pat)).start()
+                            threading.Thread(target=deleteNotify,args=(pat,)).start()
                             appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
                     if not isAppointmentFree(appointment_instance):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     if input.get('taken') != None and not input.get('taken'):
-                        threading.Thread(target=checkUserOverdue(pat)).start()
+                        threading.Thread(target=checkUserOverdue,args=(pat,)).start()
                     return CreateAppointment(appointment=appointment_instance)
                 elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
@@ -336,7 +336,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                         appointment_instance.taken = False
                         appointment_instance.save()
                         updateUserOverdue(info.context.user)
-                        t1 = threading.Thread(target=deleteNotify(info.context.user))
+                        t1 = threading.Thread(target=deleteNotify,args=(info.context.user,))
                         t1.start()
                 return DeleteAppointment(ok=True)
         else:
