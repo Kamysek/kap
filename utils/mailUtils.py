@@ -7,24 +7,24 @@ User = get_user_model()
 EMAIL_FROM = "kapTest@web.de"
 
 def sendTestMail(recipient):
-    msg = EmailMessage()
-    msg.body = "TestBody"
-    msg.subject = "TestSubject"
-    msg.from_email = EMAIL_FROM
-    msg.to = [recipient.email]
     try:
+        msg = EmailMessage()
+        msg.body = "TestBody"
+        msg.subject = "TestSubject"
+        msg.from_email = EMAIL_FROM
+        msg.to = [recipient.email]
         msg.send(fail_silently=False)
     except Exception as err:
         print("error sending email: {0}".format(err))
         return -1
 
 def sendWeekReminderMail(recipient):
-    msg = EmailMessage()
-    msg.body = "Sie haben demnächst einen Termin bei uns!"
-    msg.subject = "Termin Erinnerung"
-    msg.from_email = EMAIL_FROM
-    msg.to = [recipient.email]
     try:
+        msg = EmailMessage()
+        msg.body = "Sie haben demnächst einen Termin bei uns!"
+        msg.subject = "Termin Erinnerung"
+        msg.from_email = EMAIL_FROM
+        msg.to = [recipient.email]
         msg.send(fail_silently=False)
         return 0
     except Exception as err:
@@ -33,12 +33,12 @@ def sendWeekReminderMail(recipient):
 
 
 def sendDayReminderMail(recipient):
-    msg = EmailMessage()
-    msg.body = "Sie haben demnächst einen Termin bei uns!"
-    msg.subject = "Termin Erinnerung"
-    msg.from_email = EMAIL_FROM
-    msg.to = [recipient.email]
     try:
+        msg = EmailMessage()
+        msg.body = "Sie haben demnächst einen Termin bei uns!"
+        msg.subject = "Termin Erinnerung"
+        msg.from_email = EMAIL_FROM
+        msg.to = [recipient.email]
         msg.send(fail_silently=False)
         return 0
     except Exception as err:
@@ -47,12 +47,12 @@ def sendDayReminderMail(recipient):
 
 
 def sendOverdueMail(recipient,checkupName):
-    msg = EmailMessage()
-    msg.body = "Sie nehmen bei einer Studie an unserem Institut teil und sind für ihre Untersuchung \"" + str(checkupName) + "\" überfällig!"
-    msg.subject = "Termin überfällig"
-    msg.from_email = EMAIL_FROM
-    msg.to = [recipient.email]
     try:
+        msg = EmailMessage()
+        msg.body = "Sie nehmen bei einer Studie an unserem Institut teil und sind für ihre Untersuchung \"" + str(checkupName) + "\" überfällig!"
+        msg.subject = "Termin überfällig"
+        msg.from_email = EMAIL_FROM
+        msg.to = [recipient.email]
         msg.send(fail_silently=False)
         return 0
     except Exception as err:
@@ -60,19 +60,19 @@ def sendOverdueMail(recipient,checkupName):
         return -1
 
 def deleteNotify(user):
-    msg = EmailMessage()
-    msg.body = "Der Patient\": " + user.username + " hat einen Termin abgebrochen!"
-    msg.subject = "Patient hat Termin ABGEBROCHEN"
-    msg.from_email= EMAIL_FROM
-    msg.to = []
-    for doc in User.objects.all().filter(groups__name="Doctor"):
-        msg.to.append(doc.email)
-    msg2 = EmailMessage()
-    msg2.from_email = EMAIL_FROM
-    msg2.subject = "Termin ABGEBROCHEN"
-    msg2.body = "BENACHRICHTIGUNG: Ihr Termin bei uns wurde abgebrochen!"
-    msg2.to = [user.email]
     try:
+        msg = EmailMessage()
+        msg.body = "Der Patient\": " + user.username + " hat einen Termin abgebrochen!"
+        msg.subject = "Patient hat Termin ABGEBROCHEN"
+        msg.from_email = EMAIL_FROM
+        msg.to = []
+        for doc in User.objects.all().filter(groups__name="Doctor"):
+            msg.to.append(doc.email)
+        msg2 = EmailMessage()
+        msg2.from_email = EMAIL_FROM
+        msg2.subject = "Termin ABGEBROCHEN"
+        msg2.body = "BENACHRICHTIGUNG: Ihr Termin bei uns wurde abgebrochen!"
+        msg2.to = [user.email]
         msg.send(fail_silently=False)
     except Exception as err:
         print("error sending email: {0}".format(err))
@@ -83,14 +83,14 @@ def deleteNotify(user):
 
 
 def VIPreminder(vip):
-    msg = EmailMessage()
-    msg.body = "Ein \"Very Important Patient\": " + vip.username + " hat sich für einen Termin angemeldet!"
-    msg.subject = "VIP Terminanmeldung"
-    msg.from_email = EMAIL_FROM
-    msg.to = []
-    for doc in User.objects.all().filter(groups__name="Doctor"):
-        msg.to.append(doc.email)
     try:
+        msg = EmailMessage()
+        msg.body = "Ein \"Very Important Patient\": " + vip.username + " hat sich für einen Termin angemeldet!"
+        msg.subject = "VIP Terminanmeldung"
+        msg.from_email = EMAIL_FROM
+        msg.to = []
+        for doc in User.objects.all().filter(groups__name="Doctor"):
+            msg.to.append(doc.email)
         msg.send(fail_silently=False)
     except Exception as err:
         print("error sending email: {0}".format(err))
