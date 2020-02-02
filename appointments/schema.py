@@ -184,15 +184,17 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
-def updateandremind(user):#dirty hack that makes it possible to run in one thread and not hurt processing time
+
+def updateandremind(user):  # dirty hack that makes it possible to run in one thread and not hurt processing time
     updateUserOverdue(user)
     VIPreminder(user)
+
 
 class BookSlots(graphene.relay.ClientIDMutation):
     class Input:
         appointmentList = graphene.List(graphene.ID)
         comment_patient = graphene.String()
-        #user_id = graphene.ID()
+        user_id = graphene.ID()
 
     appointmentList = graphene.List(graphene.ID)
 
@@ -221,8 +223,8 @@ class BookSlots(graphene.relay.ClientIDMutation):
                     max_date = app_end
 
             user_instance = info.context.user
-            #if input.get('user_id'):#REMOVED BECAUSE PATIENT COULD POTENTIALLY BOOK APPOINTMENT FOR ANOTHER PATIENT
-            #    user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
+            if input.get('user_id') and has_group(['Doctor', 'Admin'], info):
+                user_instance = CustomUser.objects.get(pk=valid_id(input.get('user_id'), UserType)[1])
 
             tmp_app = Appointment.objects.get(pk=from_global_id(input.get('appointmentList')[0])[1])
             appointment = Appointment(title=tmp_app.title,
@@ -373,21 +375,19 @@ class Query(graphene.ObjectType):
         qs = Appointment.objects.all().filter(taken=False)
 
         userObj = info.context.user
-
-        if kwargs.get('user_id'):
+        if kwargs.get('user_id') and has_group(['Admin','Doctor','Labor'],info):
             userObj = CustomUser.objects.get(pk=valid_id(kwargs.get('user_id'), UserType)[1])
             qs.filter(patient=userObj)
-
         try:
             checkups = userObj.study_participation.checkup_set.all().order_by("daysUntil")
-            appointmentsAttended = Appointment.objects.all().filter(patient=userObj).filter(
-                noshow=False).order_by(
-                'appointment_start')  # get number of  attended appointments
+            appointmentsAttended = Appointment.objects.all().filter(patient=userObj).filter(noshow=False).order_by('appointment_start')  # get number of  attended appointments
             appointmentCount = countSeperateAppointments(appointmentsAttended)
             nextCheckup = checkups[appointmentCount]
             date = max(userObj.date_joined + timedelta(days=nextCheckup.daysUntil), timezone.now() + timedelta(days=7))
-        except:
+        except Exception as err:
+            print("error: {0}".format(err))
             raise GraphQLError(message="User does not have study participation!")
+
 
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')

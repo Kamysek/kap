@@ -471,10 +471,11 @@ class CreateCheckup(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
-            if (input.get("name") and (len(input.get("name")) != 0) and input.get("study_id") and input.get("days_until") != None):
+            if input.get("name") and (len(input.get("name")) != 0) and input.get("study_id") and input.get("days_until") != None:
+                print(input.get('days_until'))
                 study_instance = Study.objects.get(pk=valid_id(input.get('study_id'), StudyType)[1])
                 if study_instance:
-                    checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("daysUntil"), study=study_instance)
+                    checkup_instance = Checkup(name=input.get("name"), daysUntil=input.get("days_until"), study=study_instance)
                     checkup_instance.save()
                     return CreateCheckup(checkup=checkup_instance)
             else:
@@ -496,7 +497,7 @@ class UpdateCheckup(graphene.relay.ClientIDMutation):
         if has_group(["Admin", "Doctor"], info):
             checkup_instance = Checkup.objects.get(pk=valid_id(input.get('id'), CheckupType)[1])
             if checkup_instance:
-                if input.get("daysUntil"):
+                if input.get("daysUntil") != None:
                     checkup_instance.daysUntil = input.get("daysUntil")
                 if input.get("name"):
                     checkup_instance.name = input.get("name")
