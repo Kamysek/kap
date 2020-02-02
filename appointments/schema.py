@@ -376,6 +376,14 @@ class Query(graphene.ObjectType):
             return []
         qs = Appointment.objects.all().filter(taken=False)
 
+        if kwargs.get('after'):
+            qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
+                datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+        if kwargs.get('before'):
+            qs = qs.filter(appointment_start__range=[make_aware(
+                datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+
+
         userObj = info.context.user
         if kwargs.get('user_id') and has_group(['Admin','Doctor','Labor'],info):
             userObj = CustomUser.objects.get(pk=valid_id(kwargs.get('user_id'), UserType)[1])
