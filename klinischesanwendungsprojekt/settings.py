@@ -27,6 +27,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
+EMAIL_HOST_USER = "kapTest@web.de"
+EMAIL_HOST_PASSWORD = 'kappasswort'
+EMAIL_HOST = "smtp.web.de"
+EMAIL_USE_TLS = True
+EMAIL_TIMEOUT = 5
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 GRAPHQL_JWT = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_EXPIRATION_DELTA': timedelta(days=1),
