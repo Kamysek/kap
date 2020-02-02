@@ -284,19 +284,21 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.patient = userObj
                             appointment_instance.taken = True
                             pat = userObj
-                            if pat.email_notification:
+                            if pat.email_notification and pat:
                                 threading.Thread(target=VIPreminder,args=(pat,)).start()
                     if input.get('taken') != None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
-                            threading.Thread(target=deleteNotify,args=(pat,)).start()
-                            appointment_instance.patient = None
+                            if pat:
+                                threading.Thread(target=deleteNotify,args=(pat,)).start()
+                                appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
                     if not isAppointmentFree(appointment_instance):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     if input.get('taken') != None and not input.get('taken'):
-                        threading.Thread(target=checkUserOverdue,args=(pat,)).start()
+                        if pat:
+                            threading.Thread(target=checkUserOverdue,args=(pat,)).start()
                     return CreateAppointment(appointment=appointment_instance)
                 elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
@@ -418,20 +420,20 @@ class Query(graphene.ObjectType):
 
                 qs_tmp = qs.filter(appointment_start__range=[start_datetime, end_datetime])
 
-                if qs_tmp and userObj.timeslots_needed is 2:
+                if qs_tmp and userObj.timeslots_needed == 2:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             if a.appointment_end == b.appointment_start:
                                 slot_list.append([a, b])
 
-                if qs_tmp and userObj.timeslots_needed is 3:
+                if qs_tmp and userObj.timeslots_needed == 3:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             for c in qs_tmp:
                                 if a.appointment_end == b.appointment_start and b.appointment_end == c.appointment_start:
                                     slot_list.append([a, b, c])
 
-                if qs_tmp and userObj.timeslots_needed is 4:
+                if qs_tmp and userObj.timeslots_needed == 4:
                     for a in qs_tmp:
                         for b in qs_tmp:
                             for c in qs_tmp:
