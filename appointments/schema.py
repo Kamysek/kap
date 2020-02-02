@@ -368,6 +368,9 @@ class Query(graphene.ObjectType):
         if kwargs.get('has_patient') != None:
             qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
+        ##FILTER FOR DAYS
+        qs = qs.filter(appointment_start__range=[timezone.now() - timedelta(days=15), timezone.now() + timedelta(days=45)])
+
         return qs
 
     @login_required
