@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material';
 import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
 import { EditAppointmentDialogComponent } from './edit-appointment-dialog/edit-appointment-dialog.component';
 import { AppointmentsService } from '../../services/appointments.service';
+import { FailedAppointmentsDialogComponent } from './failed-appointments-dialog/failed-appointments-dialog.component';
 
 @Component({
   selector: 'kap-appointments',
@@ -31,8 +32,18 @@ export class AppointmentsComponent implements OnInit {
     );
   }
 
-  openAppointmentsDialog() {
-    this.dialog.open(AddAppointmentsDialogComponent);
+  async openAppointmentsDialog() {
+    const failedAppointments = await this.dialog
+      .open(AddAppointmentsDialogComponent)
+      .afterClosed()
+      .toPromise();
+    console.log(failedAppointments);
+    console.log('Dialog closed');
+    if (failedAppointments && failedAppointments.length) {
+      this.dialog.open(FailedAppointmentsDialogComponent, {
+        data: { failedAppointments }
+      });
+    }
   }
 
   editAppointment(appointment) {

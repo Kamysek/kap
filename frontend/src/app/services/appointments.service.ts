@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import * as moment from 'moment';
 import 'moment-timezone';
 import {
+  AppointmentInput,
   CreateAppointmentInput,
   UpdateAppointmentInput
 } from '../../../__generated__/globalTypes';
@@ -27,6 +28,10 @@ import {
   getOpenSlotsVariables
 } from '../../../__generated__/getOpenSlots';
 import { takeSlot, takeSlotVariables } from '../../../__generated__/takeSlot';
+import {
+  createAppointments,
+  createAppointmentsVariables
+} from '../../../__generated__/createAppointments';
 
 @Injectable({
   providedIn: 'root'
@@ -107,6 +112,18 @@ export class AppointmentsService {
             username
             email
           }
+        }
+      }
+    }
+  `;
+
+  private static CREATE_APPOINTMENTS_MUTATION = gql`
+    mutation createAppointments($input: CreateAppointmentsInput!) {
+      createAppointments(input: $input) {
+        appointments {
+          appointmentStart
+          appointmentEnd
+          id
         }
       }
     }
@@ -302,12 +319,19 @@ export class AppointmentsService {
     });
   }
 
-  public createAppointments(appointments: CreateAppointmentInput[]) {
-    return Promise.all(
+  public createAppointments(appointments: AppointmentInput[]) {
+    return this.apollo
+      .mutate<createAppointments, createAppointmentsVariables>({
+        mutation: AppointmentsService.CREATE_APPOINTMENTS_MUTATION,
+        variables: { input: { appointments } },
+        refetchQueries: [{ query: AppointmentsService.GET_APPOINTMENTS_QUERY }]
+      })
+      .pipe(map(res => res.data.createAppointments.appointments));
+    /*return Promise.all(
       appointments.map(appointment =>
         this.createAppointment(appointment).toPromise()
       )
-    );
+    );*/
   }
 
   public bookSlot(variables: takeSlotVariables, config: getOpenSlotsVariables) {

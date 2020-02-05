@@ -104,7 +104,9 @@ export class AddAppointmentsDialogComponent implements OnInit {
         )
       );
     }, []);
-    await this.appointmentsService.createAppointments(appointments);
-    this.dialog.close(true);
+    const failed = await this.appointmentsService
+      .createAppointments(appointments)
+      .toPromise();
+    this.dialog.close(failed);
   }
 }

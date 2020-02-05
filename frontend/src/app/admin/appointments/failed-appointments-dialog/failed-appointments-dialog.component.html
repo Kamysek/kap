@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Some Appointments could not be created</h2>
+<mat-dialog-content>
+  <mat-list *ngFor="let appointment of data.failedAppointments">
+    <mat-list-item
+      >{{ appointment.appointmentStart | date: 'medium' }} -
+      {{ appointment.appointmentEnd | date: 'medium' }}</mat-list-item
+    >
+  </mat-list>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button color="primary" mat-stroked-button>Close</button>
+</mat-dialog-actions>

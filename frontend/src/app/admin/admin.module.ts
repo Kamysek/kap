@@ -15,6 +15,7 @@ import { PlanResolver } from './resolvers/plan.resolver';
 import { DisplayStudyPlanComponent } from './study-plan/display-study-plan/display-study-plan.component';
 import { OverduePatientsComponent } from './overdue-patients/overdue-patients.component';
 import { EditAppointmentDialogComponent } from './appointments/edit-appointment-dialog/edit-appointment-dialog.component';
+import { FailedAppointmentsDialogComponent } from './appointments/failed-appointments-dialog/failed-appointments-dialog.component';
 
 const routes: Routes = [
   {
@@ -62,13 +63,15 @@ const routes: Routes = [
     StudyPlanComponent,
     DisplayStudyPlanComponent,
     OverduePatientsComponent,
-    EditAppointmentDialogComponent
+    EditAppointmentDialogComponent,
+    FailedAppointmentsDialogComponent
   ],
   imports: [CommonModule, RouterModule.forChild(routes), SharedModule],
   entryComponents: [
     NewUserDialogComponent,
     AddAppointmentsDialogComponent,
-    EditAppointmentDialogComponent
+    EditAppointmentDialogComponent,
+    FailedAppointmentsDialogComponent
   ]
 })
 export class AdminModule {}
