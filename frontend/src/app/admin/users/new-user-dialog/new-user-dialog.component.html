@@ -12,14 +12,29 @@
     <mat-form-field>
       <input formControlName="email" matInput placeholder="Mail" type="email" />
     </mat-form-field>
-    <mat-form-field>
-      <input
-        formControlName="timeslotsNeeded"
-        matInput
-        placeholder="Appointment Slots"
-        type="number"
-      />
-    </mat-form-field>
+    <div fxLayout="row" fxLayoutGap="1rem">
+      <mat-form-field fxFlex>
+        <input
+          formControlName="timeslotsNeeded"
+          matInput
+          placeholder="Appointment Slots"
+          type="number"
+        />
+      </mat-form-field>
+      <mat-form-field fxFlex>
+        <input
+          [matDatepicker]="myDatepicker"
+          formControlName="dateJoined"
+          matInput
+          placeholder="Join date"
+        />
+        <mat-datepicker-toggle
+          [for]="myDatepicker"
+          matSuffix
+        ></mat-datepicker-toggle>
+        <mat-datepicker #myDatepicker></mat-datepicker>
+      </mat-form-field>
+    </div>
     <mat-form-field>
       <input
         formControlName="password"

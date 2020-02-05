@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material';
+import * as moment from 'moment';
 
 @Component({
   selector: 'kap-new-user-dialog',
@@ -18,7 +19,8 @@ export class NewUserDialogComponent implements OnInit {
       timeslotsNeeded: [1],
       emailNotification: [false, Validators.required],
       password: ['', Validators.required],
-      group: ['Patient', Validators.required]
+      group: ['Patient', Validators.required],
+      dateJoined: [moment(), Validators.required]
     });
   }
 
