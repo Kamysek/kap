@@ -12,7 +12,7 @@ from graphql import GraphQLError
 from account.models import CustomUser, Checkup, Study, Call
 from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
-from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError, countSeperateAppointments
+from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError, countSeperateAppointments,updateUserOverdue
 
 
 class CallFilter(django_filters.FilterSet):
@@ -67,7 +67,7 @@ class UserType(DjangoObjectType):
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
         fields = (
-            'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
+            'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'next_checkup',
             'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set', 'group', 'appointment_set')
 
     @login_required
@@ -83,6 +83,12 @@ class UserType(DjangoObjectType):
                 return "Patient"
             return ""
         return ""
+
+    @login_required
+    def resolve_next_checkup(self, info):
+        if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
+            return self.next_checkup
+        return None
 
     @login_required
     def resolve_id(self, info):
@@ -212,7 +218,7 @@ class CreateUser(graphene.relay.ClientIDMutation):
             user_instance.set_password(input.get('password'))
 
             user_instance.save()
-
+            updateUserOverdue(user_instance)
             if input.get('group') == "Admin" and not has_group(["Admin"], info):
                 user_instance.delete()
                 raise UnauthorisedAccessError(message='Must be Admin to create Admin')
@@ -267,6 +273,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                             g.user_set.remove(user_instance)
                         Group.objects.get(name=input.get('group')).user_set.add(user_instance)
                     user_instance.save()
+                    updateUserOverdue(user_instance)
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')
