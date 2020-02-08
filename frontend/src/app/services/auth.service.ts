@@ -22,49 +22,49 @@ export class AuthService {
     return !!this.authToken;
   }
 
-  login(username: string, password: string) {
+  async login(username: string, password: string) {
     const query = `mutation($username: String!, $password: String!){tokenAuth(username:$username, password:$password){token}}`;
     const variables = { username, password };
-    this.http
+    const res = await this.http
       .post<{ data?: { tokenAuth: { token: string } } }>('/graphql/', {
         query,
         variables
       })
-      .subscribe(res => {
-        console.log(res);
-        if (res.hasOwnProperty('data')) {
-          this.authToken = res.data.tokenAuth.token;
-          localStorage.setItem('kap-token', this.authToken);
-          this.http
-            .post<{ data?: { getUserGroup: string } }>('/graphql/', {
-              query: `query{getUserGroup}`
-            })
-            .subscribe(groupRes => {
-              if (groupRes.hasOwnProperty('data')) {
-                this.group = groupRes.data.getUserGroup;
-                localStorage.setItem('kap-group', this.group);
-                switch (this.group) {
-                  case 'Admin': {
-                    this.router.navigate(['/admin/appointments']);
-                    break;
-                  }
-                  case 'Doctor': {
-                    this.router.navigate(['/doctor']);
-                    break;
-                  }
-                  case 'Labor': {
-                    this.router.navigate(['/lab']);
-                    break;
-                  }
-                  default: {
-                    this.router.navigate(['/patient']);
-                    break;
-                  }
-                }
-              }
-            });
+      .toPromise();
+    if (!!res.data.tokenAuth) {
+      this.authToken = res.data.tokenAuth.token;
+      localStorage.setItem('kap-token', this.authToken);
+      const groupRes = await this.http
+        .post<{ data?: { getUserGroup: string } }>('/graphql/', {
+          query: `query{getUserGroup}`
+        })
+        .toPromise();
+      if (groupRes.hasOwnProperty('data')) {
+        this.group = groupRes.data.getUserGroup;
+        localStorage.setItem('kap-group', this.group);
+        switch (this.group) {
+          case 'Admin': {
+            await this.router.navigate(['/admin/appointments']);
+            break;
+          }
+          case 'Doctor': {
+            await this.router.navigate(['/doctor']);
+            break;
+          }
+          case 'Labor': {
+            await this.router.navigate(['/lab']);
+            break;
+          }
+          default: {
+            await this.router.navigate(['/patient']);
+            break;
+          }
         }
-      });
+        return true;
+      }
+    } else {
+      return false;
+    }
   }
 
   logout() {
