@@ -10,8 +10,8 @@ export class AuthService {
   private group: string;
 
   constructor(private http: HttpClient, private router: Router) {
-    this.authToken = localStorage.getItem('kap-token');
-    this.group = localStorage.getItem('kap-group');
+    this.authToken = sessionStorage.getItem('kap-token');
+    this.group = sessionStorage.getItem('kap-group');
   }
 
   get authorization() {
@@ -33,7 +33,7 @@ export class AuthService {
       .toPromise();
     if (!!res.data.tokenAuth) {
       this.authToken = res.data.tokenAuth.token;
-      localStorage.setItem('kap-token', this.authToken);
+      sessionStorage.setItem('kap-token', this.authToken);
       const groupRes = await this.http
         .post<{ data?: { getUserGroup: string } }>('/graphql/', {
           query: `query{getUserGroup}`
@@ -41,7 +41,7 @@ export class AuthService {
         .toPromise();
       if (groupRes.hasOwnProperty('data')) {
         this.group = groupRes.data.getUserGroup;
-        localStorage.setItem('kap-group', this.group);
+        sessionStorage.setItem('kap-group', this.group);
         switch (this.group) {
           case 'Admin': {
             await this.router.navigate(['/admin/appointments']);
@@ -69,9 +69,9 @@ export class AuthService {
 
   logout() {
     this.authToken = null;
-    localStorage.removeItem('kap-token');
+    sessionStorage.removeItem('kap-token');
     this.group = null;
-    localStorage.removeItem('kap-group');
+    sessionStorage.removeItem('kap-group');
     this.router.navigate(['login']);
   }
 }
