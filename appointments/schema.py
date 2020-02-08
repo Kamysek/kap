@@ -243,7 +243,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
             threading.Thread(target=updateandremind, args=(user_instance,)).start()
-            return CreateAppointments(appointments=appointment)
+            return BookSlots(appointmentList=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
@@ -309,20 +309,39 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             tmp = appointment_instance
                             for i in range(numSlots):
                                 tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
-                                            patient=None,
-                                            appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
-                                            appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
-                                            taken=False)
+                                                  patient=None,
+                                                  appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
+                                                  appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
+                                                  taken=False)
                                 tmp.save()
                             appointment_instance.delete()
                             appointment_instance = tmp
-                    return CreateAppointment(appointment=appointment_instance)
-                elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
-                    appointment_instance.patient = info.context.user
-                    appointment_instance.comment_patient = "" if input.get('comment_patient') is None else input.get('comment_patient'),
-                    appointment_instance.taken = True
-                    appointment_instance.save()
-                return CreateAppointment(appointment=appointment_instance)
+                    return UpdateAppointment(appointment=appointment_instance)
+                elif has_group(["Patient"], info) and (appointment_instance.patient == info.context.user):
+                    if input.get('comment_patient'):
+                        appointment_instance.comment_patient = input.get('comment_patient')
+                        appointment_instance.save()
+                    if input.get('taken') != None and input.get('taken') == False:
+                        if round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) != APPOINTMENT_MINUTES:
+                            numSlots = round(round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) / APPOINTMENT_MINUTES)
+                            print(numSlots)
+                            for i in range(numSlots):
+                                tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
+                                                  patient=None,
+                                                  appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
+                                                  appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
+                                                  taken=False)
+                                tmp.save()
+                            appointment_instance.delete()
+                        else:
+                            appointment_instance.patient = None
+                            appointment_instance.comment_patient = ""
+                            appointment_instance.taken = False
+                            appointment_instance.save()
+                        updateUserOverdue(info.context.user)
+                        t1 = threading.Thread(target=deleteNotify, args=(info.context.user,))
+                        t1.start()
+                return UpdateAppointment(appointment=appointment_instance)
         else:
             raise UnauthorisedAccessError(message='No permissions to change a appointment!')
 
@@ -337,39 +356,16 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
-        if has_group(["Admin", "Doctor", "Patient"], info):
-            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'), AppointmentType)[1] )
+        if has_group(["Admin", "Doctor"], info):
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'), AppointmentType)[1])
             if appointment_instance:
-                if has_group(["Admin", "Doctor"], info):
-                    if input.get('remove_patient'):
-                        appointment_instance.patient = None
-                        appointment_instance.comment_patient = ""
-                        appointment_instance.taken = False
-                        appointment_instance.save()
-                    else:
-                        appointment_instance.delete()
-                elif has_group(["Patient"], info):
-                    if appointment_instance.patient == info.context.user:
-                        appointment_instance.patient = None
-                        appointment_instance.comment_patient = ""
-                        appointment_instance.taken = False
-                        appointment_instance.save()
-                        updateUserOverdue(info.context.user)
-                        t1 = threading.Thread(target=deleteNotify, args=(info.context.user,))
-                        t1.start()
-                        if round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) != APPOINTMENT_MINUTES:
-                            numSlots = round(round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) / APPOINTMENT_MINUTES)
-                            print(numSlots)
-                            tmp = appointment_instance
-                            for i in range(numSlots):
-                                tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
-                                            patient=None,
-                                            appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
-                                            appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
-                                            taken=False)
-                                tmp.save()
-                            appointment_instance.delete()
-
+                if input.get('remove_patient'):
+                    appointment_instance.patient = None
+                    appointment_instance.comment_patient = ""
+                    appointment_instance.taken = False
+                    appointment_instance.save()
+                else:
+                    appointment_instance.delete()
                 return DeleteAppointment(ok=True)
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a appointment!')
