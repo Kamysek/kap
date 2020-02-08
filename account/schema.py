@@ -12,7 +12,7 @@ from graphql import GraphQLError
 from account.models import CustomUser, Checkup, Study, Call
 from graphql_jwt.decorators import login_required
 from appointments.models import Appointment
-from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError, countSeperateAppointments
+from utils.HelperMethods import valid_id, has_group, UnauthorisedAccessError, countSeperateAppointments,updateUserOverdue
 
 
 class CallFilter(django_filters.FilterSet):
@@ -67,7 +67,7 @@ class UserType(DjangoObjectType):
         model = get_user_model()
         interfaces = (graphene.relay.Node,)
         fields = (
-            'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed',
+            'username', 'email', 'email_notification', 'is_staff', 'is_active', 'date_joined', 'password_changed', 'next_checkup',
             'study_participation', 'checkup_overdue', 'overdue_notified', 'timeslots_needed', 'call_set', 'group', 'appointment_set')
 
     @login_required
@@ -83,6 +83,12 @@ class UserType(DjangoObjectType):
                 return "Patient"
             return ""
         return ""
+
+    @login_required
+    def resolve_next_checkup(self, info):
+        if has_group(["Admin", "Doctor", "Labor"], info) or self == info.context.user:
+            return self.next_checkup
+        return None
 
     @login_required
     def resolve_id(self, info):
@@ -192,6 +198,7 @@ class CreateUser(graphene.relay.ClientIDMutation):
         email = graphene.String(required=True)
         group = graphene.String(required=True)
         timeslots_needed = graphene.Int()
+        date_joined = graphene.DateTime()
         email_notification = graphene.Boolean()
 
     @login_required
@@ -206,11 +213,12 @@ class CreateUser(graphene.relay.ClientIDMutation):
                 timeslots_needed=input.get('timeslots_needed') if input.get('timeslots_needed') else 1,
                 study_participation=study_instance if study_instance and input.get('group') == "Patient" else None,
                 email_notification=input.get('email_notification') if input.get('email_notification') else True,
+                date_joined = input.get('date_joined') if input.get('date_joined') else timezone.now(),
             )
             user_instance.set_password(input.get('password'))
 
             user_instance.save()
-
+            updateUserOverdue(user_instance)
             if input.get('group') == "Admin" and not has_group(["Admin"], info):
                 user_instance.delete()
                 raise UnauthorisedAccessError(message='Must be Admin to create Admin')
@@ -233,6 +241,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         study_participation = graphene.ID()
         timeslots_needed = graphene.Int()
         group = graphene.String()
+        date_joined = graphene.DateTime()
 
     @login_required
     def mutate_and_get_payload(self, info, **input):
@@ -252,6 +261,8 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                         user_instance.is_active = input.get('study_participation')
                     if input.get('timeslots_needed'):
                         user_instance.timeslots_needed = input.get('timeslots_needed')
+                    if input.get('date_joined'):
+                        user_instance.date_joined = input.get('date_joined')
                     if input.get('group'):
                         current_group = user_instance.groups.first()
                         if not Group.objects.filter(name=input.get('group')).exists():
@@ -262,6 +273,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
                             g.user_set.remove(user_instance)
                         Group.objects.get(name=input.get('group')).user_set.add(user_instance)
                     user_instance.save()
+                    updateUserOverdue(user_instance)
                     return UpdateUser(user=user_instance)
             except CustomUser.DoesNotExist:
                 raise GraphQLError('User does not exist!')

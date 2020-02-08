@@ -18,6 +18,8 @@ from django.utils.timezone import make_aware
 from django.utils import timezone
 import threading
 
+APPOINTMENT_MINUTES = 30
+
 
 def isAppointmentFree(newAppointment):
     allAppointments = Appointment.objects.all()
@@ -187,7 +189,8 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
 
 def updateandremind(user):  # dirty hack that makes it possible to run in one thread and not hurt processing time
     updateUserOverdue(user)
-    VIPreminder(user)
+    if user.email_notification:
+        VIPreminder(user)
 
 
 class BookSlots(graphene.relay.ClientIDMutation):
@@ -239,7 +242,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
             for app in input.get('appointmentList'):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
-            threading.Thread(target=updateandremind,args=(user_instance,)).start()
+            threading.Thread(target=updateandremind, args=(user_instance,)).start()
             return CreateAppointments(appointments=appointment)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -285,12 +288,12 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             appointment_instance.taken = True
                             pat = userObj
                             if pat.email_notification and pat:
-                                threading.Thread(target=VIPreminder,args=(pat,)).start()
+                                threading.Thread(target=VIPreminder, args=(pat,)).start()
                     if input.get('taken') != None:
                         appointment_instance.taken = input.get('taken')
                         if not input.get('taken'):
                             if pat:
-                                threading.Thread(target=deleteNotify,args=(pat,)).start()
+                                threading.Thread(target=deleteNotify, args=(pat,)).start()
                                 appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
                     if not isAppointmentFree(appointment_instance):
@@ -298,7 +301,22 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     appointment_instance.save()
                     if input.get('taken') != None and not input.get('taken'):
                         if pat:
-                            threading.Thread(target=checkUserOverdue,args=(pat,)).start()
+                            threading.Thread(target=checkUserOverdue, args=(pat,)).start()
+                        # Split up appointment into slots
+                        if round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) != APPOINTMENT_MINUTES:
+                            numSlots = round(round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) / APPOINTMENT_MINUTES)
+                            print(numSlots)
+                            tmp = appointment_instance
+                            for i in range(numSlots):
+                                print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+                                tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
+                                            patient=None,
+                                            appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
+                                            appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
+                                            taken=False)
+                                tmp.save()
+                            appointment_instance.delete()
+                            appointment_instance = tmp
                     return CreateAppointment(appointment=appointment_instance)
                 elif has_group(["Patient"], info) and (appointment_instance.taken == False or appointment_instance.patient == info.context.user):
                     appointment_instance.patient = info.context.user
@@ -338,7 +356,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                         appointment_instance.taken = False
                         appointment_instance.save()
                         updateUserOverdue(info.context.user)
-                        t1 = threading.Thread(target=deleteNotify,args=(info.context.user,))
+                        t1 = threading.Thread(target=deleteNotify, args=(info.context.user,))
                         t1.start()
                 return DeleteAppointment(ok=True)
         else:
@@ -386,9 +404,8 @@ class Query(graphene.ObjectType):
             qs = qs.filter(appointment_start__range=[make_aware(
                 datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
 
-
         userObj = info.context.user
-        if kwargs.get('user_id') and has_group(['Admin','Doctor','Labor'],info):
+        if kwargs.get('user_id') and has_group(['Admin', 'Doctor', 'Labor'], info):
             userObj = CustomUser.objects.get(pk=valid_id(kwargs.get('user_id'), UserType)[1])
             qs.filter(patient=userObj)
         try:
@@ -400,7 +417,6 @@ class Query(graphene.ObjectType):
         except Exception as err:
             print("error: {0}".format(err))
             raise GraphQLError(message="User does not have study participation!")
-
 
         minusdays = kwargs.get('minusdays')
         plusdays = kwargs.get('plusdays')
