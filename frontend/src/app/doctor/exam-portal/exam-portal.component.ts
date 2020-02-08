@@ -3,7 +3,8 @@ import { AuthService } from '../../services/auth.service';
 import { AppointmentsService } from '../../services/appointments.service';
 import { first, map } from 'rxjs/operators';
 import * as moment from 'moment';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MakeAppointmentDialogComponent } from './make-appointment-dialog/make-appointment-dialog.component';
 
 @Component({

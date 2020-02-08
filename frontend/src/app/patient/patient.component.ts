@@ -5,7 +5,7 @@ import { AppointmentsService } from '../services/appointments.service';
 import { BehaviorSubject } from 'rxjs';
 import * as moment from 'moment';
 import { map, switchMap } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { CollectCommentDialogComponent } from './collect-comment-dialog/collect-comment-dialog.component';
 
 @Component({

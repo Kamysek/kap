@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { first, startWith } from 'rxjs/operators';
-import { MatDialog, MatTableDataSource } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTableDataSource } from '@angular/material/table';
 import { FormControl } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.component';

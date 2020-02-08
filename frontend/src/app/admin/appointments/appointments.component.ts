@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { first, map, startWith } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { AddAppointmentsDialogComponent } from './add-appointments-dialog/add-appointments-dialog.component';
 import { EditAppointmentDialogComponent } from './edit-appointment-dialog/edit-appointment-dialog.component';
 import { AppointmentsService } from '../../services/appointments.service';

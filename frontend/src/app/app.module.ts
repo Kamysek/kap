@@ -15,12 +15,13 @@ import {
 import { AuthInterceptor } from './services/auth.interceptor';
 import { AdminModule } from './admin/admin.module';
 import { GraphQLModule } from './graphql.module';
-import { MAT_DATE_LOCALE } from '@angular/material';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { registerLocaleData } from '@angular/common';
 import { PatientModule } from './patient/patient.module';
 import { SharedModule } from './shared/shared.module';
 import { LabModule } from './lab/lab.module';
 import { DoctorModule } from './doctor/doctor.module';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 registerLocaleData(localeEn, 'en-DE', localeEnExtra);
 
@@ -45,6 +46,10 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: { appearance: 'fill' }
+    },
     { provide: LOCALE_ID, useValue: 'en-DE' }
   ],
   bootstrap: [AppComponent]

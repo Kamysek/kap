@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import 'moment-recur-ts';
 import 'moment-timezone';
 import { map, startWith } from 'rxjs/operators';
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { AppointmentsService } from '../../../services/appointments.service';
 
 @Component({
