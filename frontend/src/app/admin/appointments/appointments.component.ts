@@ -53,7 +53,13 @@ export class AppointmentsComponent implements OnInit {
       .pipe(first())
       .subscribe(async patch => {
         if (!!patch) {
-          await this.appointmentsService.updateAppointment(patch).toPromise();
+          if (typeof patch === 'object') {
+            await this.appointmentsService.updateAppointment(patch).toPromise();
+          } else if (patch === 'free') {
+            await this.appointmentsService
+              .updateAppointment({ id: appointment.id, taken: false })
+              .toPromise();
+          }
         }
       });
   }

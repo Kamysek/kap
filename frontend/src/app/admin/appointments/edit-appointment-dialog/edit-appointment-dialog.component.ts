@@ -20,7 +20,11 @@ export class EditAppointmentDialogComponent implements OnInit {
       startDate: [null, Validators.required],
       startTime: ['', Validators.pattern('(0|1)[0-5]|9|8:(00|15|30|45)')],
       title: ['', Validators.required],
-      taken: [false, Validators.required],
+      taken: {
+        value: false,
+        validators: [Validators.required],
+        disabled: true
+      },
       commentDoctor: [''],
       commentPatient: ['']
     });
@@ -46,6 +50,7 @@ export class EditAppointmentDialogComponent implements OnInit {
       this.appointmentForm.get('startDate').disable();
       this.appointmentForm.get('startTime').disable();
     }
+    this.appointmentForm.get('taken').disable();
   }
 
   submit() {
@@ -69,5 +74,9 @@ export class EditAppointmentDialogComponent implements OnInit {
       taken: takenEnabled ? formValue.taken : true
     };
     this.dialog.close(patch);
+  }
+
+  freeAppointment() {
+    this.dialog.close('free');
   }
 }

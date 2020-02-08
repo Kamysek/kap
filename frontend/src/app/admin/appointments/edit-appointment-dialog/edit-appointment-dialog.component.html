@@ -45,6 +45,14 @@
 <mat-dialog-actions>
   <button color="warn" mat-dialog-close mat-stroked-button>Cancel</button>
   <button
+    (click)="freeAppointment()"
+    color="warn"
+    mat-dialog-close
+    mat-stroked-button
+  >
+    Free Appointment
+  </button>
+  <button
     (click)="submit()"
     [disabled]="appointmentForm.invalid"
     color="primary"
