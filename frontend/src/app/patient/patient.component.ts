@@ -4,7 +4,7 @@ import { UserService } from '../services/user.service';
 import { AppointmentsService } from '../services/appointments.service';
 import { BehaviorSubject } from 'rxjs';
 import * as moment from 'moment';
-import { map, switchMap } from 'rxjs/operators';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { CollectCommentDialogComponent } from './collect-comment-dialog/collect-comment-dialog.component';
 
@@ -36,7 +36,15 @@ export class PatientComponent implements OnInit {
     this.slots$ = this.appointmentConfig.pipe(
       switchMap(config => this.appointmentsService.getDays(config))
     );
-    this.patient$ = this.userService.getOwnDetails();
+    this.patient$ = this.userService.getOwnDetails().pipe(
+      filter(user => !!user),
+      tap(details =>
+        this.appointmentConfig.next({
+          ...this.appointmentConfig.value,
+          date: moment(details.nextCheckup)
+        })
+      )
+    );
   }
 
   async takeAppointment(slot) {
@@ -59,6 +67,15 @@ export class PatientComponent implements OnInit {
       ...this.appointmentConfig.value,
       minus: this.appointmentConfig.value.minus + 7
     });
+  }
+
+  async freeAppointment(appointment) {
+    await this.appointmentsService
+      .updateAppointment({
+        id: appointment.id,
+        taken: false
+      })
+      .toPromise();
   }
 
   logout() {

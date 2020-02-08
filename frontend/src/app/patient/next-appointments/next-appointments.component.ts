@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'kap-next-appointments',
@@ -7,6 +7,7 @@ import { Component, Input } from '@angular/core';
 })
 export class NextAppointmentsComponent {
   @Input() user;
+  @Output() freeAppointment = new EventEmitter();
 
   constructor() {}
 }

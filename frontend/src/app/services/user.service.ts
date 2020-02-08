@@ -41,6 +41,7 @@ export class UserService {
         appointmentSet(after: $afterDate) {
           edges {
             node {
+              id
               appointmentEnd
               appointmentStart
               commentDoctor

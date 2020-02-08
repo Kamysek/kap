@@ -134,6 +134,11 @@ export class AppointmentsService {
       updateAppointment(input: $appointment) {
         appointment {
           id
+          taken
+          title
+          commentPatient
+          appointmentStart
+          appointmentEnd
         }
       }
     }

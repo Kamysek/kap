@@ -26,7 +26,10 @@ export class AppointmentOverviewComponent implements OnChanges {
   constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.hasOwnProperty('appointments')) {
+    if (
+      changes.hasOwnProperty('appointments') &&
+      changes.appointments.currentValue
+    ) {
       this.days.next(
         Object.keys(changes.appointments.currentValue).map(day =>
           Object.assign(

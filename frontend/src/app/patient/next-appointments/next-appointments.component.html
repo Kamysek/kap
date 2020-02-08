@@ -1,12 +1,23 @@
 <div fxLayout="column" fxLayoutGap="2rem">
   <h2>Your upcoming appointments</h2>
-  <mat-card *ngFor="let appointment of user.appointments">
+  <mat-card *ngFor="let appointment of user?.appointments">
     <mat-card-title>
       <mat-card-title
         >{{ appointment.appointmentStart | date: 'medium' }} -
         {{ appointment.appointmentEnd | date: 'shortTime' }}</mat-card-title
       >
     </mat-card-title>
-    <mat-card-content></mat-card-content>
+    <mat-card-content>
+      {{ appointment.commentPatient }}
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        (click)="freeAppointment.emit(appointment)"
+        color="warn"
+        mat-flat-button
+      >
+        Termin freigeben
+      </button>
+    </mat-card-actions>
   </mat-card>
 </div>
