@@ -308,7 +308,6 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                             print(numSlots)
                             tmp = appointment_instance
                             for i in range(numSlots):
-                                print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
                                 tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
                                             patient=None,
                                             appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
@@ -339,7 +338,7 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
     @login_required
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor", "Patient"], info):
-            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id')[1], AppointmentType))
+            appointment_instance = Appointment.objects.get(pk=HelperMethods.valid_id(input.get('id'), AppointmentType)[1] )
             if appointment_instance:
                 if has_group(["Admin", "Doctor"], info):
                     if input.get('remove_patient'):
@@ -358,6 +357,19 @@ class DeleteAppointment(graphene.relay.ClientIDMutation):
                         updateUserOverdue(info.context.user)
                         t1 = threading.Thread(target=deleteNotify, args=(info.context.user,))
                         t1.start()
+                        if round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) != APPOINTMENT_MINUTES:
+                            numSlots = round(round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) / APPOINTMENT_MINUTES)
+                            print(numSlots)
+                            tmp = appointment_instance
+                            for i in range(numSlots):
+                                tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
+                                            patient=None,
+                                            appointment_start=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i),
+                                            appointment_end=appointment_instance.appointment_start + timedelta(minutes=APPOINTMENT_MINUTES * i + APPOINTMENT_MINUTES),
+                                            taken=False)
+                                tmp.save()
+                            appointment_instance.delete()
+
                 return DeleteAppointment(ok=True)
         else:
             raise UnauthorisedAccessError(message='No permissions to delete a appointment!')
