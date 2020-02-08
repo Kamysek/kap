@@ -7,15 +7,12 @@
     </button>
   </ng-container>
   <mat-form-field>
-    <input
-      matInput
-      [formControl]="monthControl"
-      type="number"
-      placeholder="Month after Study start"
-    />
+    <mat-label>Month after Study start</mat-label>
+    <input matInput [formControl]="monthControl" type="number" />
   </mat-form-field>
   <mat-form-field>
-    <input matInput [formControl]="nameControl" placeholder="Name" />
+    <mat-label>Name</mat-label>
+    <input [formControl]="nameControl" matInput />
   </mat-form-field>
   <button
     gdColumn="1/-1"

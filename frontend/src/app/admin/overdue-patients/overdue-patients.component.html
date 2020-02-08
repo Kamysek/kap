@@ -12,7 +12,8 @@
       </mat-list-item>
     </mat-list>
     <mat-form-field>
-      <input [formControl]="commentControl" matInput placeholder="Comment" />
+      <mat-label>Comment</mat-label>
+      <input [formControl]="commentControl" matInput />
     </mat-form-field>
     <button
       (click)="recordCall(patient)"

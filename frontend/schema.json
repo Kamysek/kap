@@ -1137,6 +1137,18 @@
               "deprecationReason": null,
               "description": "",
               "isDeprecated": false,
+              "name": "nextCheckup",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Date",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": "",
+              "isDeprecated": false,
               "name": "checkupOverdue",
               "type": {
                 "kind": "SCALAR",
@@ -1818,6 +1830,16 @@
           "interfaces": [],
           "kind": "OBJECT",
           "name": "UserTypeEdge",
+          "possibleTypes": null
+        },
+        {
+          "description": "The `Date` scalar type represents a Date\nvalue as specified by\n[iso8601](https://en.wikipedia.org/wiki/ISO_8601).",
+          "enumValues": null,
+          "fields": null,
+          "inputFields": null,
+          "interfaces": null,
+          "kind": "SCALAR",
+          "name": "Date",
           "possibleTypes": null
         },
         {
@@ -3358,6 +3380,16 @@
             {
               "defaultValue": null,
               "description": null,
+              "name": "dateJoined",
+              "type": {
+                "kind": "SCALAR",
+                "name": "DateTime",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
               "name": "emailNotification",
               "type": {
                 "kind": "SCALAR",
@@ -3502,6 +3534,16 @@
               "type": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "dateJoined",
+              "type": {
+                "kind": "SCALAR",
+                "name": "DateTime",
                 "ofType": null
               }
             },

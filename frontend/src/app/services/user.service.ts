@@ -37,6 +37,7 @@ export class UserService {
         email
         dateJoined
         checkupOverdue
+        nextCheckup
         appointmentSet(after: $afterDate) {
           edges {
             node {

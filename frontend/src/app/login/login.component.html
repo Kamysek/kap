@@ -9,20 +9,12 @@
     <mat-card-content>
       <form [formGroup]="loginForm" fxLayout="column" fxLayoutGap="1rem">
         <mat-form-field>
-          <input
-            formControlName="username"
-            matInput
-            placeholder="username"
-            type="text"
-          />
+          <mat-label>Patient ID</mat-label>
+          <input formControlName="username" matInput type="text" />
         </mat-form-field>
         <mat-form-field>
-          <input
-            formControlName="password"
-            matInput
-            placeholder="password"
-            type="password"
-          />
+          <mat-label>Passwort</mat-label>
+          <input formControlName="password" matInput type="password" />
         </mat-form-field>
         <button
           (click)="submitForm()"

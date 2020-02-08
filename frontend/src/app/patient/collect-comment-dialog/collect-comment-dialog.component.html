@@ -1,17 +1,14 @@
-<h2 mat-dialog-title>Provide a comment for your doctor</h2>
+<h2 mat-dialog-title>Geben sie einen Hinweis zu ihrem Termin</h2>
 <mat-dialog-content>
   <p>
-    Booking appointment on
-    <strong>{{ slot.start | date: 'fullDate' }}</strong> from
-    <strong>{{ slot.start | date: 'mediumTime' }}</strong> to
+    Termin am
+    <strong>{{ slot.start | date: 'fullDate' }}</strong> von
+    <strong>{{ slot.start | date: 'mediumTime' }}</strong> bis
     <strong>{{ slot.end | date: 'mediumTime' }}</strong>
   </p>
   <mat-form-field style="width: 100%;">
-    <textarea
-      [formControl]="commentControl"
-      matInput
-      placeholder="Leave a comment for the doctor"
-    ></textarea>
+    <mat-label>Hinterlassen sie einen Hinweis fuer den Arzt</mat-label>
+    <textarea [formControl]="commentControl" matInput></textarea>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
@@ -20,7 +17,7 @@
     mat-dialog-close="No comment provided."
     mat-stroked-button
   >
-    Continue without a comment
+    Buchen ohne Kommentar
   </button>
   <button
     [disabled]="commentControl.invalid"
@@ -28,6 +25,6 @@
     color="primary"
     mat-stroked-button
   >
-    Book with comment
+    Kommentar speichern und buchen
   </button>
 </mat-dialog-actions>

@@ -336,6 +336,7 @@ type UserType implements Node {
   id: ID!
   isActive: Boolean!
   isStaff: Boolean!
+  nextCheckup: Date
   overdueNotified: DateTime
   passwordChanged: Boolean!
   studyParticipation: StudyType
@@ -404,6 +405,7 @@ input CreateStudyInput {
 
 input CreateUserInput {
   clientMutationId: String
+  dateJoined: DateTime
   email: String!
   emailNotification: Boolean
   group: String!
@@ -461,6 +463,7 @@ input UpdateStudyInput {
 
 input UpdateUserInput {
   clientMutationId: String
+  dateJoined: DateTime
   email: String
   emailNotification: Boolean
   group: String
@@ -483,6 +486,13 @@ value as specified by
 [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
 """
 scalar DateTime
+
+"""
+The `Date` scalar type represents a Date
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar Date
 
 """
 The `GenericScalar` scalar type represents a generic

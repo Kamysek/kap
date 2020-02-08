@@ -1,9 +1,6 @@
 <main class="mat-typography mat-app-background">
   <h1>Manage Users</h1>
   <button (click)="createUser()" mat-raised-button>Create User</button>
-  <!--<mat-form-field class="full-width">
-    <input matInput [formControl]="filterControl" placeholder="Filter">
-  </mat-form-field>-->
   <table [dataSource]="users$" class="full-width" mat-table>
     <ng-container matColumnDef="username">
       <th *matHeaderCellDef mat-header-cell>Username</th>

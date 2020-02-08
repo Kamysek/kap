@@ -2,6 +2,9 @@
 <p><strong>Username: </strong>{{ patient?.username }}</p>
 <p><strong>Mail: </strong>{{ patient?.email }}</p>
 <p><strong>Joined: </strong>{{ patient?.dateJoined | date }}</p>
+<p>
+  <strong>Next planned Appointment: </strong>{{ patient?.nextCheckup | date }}
+</p>
 <ng-container *ngIf="patient?.checkupOverdue">
   <strong>Messages:</strong>
   <div class="messages" fxLayout="column" fxLayoutGap="1rem">

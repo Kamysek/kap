@@ -2,31 +2,24 @@
 <mat-dialog-content>
   <form [formGroup]="userForm" fxLayout="column">
     <mat-form-field>
-      <input
-        formControlName="username"
-        matInput
-        placeholder="Username"
-        type="text"
-      />
+      <mat-label>Username</mat-label>
+      <input formControlName="username" matInput type="text" />
     </mat-form-field>
     <mat-form-field>
-      <input formControlName="email" matInput placeholder="Mail" type="email" />
+      <mat-label>Mail</mat-label>
+      <input formControlName="email" matInput type="email" />
     </mat-form-field>
     <div fxLayout="row" fxLayoutGap="1rem">
       <mat-form-field fxFlex>
-        <input
-          formControlName="timeslotsNeeded"
-          matInput
-          placeholder="Appointment Slots"
-          type="number"
-        />
+        <mat-label>Appointment Slots</mat-label>
+        <input formControlName="timeslotsNeeded" matInput type="number" />
       </mat-form-field>
       <mat-form-field fxFlex>
+        <mat-label>Join date</mat-label>
         <input
           [matDatepicker]="myDatepicker"
           formControlName="dateJoined"
           matInput
-          placeholder="Join date"
         />
         <mat-datepicker-toggle
           [for]="myDatepicker"
@@ -36,18 +29,15 @@
       </mat-form-field>
     </div>
     <mat-form-field>
-      <input
-        formControlName="password"
-        matInput
-        placeholder="Password"
-        type="password"
-      />
+      <mat-label>Password</mat-label>
+      <input formControlName="password" matInput type="password" />
       <mat-hint *ngIf="showPasswordHint"
         >Leave empty to not override the password
       </mat-hint>
     </mat-form-field>
     <mat-form-field>
-      <mat-select formControlName="group" placeholder="Permission group">
+      <mat-label>Permission group</mat-label>
+      <mat-select formControlName="group">
         <mat-option value="Patient">Patient</mat-option>
         <mat-option value="Doctor">Doctor</mat-option>
         <mat-option value="Labor">Lab Tech</mat-option>
