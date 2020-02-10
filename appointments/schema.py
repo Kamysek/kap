@@ -168,7 +168,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         if has_group(["Admin", "Doctor"], info):
             failed_appointments = []
             appointment_set = []
-            processedAppointments = list(Appointment.objects.filter(appointment_start_gte= str(timezone.now())))
+            processedAppointments = list(Appointment.objects.all())
             for app in input.get('appointments'):
                 appointment_instance = Appointment(title=app.get('title'),
                                                    comment_doctor="" if app.get('comment_doctor') is None else app.get(
