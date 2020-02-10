@@ -21,8 +21,8 @@ import threading
 APPOINTMENT_MINUTES = 30
 
 
-def isAppointmentFree(newAppointment):
-    allAppointments = Appointment.objects.all()
+def isAppointmentFree(newAppointment, processedAppointments):
+    allAppointments = processedAppointments
     for existingAppointment in allAppointments:
         if newAppointment == existingAppointment:
             continue
@@ -167,6 +167,8 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(self, info, **input):
         if has_group(["Admin", "Doctor"], info):
             failed_appointments = []
+            appointment_set = []
+            processedAppointments = list(Appointment.objects.filter(appointment_start_gte= str(timezone.now())))
             for app in input.get('appointments'):
                 appointment_instance = Appointment(title=app.get('title'),
                                                    comment_doctor="" if app.get('comment_doctor') is None else app.get(
@@ -176,12 +178,12 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
                                                    appointment_end=app.get('appointment_end'),
                                                    taken=False)
                 checkAppointmentFormat(appointment_instance)
-                if not isAppointmentFree(appointment_instance) or len(app.get('title')) == 0:
+                if not isAppointmentFree(appointment_instance,processedAppointments) or len(app.get('title')) == 0:
                     failed_appointments.append(appointment_instance)
                     continue
-
-                appointment_instance.save()
-
+                processedAppointments.append(appointment_instance)
+                appointment_set.append(appointment_instance)
+            Appointment.objects.bulk_create(appointment_set)
             return CreateAppointments(appointments=failed_appointments)
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
@@ -282,7 +284,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                     if input.get('appointment_end'):
                         appointment_instance.appointment_end = input.get('appointment_end')
                     if input.get('patient'):
-                        userObj = CustomUser.objects.all().filter(username=input.get('patient'))[0]
+                        userObj = CustomUser.objects.filter(username=input.get('patient'))[0]
                         if userObj:
                             appointment_instance.patient = userObj
                             appointment_instance.taken = True
@@ -383,7 +385,7 @@ class Query(graphene.ObjectType):
     def resolve_get_appointments(self, info, **kwargs):
         if not has_group(["Admin", "Doctor", "Labor", "Patient"], info):
             return []
-        qs = Appointment.objects.all().filter()
+        qs = Appointment.objects
 
         if kwargs.get('after'):
             qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
@@ -396,14 +398,13 @@ class Query(graphene.ObjectType):
 
         ##FILTER FOR DAYS
         qs = qs.filter(appointment_start__range=[timezone.now() - timedelta(days=15), timezone.now() + timedelta(days=45)])
-
-        return qs
+        return qs.prefetch_related('patient')
 
     @login_required
     def resolve_get_slot_lists(self, info, **kwargs):
         if not has_group(["Admin", "Doctor", "Labor", "Patient"], info):
             return []
-        qs = Appointment.objects.all().filter(taken=False)
+        qs = Appointment.objects.filter(taken=False)
 
         if kwargs.get('after'):
             qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
@@ -418,7 +419,7 @@ class Query(graphene.ObjectType):
             qs.filter(patient=userObj)
         try:
             checkups = userObj.study_participation.checkup_set.all().order_by("daysUntil")
-            appointmentsAttended = Appointment.objects.all().filter(patient=userObj).filter(noshow=False).order_by('appointment_start')  # get number of  attended appointments
+            appointmentsAttended = Appointment.objects.filter(patient=userObj).filter(noshow=False).order_by('appointment_start')  # get number of  attended appointments
             appointmentCount = countSeperateAppointments(appointmentsAttended)
             nextCheckup = checkups[appointmentCount]
             date = max(userObj.date_joined + timedelta(days=nextCheckup.daysUntil), timezone.now() + timedelta(days=7))
