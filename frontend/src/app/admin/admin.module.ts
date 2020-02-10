@@ -45,9 +45,6 @@ const routes: Routes = [
       {
         path: 'overdue',
         component: OverduePatientsComponent
-        /*resolve: {
-          plans: PlanResolver
-        }*/
       }
     ]
   }
