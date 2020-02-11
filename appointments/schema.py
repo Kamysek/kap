@@ -21,8 +21,22 @@ import threading
 APPOINTMENT_MINUTES = 30
 
 
-def isAppointmentFree(newAppointment, processedAppointments):
+def isAppointmentFreeFast(newAppointment, processedAppointments):
     allAppointments = processedAppointments
+    for existingAppointment in allAppointments:
+        if newAppointment == existingAppointment:
+            continue
+        if ((
+                newAppointment.appointment_start > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_end > existingAppointment.appointment_start and newAppointment.appointment_start < existingAppointment.appointment_end) or (
+                newAppointment.appointment_start < existingAppointment.appointment_start and newAppointment.appointment_end > existingAppointment.appointment_end)):
+            # Invalid Appointment time
+            return False
+    return True
+
+
+def isAppointmentFree(newAppointment):
+    allAppointments = Appointment.objects.all()
     for existingAppointment in allAppointments:
         if newAppointment == existingAppointment:
             continue
@@ -58,61 +72,61 @@ class AppointmentType(DjangoObjectType):
 
     @login_required
     def resolve_id(self, info):
-        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if info.context.user.has_perm('appointments.view_appointment'):  # if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.id
         return None
 
     @login_required
     def resolve_title(self, info):
-        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if info.context.user.has_perm('appointments.view_appointment'):  # if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.title
         return None
 
     @login_required
     def resolve_comment_doctor(self, info):
-        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.change_appointment') or self.patient == info.context.user:  # if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_doctor
         return None
 
     @login_required
     def resolve_comment_patient(self, info):
-        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.change_appointment') or self.patient == info.context.user:  # if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.comment_patient
         return None
 
     @login_required
     def resolve_patient(self, info):
-        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.change_appointment') or self.patient == info.context.user:  # if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.patient
         return None
 
     @login_required
     def resolve_created_at(self, info):
-        if has_group(["Admin", "Doctor", "Labor"], info):
+        if info.context.user.has_perm('appointments.change_appointment'):  # if has_group(["Admin", "Doctor", "Labor"], info):
             return self.created_at
         return None
 
     @login_required
     def resolve_appointment_start(self, info):
-        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.view_appointment'):  # if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_start
         return None
 
     @login_required
     def resolve_appointment_end(self, info):
-        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.view_appointment'):  # if has_group(["Admin", "Doctor", 'Labor', "Patient"], info) or self.patient == None or self.patient == info.context.user:
             return self.appointment_end
         return None
 
     @login_required
     def resolve_taken(self, info):
-        if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
+        if info.context.user.has_perm('appointments.view_appointment'):  # if has_group(["Admin", "Doctor", 'Labor', "Patient"], info):
             return self.taken
         return None
 
     @login_required
     def resolve_noshow(self, info):
-        if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
+        if info.context.user.has_perm('appointments.change_appointment') or self.patient == info.context.user:  # if has_group(["Admin", "Doctor", 'Labor'], info) or self.patient == info.context.user:
             return self.noshow
         return False
 
@@ -178,7 +192,7 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
                                                    appointment_end=app.get('appointment_end'),
                                                    taken=False)
                 checkAppointmentFormat(appointment_instance)
-                if not isAppointmentFree(appointment_instance,processedAppointments) or len(app.get('title')) == 0:
+                if len(app.get('title')) == 0 or not isAppointmentFreeFast(appointment_instance, processedAppointments):
                     failed_appointments.append(appointment_instance)
                     continue
                 processedAppointments.append(appointment_instance)
@@ -245,7 +259,7 @@ class BookSlots(graphene.relay.ClientIDMutation):
                 appointment_instance = Appointment.objects.get(pk=from_global_id(app)[1])
                 appointment_instance.delete()
             threading.Thread(target=updateandremind, args=(user_instance,)).start()
-            return BookSlots(appointmentList=appointment)
+            return BookSlots(appointmentList=[appointment.id])
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
@@ -397,7 +411,9 @@ class Query(graphene.ObjectType):
             qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
         ##FILTER FOR DAYS
-        qs = qs.filter(appointment_start__range=[timezone.now() - timedelta(days=15), timezone.now() + timedelta(days=45)])
+        # qs = qs.filter(appointment_start__range=[timezone.now() - timedelta(days=15), timezone.now() + timedelta(days=45)])
+        # FILTER TO ONLY SHOW PAST 30 DAYS OF APPOINTMENTS
+        qs = qs.filter(appointment_start__gte=timezone.now() - timedelta(days=30))
         return qs.prefetch_related('patient')
 
     @login_required

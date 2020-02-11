@@ -43,6 +43,7 @@ GROUPS_PERMISSIONS = {
         Appointment: ['view'],
     },
     'Patient': {
+        Appointment: ['view'],
         Checkup: ['view'],
         Study: ['view'],
         CronJobLog: ['view'],
