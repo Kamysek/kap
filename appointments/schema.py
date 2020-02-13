@@ -312,7 +312,7 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                                 threading.Thread(target=deleteNotify, args=(pat,)).start()
                                 appointment_instance.patient = None
                     checkAppointmentFormat(appointment_instance)
-                    if not isAppointmentFree(appointment_instance):
+                    if (input.get('appointment_end') or input.get('appointment_start')) and not isAppointmentFree(appointment_instance):
                         raise GraphQLError("Selected time slot overlaps with existing appointment")
                     appointment_instance.save()
                     if input.get('taken') != None and not input.get('taken'):
@@ -321,7 +321,6 @@ class UpdateAppointment(graphene.relay.ClientIDMutation):
                         # Split up appointment into slots
                         if round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) != APPOINTMENT_MINUTES:
                             numSlots = round(round((appointment_instance.appointment_end - appointment_instance.appointment_start).total_seconds() / 60) / APPOINTMENT_MINUTES)
-                            print(numSlots)
                             tmp = appointment_instance
                             for i in range(numSlots):
                                 tmp = Appointment(title=appointment_instance.title, comment_doctor="" if appointment_instance.comment_doctor is None else appointment_instance.comment_doctor,
