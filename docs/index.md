@@ -2,7 +2,7 @@
 
 ## Overview
 
-In this file the general contents of the project folders are explained.  
+In this file the general contents of the project folders are explained.
 There are separate files for specific parts of the application.
 
 1. the [account app](modules/account.md) in `/accounts` holds the user model and the permissions of each user in `/accounts/management`

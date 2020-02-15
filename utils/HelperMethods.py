@@ -69,8 +69,10 @@ def checkUserOverdue(user):
         user.overdue_notified = timezone.now()  - timedelta(days=10)
     user.save()
 
-
-def updateUserOverdue(user):#Updates UserOverdue fields without triggering email notification bc. of faster response
+"""
+Updates UserOverdue fields without triggering email notification 
+"""
+def updateUserOverdue(user):
     days_since_joined = (timezone.now() - user.date_joined).days
     checkups = user.study_participation.checkup_set.all().order_by("daysUntil")
     appointmentsAttended = Appointment.objects.all().filter(patient=user).filter(noshow= False).order_by('appointment_start')# get number of  attended appointments

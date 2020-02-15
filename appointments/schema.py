@@ -20,7 +20,9 @@ import threading
 
 APPOINTMENT_MINUTES = 30
 
-
+"""
+Used for mass appointment creation, using an array instead of dbCall because a dbCall for each appointment destroys performance with large datasets
+"""
 def isAppointmentFreeFast(newAppointment, processedAppointments):
     allAppointments = processedAppointments
     for existingAppointment in allAppointments:
@@ -64,7 +66,10 @@ class AppointmentFilter(django_filters.FilterSet):
         model = Appointment
         fields = ['title', 'appointment_start', 'appointment_end', 'taken']
 
-
+"""
+We use permissions here instead of hasGroup because we realized too late that performance on large datasets is very poor since each resolver performs a dbCall for the group.
+Permissions however are cached and improved our query times by a factor of ~20x 
+"""
 class AppointmentType(DjangoObjectType):
     class Meta:
         model = Appointment
@@ -154,7 +159,6 @@ class CreateAppointment(graphene.relay.ClientIDMutation):
                 checkAppointmentFormat(appointment_instance)
                 if not isAppointmentFree(appointment_instance):
                     raise GraphQLError("Selected time slot overlaps with existing appointment")
-
                 appointment_instance.save()
                 return CreateAppointment(appointment=appointment_instance)
             else:
@@ -202,8 +206,10 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
-
-def updateandremind(user):  # dirty hack that makes it possible to run in one thread and not hurt processing time
+"""
+Allows us to perform 2 email actions in one thread
+"""
+def updateandremind(user):
     updateUserOverdue(user)
     if user.email_notification:
         VIPreminder(user)
@@ -403,16 +409,14 @@ class Query(graphene.ObjectType):
         if kwargs.get('after'):
             qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
                 datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
+        else:
+            # Only return future appointments and last month of appointments
+            qs = qs.filter(appointment_start__gte=timezone.now() - timedelta(days=30))
         if kwargs.get('before'):
-            qs = qs.filter(appointment_start__range=[make_aware(
-                datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
+            qs = qs.filter(appointment_start__range=[make_aware(datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
         if kwargs.get('has_patient') != None:
             qs = qs.filter(patient__isnull=(not kwargs.get('has_patient')))
 
-        ##FILTER FOR DAYS
-        # qs = qs.filter(appointment_start__range=[timezone.now() - timedelta(days=15), timezone.now() + timedelta(days=45)])
-        # FILTER TO ONLY SHOW PAST 30 DAYS OF APPOINTMENTS
-        qs = qs.filter(appointment_start__gte=timezone.now() - timedelta(days=30))
         return qs.prefetch_related('patient')
 
     @login_required
