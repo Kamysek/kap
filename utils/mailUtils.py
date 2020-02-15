@@ -1,6 +1,10 @@
 # Import smtplib for the actual sending function
 from django.core.mail import EmailMessage
 from django.contrib.auth import get_user_model
+"""
+These functions are all wrapped in a try catch so that they won't interrupt any api calls.
+Emails are sent using django Backend (see docs)
+"""
 
 User = get_user_model()
 

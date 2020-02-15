@@ -68,7 +68,7 @@ MIDDLEWARE = [
 ]
 
 CRON_CLASSES = [
-    "klinischesanwendungsprojekt.crons.MyCronJob",
+    "utils.crons.MyCronJob",
     # ...
 ]
 
