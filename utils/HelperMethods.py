@@ -10,6 +10,9 @@ from utils.mailUtils import sendOverdueMail, sendDayReminderMail, sendWeekRemind
 
 User = get_user_model()
 
+"""
+Checks that the given graphql id is relevant to specific type and that the queried object exists
+"""
 def valid_id(global_id, type):
     try:
         if str(type) == str(from_global_id(global_id)[0]):
@@ -17,8 +20,10 @@ def valid_id(global_id, type):
     except:
         raise GraphQLError("Invalid ID")
     raise GraphQLError("InvalidID")
-
-
+"""
+TODO: We used group authentication because fullblown CRUD authentication would have introduced unnecessary complexity
+HOWEVER: this function call always does a db request leading to decreased performance, while django permissions are cached automatically. a rewrite would probably boost performance
+"""
 def has_group(groups, info):
     for role in groups:
         if info.context.user.groups.filter(name=role).exists():
