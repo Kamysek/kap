@@ -20,10 +20,11 @@ import threading
 
 APPOINTMENT_MINUTES = 30
 
-"""
-Used for mass appointment creation, using an array instead of dbCall because a dbCall for each appointment destroys performance with large datasets
-"""
+
 def isAppointmentFreeFast(newAppointment, processedAppointments):
+    """
+    Used for mass appointment creation, using an array instead of dbCall because a dbCall for each appointment destroys performance with large datasets
+    """
     allAppointments = processedAppointments
     for existingAppointment in allAppointments:
         if newAppointment == existingAppointment:
@@ -66,11 +67,13 @@ class AppointmentFilter(django_filters.FilterSet):
         model = Appointment
         fields = ['title', 'appointment_start', 'appointment_end', 'taken']
 
-"""
-We use permissions here instead of hasGroup because we realized too late that performance on large datasets is very poor since each resolver performs a dbCall for the group.
-Permissions however are cached and improved our query times by a factor of ~20x 
-"""
+
 class AppointmentType(DjangoObjectType):
+    """
+    We use permissions here instead of hasGroup because we realized too late that performance on large datasets is very poor since each resolver performs a dbCall for the group.
+    Permissions however are cached and improved our query times by a factor of ~20x
+    """
+
     class Meta:
         model = Appointment
         interfaces = (graphene.relay.Node,)
@@ -206,10 +209,9 @@ class CreateAppointments(graphene.relay.ClientIDMutation):
         else:
             raise UnauthorisedAccessError(message='No permissions to create a appointment!')
 
-"""
-Allows us to perform 2 email actions in one thread
-"""
+
 def updateandremind(user):
+    """Allows us to perform 2 email actions in one thread"""
     updateUserOverdue(user)
     if user.email_notification:
         VIPreminder(user)
@@ -410,7 +412,7 @@ class Query(graphene.ObjectType):
             qs = qs.filter(appointment_start__range=[kwargs.get('after'), make_aware(
                 datetime.datetime.strptime("3000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S'))])
         else:
-            # Only return future appointments and last month of appointments
+            # Only return last month of appointments by default
             qs = qs.filter(appointment_start__gte=timezone.now() - timedelta(days=30))
         if kwargs.get('before'):
             qs = qs.filter(appointment_start__range=[make_aware(datetime.datetime.strptime("2000-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')), kwargs.get('before')])
