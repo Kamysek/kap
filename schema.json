@@ -763,7 +763,7 @@
           "possibleTypes": null
         },
         {
-          "description": null,
+          "description": "We use permissions here instead of hasGroup because we realized too late that performance on large datasets is very poor since each resolver performs a dbCall for the group.\nPermissions however are cached and improved our query times by a factor of ~20x",
           "enumValues": null,
           "fields": [
             {

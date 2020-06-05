@@ -9,6 +9,12 @@ There are separate files for specific parts of the application.
 2. the [appointments app](modules/appointments.md) in `/appointments` holds the appointment model
 3. the [utils](modules/utils.md) in `/utils` contains the cron job, email handling and additional helper methods
 
+### Development setup
+
+1. Make sure you have python and pip installed on your system.
+2. Run `pip isntall -r requirements.txt` to install the dependencies
+3. Run `initalize[.bat]` to prepare the local server.
+
 ### Tech stack
 
 This backend project is using [django](https://www.djangoproject.com/) a python framework for building
