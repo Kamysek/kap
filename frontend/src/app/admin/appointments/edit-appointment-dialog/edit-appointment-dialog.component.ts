@@ -6,7 +6,7 @@ import * as moment from 'moment';
 @Component({
   selector: 'kap-edit-appointment-dialog',
   templateUrl: './edit-appointment-dialog.component.html',
-  styleUrls: ['./edit-appointment-dialog.component.scss']
+  styleUrls: ['./edit-appointment-dialog.component.scss'],
 })
 export class EditAppointmentDialogComponent implements OnInit {
   appointmentForm: FormGroup;
@@ -23,10 +23,10 @@ export class EditAppointmentDialogComponent implements OnInit {
       taken: {
         value: false,
         validators: [Validators.required],
-        disabled: true
+        disabled: true,
       },
       commentDoctor: [''],
-      commentPatient: ['']
+      commentPatient: [''],
     });
   }
 
@@ -36,7 +36,7 @@ export class EditAppointmentDialogComponent implements OnInit {
       taken,
       commentDoctor,
       commentPatient,
-      startMoment
+      startMoment,
     } = this.data;
     this.appointmentForm.setValue({
       startDate: startMoment,
@@ -44,13 +44,15 @@ export class EditAppointmentDialogComponent implements OnInit {
       title,
       taken,
       commentDoctor,
-      commentPatient
+      commentPatient,
     });
     if (moment() > startMoment) {
       this.appointmentForm.get('startDate').disable();
       this.appointmentForm.get('startTime').disable();
     }
-    this.appointmentForm.get('taken').disable();
+    if (this.appointmentForm.get('taken').value) {
+      this.appointmentForm.get('taken').disable();
+    }
   }
 
   submit() {
@@ -68,10 +70,8 @@ export class EditAppointmentDialogComponent implements OnInit {
       commentDoctor: formValue.commentDoctor,
       commentPatient: formValue.commentPatient,
       appointmentStart: moment(startMoment).toDate(),
-      appointmentEnd: moment(startMoment)
-        .add(30, 'minutes')
-        .toDate(),
-      taken: takenEnabled ? formValue.taken : true
+      appointmentEnd: moment(startMoment).add(30, 'minutes').toDate(),
+      taken: takenEnabled ? formValue.taken : true,
     };
     this.dialog.close(patch);
   }

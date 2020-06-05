@@ -10,7 +10,7 @@ import { LoginComponent } from './login/login.component';
 import {
   HTTP_INTERCEPTORS,
   HttpClientModule,
-  HttpClientXsrfModule
+  HttpClientXsrfModule,
 } from '@angular/common/http';
 import { AuthInterceptor } from './services/auth.interceptor';
 import { AdminModule } from './admin/admin.module';
@@ -33,7 +33,7 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
     HttpClientModule,
     HttpClientXsrfModule.withOptions({
       cookieName: 'csrftoken',
-      headerName: 'X-CSRFToken'
+      headerName: 'X-CSRFToken',
     }),
     BrowserAnimationsModule,
     SharedModule,
@@ -41,17 +41,17 @@ registerLocaleData(localeEn, 'en-DE', localeEnExtra);
     PatientModule,
     DoctorModule,
     LabModule,
-    GraphQLModule
+    GraphQLModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-      useValue: { appearance: 'fill' }
+      useValue: { appearance: 'outline' },
     },
-    { provide: LOCALE_ID, useValue: 'en-DE' }
+    { provide: LOCALE_ID, useValue: 'en-DE' },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
